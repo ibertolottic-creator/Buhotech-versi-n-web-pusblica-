@@ -1,0 +1,551 @@
+{% extends "base.html" %}
+{% block title %}Lección - Buhotech Labs{% endblock %}
+
+{% block content %}
+<style>
+    .text-input {
+        width: 100%;
+        background: rgba(255,255,255,0.05);
+        border: 2px solid var(--slate-600);
+        border-radius: 12px;
+        color: white;
+        padding: 15px;
+        font-family: inherit;
+        font-size: 1rem;
+        resize: vertical;
+        transition: border-color 0.2s;
+    }
+    .text-input:focus {
+        outline: none;
+        border-color: var(--brand-500);
+    }
+    .sort-container {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 1rem;
+    }
+    .sort-item {
+        background: rgba(255,255,255,0.05);
+        border: 2px solid var(--slate-600);
+        padding: 12px;
+        border-radius: 8px;
+        cursor: pointer;
+        user-select: none;
+    }
+    .sort-item.selected {
+        background: rgba(99, 102, 241, 0.2);
+        border-color: var(--brand-500);
+        opacity: 0.5;
+    }
+    .sort-result-box {
+        min-height: 40px;
+        border: 2px dashed var(--slate-600);
+        border-radius: 8px;
+        margin-top: 10px;
+        margin-bottom: 10px;
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+    .match-item {
+        background: rgba(255,255,255,0.05);
+        border: 2px solid var(--slate-600);
+        padding: 12px;
+        border-radius: 8px;
+        margin-top: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+    }
+    .match-buttons .btn {
+        opacity: 0.6;
+    }
+    .match-buttons .btn.active {
+        opacity: 1;
+        background: var(--brand-500);
+        border-color: var(--brand-500);
+        color: white;
+    }
+    .match-select {
+        background: rgba(255,255,255,0.1);
+        border: 2px solid var(--slate-500);
+        color: white;
+        padding: 8px 12px;
+        border-radius: 8px;
+        outline: none;
+        font-size: 0.9rem;
+        font-family: inherit;
+        cursor: pointer;
+    }
+    .match-select option {
+        background: var(--slate-800);
+        color: white;
+    }
+</style>
+
+<!-- Lesson Header -->
+<div class="lesson-header">
+    <button class="lesson-close" onclick="exitLesson()" title="Salir">✕</button>
+    <div class="lesson-progress-container">
+        <div class="progress-bar">
+            <div class="progress-fill" id="lesson-progress" style="width: 0%;"></div>
+        </div>
+    </div>
+    <div class="lesson-hearts">
+        <span id="heart-icon">❤️</span>
+        <span id="lesson-hearts">{{ user.hearts }}</span>
+    </div>
+</div>
+
+<!-- Lesson Content Area -->
+<div class="lesson-content" id="lesson-content">
+    <div style="text-align:center; padding:3rem;">
+        <div class="spinner" style="margin:0 auto;"></div>
+        <p style="margin-top:1rem; color:var(--brand-400); font-weight:700; font-size:0.9rem; letter-spacing:0.15em; text-transform:uppercase;">Cargando Misión...</p>
+    </div>
+</div>
+
+<!-- Check Button -->
+<div class="action-bar" id="check-bar" style="display:none;">
+    <button class="btn btn-primary btn-lg btn-block" id="check-btn" onclick="checkAnswer()">
+        COMPROBAR
+    </button>
+</div>
+
+<!-- Feedback Drawer -->
+<div id="feedback-drawer" class="feedback-drawer" style="display:none;"></div>
+
+<script>
+    // === LESSON DATA ===
+    const QUESTIONS = {{ questions | tojson }};
+    const USER_ID = "{{ user.id }}";
+    const PHASE_NUMBER = {{ phase_number }};
+    let currentIndex = 0;
+    let selectedOption = null;
+    let startTime = Date.now();
+    let isChecking = false;
+    let currentHearts = {{ user.hearts }};
+    let hasPasted = false;
+    let failedAttempts = 0;
+
+    function renderQuestion() {
+        if (currentIndex >= QUESTIONS.length) {
+            completeModule();
+            return;
+        }
+
+        const q = QUESTIONS[currentIndex];
+        const progress = (currentIndex / QUESTIONS.length) * 100;
+        document.getElementById('lesson-progress').style.width = progress + '%';
+
+        hasPasted = false;
+        failedAttempts = 0;
+        selectedOption = null;
+        isChecking = false;
+
+        if (q.question_type === 'WORKSHOP') {
+            window.location.href = '/lessons/workshop/' + PHASE_NUMBER;
+            return;
+        }
+        if (q.question_type === 'MATRIX') {
+            window.location.href = '/lessons/matrix/' + PHASE_NUMBER;
+            return;
+        }
+
+        let html = `<div class="question-phase">${q.phase}</div>`;
+        if (q.image_filename) {
+            html += `
+                <div class="question-image" onclick="this.classList.toggle('expanded')">
+                    <img src="/images/${encodeURIComponent(q.image_filename)}" 
+                         alt="${q.phase}"
+                         onerror="this.parentElement.style.display='none'">
+                </div>`;
+        }
+        let qText = q.text;
+        if (q.question_type === 'FILL_BLANK') {
+            qText = q.text.replace('_____', '<span class="blank-dropzone" id="blank-zone">...</span>');
+            html += `<div class="fill-blank-text">${qText}</div>`;
+        } else {
+            html += `<div class="question-text">${qText}</div>`;
+        }
+
+        if (q.question_type === 'MAIN' || q.question_type === 'RAPID' || q.question_type === 'DILEMMA' || q.question_type === 'SCENARIO' || q.question_type === 'FILL_BLANK' || q.question_type === 'HONESTY') {
+            html += '<div class="options-container">';
+            for (const opt of q.options) {
+                // escape quotes for onclick
+                const safeText = opt.text.replace(/'/g, "\\'");
+                html += `
+                    <button class="option-btn" data-id="${opt.id}" onclick="selectOption(this, '${opt.id}', '${q.question_type}', '${safeText}')">
+                        <span class="option-marker">${opt.id}</span>
+                        <span>${opt.text}</span>
+                    </button>`;
+            }
+            html += '</div>';
+        } else if (q.question_type === 'TEXT') {
+            html += `
+                <div style="margin-top: 1rem;">
+                    <textarea id="text-answer" class="text-input" rows="4" maxlength="300" 
+                        placeholder="Escribe tu respuesta aquí..." 
+                        onpaste="handlePaste(event)" oninput="checkText()"></textarea>
+                    <div style="text-align: right; font-size: 0.8rem; color: #888;">
+                        <span id="char-count">0</span>/300
+                    </div>
+                </div>
+                <button class="btn btn-secondary btn-sm" onclick="askForHint()" style="margin-top: 10px;">
+                    💡 Pista del Búho (-5 XP)
+                </button>
+                <div id="hint-box" style="display:none; margin-top:10px; font-style:italic; color:var(--brand-300);"></div>
+            `;
+        } else if (q.question_type === 'SORT') {
+            html += `<div class="sort-container" id="sort-container">`;
+            for (const opt of q.options) {
+                html += `
+                    <div class="sort-item" data-id="${opt.id}" data-text="${opt.text}" onclick="selectSortItem(this)">
+                        ${opt.text}
+                    </div>`;
+            }
+            html += `</div>`;
+            html += `<p style="font-size:0.8rem; color:#888; margin-top:15px;">Secuencia (toca los elementos arriba para agregarlos):</p>`;
+            html += `<div id="sort-result" class="sort-result-box"></div>`;
+            html += `<button class="btn btn-secondary btn-sm" onclick="resetSort()">Reiniciar Orden</button>`;
+            selectedOption = [];
+        } else if (q.question_type === 'MATCH') {
+            const rightOptions = [...new Set(q.options.map(o => o.right))].sort(() => Math.random() - 0.5);
+            html += `<div class="match-container">`;
+            for (const opt of q.options) {
+                html += `
+                    <div class="match-item" data-id="${opt.id}">
+                        <div style="flex:1;">${opt.left}</div>
+                        <div class="match-select-container">
+                            <select class="match-select" onchange="selectMatchDropdown('${opt.id}', this.value)">
+                                <option value="" disabled selected>Selecciona...</option>`;
+                for (const rightOpt of rightOptions) {
+                    html += `<option value="${rightOpt}">${rightOpt}</option>`;
+                }
+                html += `   </select>
+                        </div>
+                    </div>`;
+            }
+            html += `</div>`;
+            selectedOption = {};
+        }
+
+        document.getElementById('lesson-content').innerHTML = html;
+        document.getElementById('check-bar').style.display = 'none';
+        document.getElementById('feedback-drawer').style.display = 'none';
+        startTime = Date.now();
+    }
+
+    // Handlers
+    function selectOption(btn, optId, qType, optText) {
+        if (isChecking) return;
+        playSound('select');
+        document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        selectedOption = optId;
+        
+        if (qType === 'FILL_BLANK') {
+            const dropzone = document.getElementById('blank-zone');
+            if(dropzone) {
+                dropzone.textContent = optText;
+                dropzone.classList.add('filled');
+            }
+        }
+        
+        document.getElementById('check-bar').style.display = 'flex';
+    }
+
+    function checkText() {
+        if (isChecking) return;
+        const ta = document.getElementById('text-answer');
+        document.getElementById('char-count').innerText = ta.value.length;
+        if (ta.value.trim().length > 5) {
+            selectedOption = ta.value.trim();
+            document.getElementById('check-bar').style.display = 'flex';
+        } else {
+            document.getElementById('check-bar').style.display = 'none';
+        }
+    }
+
+    function handlePaste(e) {
+        e.preventDefault();
+        alert("⚠️ No puedes copiar y pegar. Las preguntas con texto pegado valen 0 puntos.");
+        hasPasted = true;
+    }
+
+    async function askForHint() {
+        if (isChecking) return;
+        if (currentHearts <= 0) return;
+        const q = QUESTIONS[currentIndex];
+        document.getElementById('hint-box').style.display = 'block';
+        document.getElementById('hint-box').innerHTML = "Buscando en los archivos del búho... 🦉🔍";
+        try {
+            const res = await fetch('/lessons/api/hint', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ question_id: q.id })
+            });
+            const data = await res.json();
+            document.getElementById('hint-box').innerHTML = "💡 " + data.hint;
+            // Update UI XP if returned
+        } catch (e) {
+            document.getElementById('hint-box').innerHTML = "⚠️ No pude conectar con el Búho.";
+        }
+    }
+
+    function selectSortItem(el) {
+        if (el.classList.contains('selected') || isChecking) return;
+        playSound('select');
+        el.classList.add('selected');
+        const id = el.dataset.id;
+        const text = el.dataset.text;
+        selectedOption.push(id);
+        
+        const resultBox = document.getElementById('sort-result');
+        const div = document.createElement('div');
+        div.className = "sort-item";
+        div.innerText = selectedOption.length + ". " + text;
+        resultBox.appendChild(div);
+
+        if (selectedOption.length === QUESTIONS[currentIndex].options.length) {
+            document.getElementById('check-bar').style.display = 'flex';
+        }
+    }
+
+    function resetSort() {
+        if (isChecking) return;
+        document.querySelectorAll('#sort-container .sort-item').forEach(el => el.classList.remove('selected'));
+        document.getElementById('sort-result').innerHTML = '';
+        selectedOption = [];
+        document.getElementById('check-bar').style.display = 'none';
+    }
+
+    function selectMatchDropdown(id, choice) {
+        if (isChecking) return;
+        playSound('select');
+        selectedOption[id] = choice;
+        
+        if (Object.keys(selectedOption).length === QUESTIONS[currentIndex].options.length) {
+            document.getElementById('check-bar').style.display = 'flex';
+        }
+    }
+
+    // Submit
+    async function checkAnswer() {
+        if (!selectedOption || isChecking) return;
+        isChecking = true;
+
+        const q = QUESTIONS[currentIndex];
+        const responseTimeMs = Date.now() - startTime;
+        const checkBtn = document.getElementById('check-btn');
+        checkBtn.textContent = 'Comprobando...';
+        checkBtn.disabled = true;
+
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+            // Determine endpoint based on question type
+            let endpoint = '/lessons/api/respond';
+            if (q.question_type === 'TEXT') {
+                endpoint = '/lessons/api/respond_text';
+            } else if (q.question_type === 'SORT' || q.question_type === 'MATCH') {
+                endpoint = '/lessons/api/respond_interactive';
+            }
+
+            let payloadSelectedOption = selectedOption;
+            if (q.question_type === 'SORT') {
+                payloadSelectedOption = selectedOption.join(','); // "1,2,3,4"
+            } else if (q.question_type === 'MATCH') {
+                payloadSelectedOption = JSON.stringify(selectedOption); // '{"1":"Cualitativo", ...}'
+            }
+
+            const res = await fetch(endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    question_id: q.id,
+                    selected_answer: payloadSelectedOption,
+                    response_time_ms: responseTimeMs,
+                    has_pasted: hasPasted,
+                    failed_attempts: failedAttempts
+                }),
+                signal: controller.signal
+            });
+            clearTimeout(timeoutId);
+
+            if (!res.ok) throw new Error('Error del servidor: ' + res.status);
+
+            const data = await res.json();
+            
+            if (data.user) {
+                currentHearts = data.user.hearts;
+                document.getElementById('lesson-hearts').textContent = currentHearts;
+            }
+
+            if (!data.is_correct) {
+                failedAttempts++;
+            }
+
+            if (q.question_type === 'MAIN' || q.question_type === 'RAPID' || q.question_type === 'DILEMMA' || q.question_type === 'SCENARIO' || q.question_type === 'FILL_BLANK') {
+                document.querySelectorAll('.option-btn').forEach(btn => {
+                    const id = btn.dataset.id;
+                    btn.disabled = true;
+                    if (id === q.correct_answer) {
+                        btn.classList.add('correct');
+                    } else if (id === selectedOption && !data.is_correct) {
+                        btn.classList.add('wrong');
+                    } else {
+                        btn.classList.add('dimmed');
+                    }
+                });
+            }
+
+            playSound(data.is_correct ? 'success' : 'error');
+
+            if (data.xp_gained > 0) showXpPopup('+' + data.xp_gained + ' XP');
+            if (data.hearts_lost > 0) {
+                document.getElementById('heart-icon').classList.add('heart-shake');
+                setTimeout(() => document.getElementById('heart-icon').classList.remove('heart-shake'), 500);
+            }
+
+            showFeedback(data);
+
+        } catch (err) {
+            console.error('[Buhotech] Error:', err);
+            if (err.name === 'AbortError') {
+                alert('La solicitud tardó demasiado.');
+            } else {
+                alert('Error de conexión: ' + err.message);
+            }
+        } finally {
+            checkBtn.textContent = 'COMPROBAR';
+            checkBtn.disabled = false;
+            isChecking = false;
+        }
+    }
+
+    function showFeedback(data) {
+        const drawer = document.getElementById('feedback-drawer');
+        drawer.className = `feedback-drawer ${data.is_correct ? 'success' : 'error'}`;
+
+        let behaviorHtml = '';
+        if (data.behavior === 'FAST_RANDOM') {
+            behaviorHtml = '<div class="behavior-badge">⚠️ Respondiste muy rápido. ¡Lee con calma!</div>';
+        } else if (data.behavior === 'PASTED') {
+            behaviorHtml = '<div class="behavior-badge">🚨 Copiar/Pegar detectado. Pierdes 1 vida.</div>';
+        } else if (data.behavior === 'SEARCHING_THINKING' && data.is_correct) {
+            behaviorHtml = '<div class="behavior-badge">🧠 Pensaste bien tu respuesta</div>';
+        }
+
+        drawer.innerHTML = `
+            <div class="feedback-header">
+                <div class="feedback-mascot">🦉</div>
+                <div>
+                    <div class="feedback-title">${data.is_correct ? '¡Excelente Intuición!' : '🚨 Misión de Rescate'}</div>
+                    ${behaviorHtml}
+                    <div class="feedback-text">${data.feedback_text || ''}</div>
+                </div>
+            </div>
+            <button class="btn ${data.is_correct ? 'btn-success' : 'btn-danger'} btn-lg btn-block" onclick="nextQuestion('${data.is_correct}')">
+                CONTINUAR
+            </button>
+        `;
+        drawer.style.display = 'block';
+        document.getElementById('check-bar').style.display = 'none';
+    }
+
+    function nextQuestion(wasCorrect) {
+        if (currentHearts <= 0) {
+            alert('💔 ¡Te has quedado sin vidas! Repasa la teoría.');
+            window.location.href = '/dashboard';
+            return;
+        }
+        if (wasCorrect === 'true') {
+            currentIndex++;
+            renderQuestion();
+        } else {
+            // Reintentar si fue incorrecto (limpiar UI)
+            // But we don't increment currentIndex
+            renderQuestion();
+        }
+    }
+
+    async function completeModule() {
+        try {
+            const res = await fetch('/lessons/api/complete-module', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ module_number: PHASE_NUMBER })
+            });
+            const data = await res.json();
+            
+            playSound('success');
+            
+            if (PHASE_NUMBER === 3) {
+                document.getElementById('lesson-content').innerHTML = `
+                    <div style="text-align:center; padding:2rem;">
+                        <div style="font-size:4rem; margin-bottom:1rem; animation: float 2s ease-in-out infinite;">📊</div>
+                        <h2 style="font-family:var(--font-display); font-size:1.8rem; color:white; margin-bottom:1.5rem;">Reporte de Autorregulación</h2>
+                        <div class="grades-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2rem;">
+                            <div class="grade-card" style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--glass-border);">
+                                <div class="grade-value text-gold" style="font-size: 2rem; font-weight: bold; margin-bottom: 0.5rem;">${data.grades.total_failed_attempts || 0}</div>
+                                <div class="grade-label" style="font-size: 0.75rem; color: var(--slate-400); text-transform: uppercase;">Intentos Fallidos<br>(Persistencia)</div>
+                            </div>
+                            <div class="grade-card" style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--glass-border);">
+                                <div class="grade-value text-fire" style="font-size: 2rem; font-weight: bold; margin-bottom: 0.5rem;">${data.grades.fast_random_count || 0}</div>
+                                <div class="grade-label" style="font-size: 0.75rem; color: var(--slate-400); text-transform: uppercase;">Respuestas<br>Impulsivas</div>
+                            </div>
+                            <div class="grade-card" style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--glass-border);">
+                                <div class="grade-value text-success" style="font-size: 2rem; font-weight: bold; margin-bottom: 0.5rem;">${data.grades.final_grade_20 || 0}</div>
+                                <div class="grade-label" style="font-size: 0.75rem; color: var(--slate-400); text-transform: uppercase;">Nota Final<br>(Vigesimal)</div>
+                            </div>
+                        </div>
+                        <p style="color:var(--slate-300); font-size:0.95rem; margin:1.5rem 0; line-height:1.5;">
+                            Este reporte evalúa tu esfuerzo, reflexión y persistencia, más allá de solo tus aciertos. 
+                            ¡La investigación requiere paciencia y método!
+                        </p>
+                        <a href="/dashboard" class="btn btn-primary btn-lg btn-block">Volver al Dashboard</a>
+                    </div>
+                    <style>
+                        @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-15px)} }
+                    </style>
+                `;
+            } else {
+                document.getElementById('lesson-content').innerHTML = `
+                    <div style="text-align:center; padding:3rem;">
+                        <div style="font-size:5rem; margin-bottom:1rem; animation: float 2s ease-in-out infinite;">🏆</div>
+                        <h2 style="font-family:var(--font-display); font-size:1.8rem; color:var(--gold-400); margin-bottom:0.5rem;">¡Fase Completada!</h2>
+                        <a href="/dashboard" class="btn btn-primary btn-lg btn-block">Continuar Misión</a>
+                    </div>
+                    <style>
+                        @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-15px)} }
+                    </style>
+                `;
+            }
+            
+            document.getElementById('check-bar').style.display = 'none';
+            document.getElementById('feedback-drawer').style.display = 'none';
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    function showXpPopup(text) {
+        const popup = document.createElement('div');
+        popup.className = 'xp-popup';
+        popup.textContent = text;
+        document.body.appendChild(popup);
+        setTimeout(() => popup.remove(), 1200);
+    }
+
+    function exitLesson() {
+        window.location.href = '/dashboard';
+    }
+
+    renderQuestion();
+</script>
+{% endblock %}

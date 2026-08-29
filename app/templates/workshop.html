@@ -1,0 +1,370 @@
+{% extends "base.html" %}
+{% block title %}Taller de Redacción - Buhotech Labs{% endblock %}
+
+{% block content %}
+<style>
+    body {
+        /* Override base layout to support full screen split */
+        background: linear-gradient(135deg, var(--slate-950) 0%, #1a1145 50%, var(--slate-900) 100%);
+        margin: 0;
+        height: 100vh;
+        overflow: hidden;
+    }
+    .app-container {
+        max-width: 100% !important;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        padding: 0;
+    }
+    .workshop-header {
+        padding: 1rem 1.5rem;
+        background: rgba(0, 0, 0, 0.4);
+        border-bottom: 1px solid var(--glass-border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .split-container {
+        display: flex;
+        flex: 1;
+        overflow: hidden;
+    }
+    /* Left Panel: Editor */
+    .editor-panel {
+        flex: 1;
+        padding: 2rem;
+        display: flex;
+        flex-direction: column;
+        border-right: 1px solid var(--glass-border);
+        background: rgba(255,255,255,0.02);
+    }
+    .editor-instructions {
+        margin-bottom: 1rem;
+        color: var(--slate-300);
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+    .workshop-textarea {
+        flex: 1;
+        width: 100%;
+        background: rgba(0,0,0,0.3);
+        border: 2px solid var(--slate-600);
+        border-radius: var(--radius-lg);
+        color: white;
+        padding: 1.5rem;
+        font-family: inherit;
+        font-size: 1.1rem;
+        line-height: 1.6;
+        resize: none;
+        outline: none;
+        transition: border-color 0.3s;
+    }
+    .workshop-textarea:focus {
+        border-color: var(--brand-500);
+        box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
+    }
+    .editor-actions {
+        margin-top: 1rem;
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+    
+    .chat-panel {
+        width: 400px;
+        display: flex;
+        flex-direction: column;
+        background: rgba(0,0,0,0.2);
+    }
+    
+    /* Topic Tabs */
+    .topic-tabs {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+        overflow-x: auto;
+        padding-bottom: 0.5rem;
+    }
+    .topic-tab {
+        padding: 0.5rem 1rem;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--glass-border);
+        border-radius: var(--radius-md);
+        color: var(--slate-300);
+        cursor: pointer;
+        white-space: nowrap;
+        transition: all 0.2s;
+        font-size: 0.9rem;
+    }
+    .topic-tab:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+    }
+    .topic-tab.active {
+        background: var(--brand-500);
+        border-color: var(--brand-400);
+        color: white;
+        font-weight: 600;
+        box-shadow: 0 0 10px rgba(99, 102, 241, 0.3);
+    }
+    /* Scrollbar for tabs */
+    .topic-tabs::-webkit-scrollbar {
+        height: 6px;
+    }
+    .topic-tabs::-webkit-scrollbar-thumb {
+        background: var(--slate-600);
+        border-radius: 3px;
+    }
+
+    @media (max-width: 768px) {
+        .split-container {
+            flex-direction: column;
+        }
+        .chat-panel {
+            width: 100%;
+            height: 50%;
+            border-top: 1px solid var(--glass-border);
+        }
+    }
+</style>
+
+<div class="workshop-header">
+    <div style="display:flex; align-items:center; gap:1rem;">
+        <a href="/dashboard" style="color:var(--slate-400); text-decoration:none; font-size:1.5rem;">✕</a>
+        <h2 style="color:white; margin:0; font-size:1.2rem;">Fase {{ phase_number }}: Taller de Redacción</h2>
+    </div>
+    <div class="lesson-hearts" style="display:flex; align-items:center; gap:0.5rem; color:var(--accent-400); font-weight:bold;">
+        <span id="heart-icon">❤️</span>
+        <span id="lesson-hearts">{{ user.hearts }}</span>
+    </div>
+</div>
+
+<div class="split-container">
+    <!-- Left: Editor -->
+    <div class="editor-panel">
+        <div class="topic-tabs" id="topic-tabs">
+            <div class="topic-tab active" onclick="selectTopic('planteamiento')">Planteamiento del Problema</div>
+            <div class="topic-tab" onclick="selectTopic('objetivos')">Objetivos e Hipótesis</div>
+            <div class="topic-tab" onclick="selectTopic('variables')">Variables</div>
+            <div class="topic-tab" onclick="selectTopic('metodologia')">Metodología</div>
+        </div>
+
+        <h3 id="current-topic-title" style="color:white; margin-bottom:0.5rem;">Planteamiento del Problema</h3>
+        <div id="current-topic-instructions" class="editor-instructions">
+            Redacta aquí tu planteamiento utilizando el método del embudo (Macro, Meso, Micro). 
+            Usa el botón "Pedir revisión al Búho" para recibir andamiaje.
+        </div>
+        <textarea id="workshop-draft" class="workshop-textarea" placeholder="Escribe tu planteamiento del problema aquí..."></textarea>
+        
+        <div class="editor-actions">
+            <button class="btn btn-secondary" onclick="askBuhoForReview()" id="review-btn">
+                🦉 Pedir revisión al Búho
+            </button>
+            <button class="btn btn-primary" onclick="completeWorkshop()" id="complete-btn">
+                Finalizar Taller ✅
+            </button>
+        </div>
+    </div>
+    
+    <!-- Right: Chat Socrático -->
+    <div class="chat-panel">
+        <div class="chat-messages" id="chat-messages" style="flex:1; padding:1.5rem; overflow-y:auto; display:flex; flex-direction:column; gap:1rem;">
+            <div class="chat-bubble assistant">
+                ¡Hola! Soy el Búho. Escribe tu avance en el panel izquierdo y presiona "Pedir revisión" cuando quieras que lo lea. Te ayudaré a mejorarlo con preguntas, sin darte la respuesta directa.
+            </div>
+        </div>
+        <div class="chat-input-area" style="padding:1rem; border-top:1px solid var(--glass-border); display:flex; gap:0.5rem;">
+            <input type="text" id="chat-input" class="chat-input" placeholder="Respóndele al búho aquí..." onkeypress="if(event.key==='Enter') sendMessageToBuho()">
+            <button class="chat-send-btn" onclick="sendMessageToBuho()">➤</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let sessionId = null;
+    const messagesContainer = document.getElementById('chat-messages');
+    
+    const topicsData = {
+        'planteamiento': {
+            title: 'Planteamiento del Problema',
+            instructions: 'Redacta aquí tu planteamiento utilizando el método del embudo (Macro, Meso, Micro). Usa el botón "Pedir revisión al Búho" para recibir andamiaje.',
+            placeholder: 'Escribe tu planteamiento del problema aquí...',
+            context: 'El estudiante está en un taller de redacción del planteamiento del problema.',
+            systemPrompt: 'Revisa el siguiente texto del estudiante sobre el planteamiento del problema de su tesis. Usa andamiaje socrático. Haz preguntas para que note si le falta delimitar, si relacionó variables o si le falta el nivel macro/meso/micro. No le des el texto corregido. Texto del alumno: {draft}'
+        },
+        'objetivos': {
+            title: 'Objetivos e Hipótesis',
+            instructions: 'Redacta tu objetivo general, objetivos específicos y tu hipótesis de investigación (si aplica). Asegúrate de que estén alineados con tu problema.',
+            placeholder: 'Escribe tus objetivos e hipótesis aquí...',
+            context: 'El estudiante está en un taller de redacción de objetivos e hipótesis.',
+            systemPrompt: 'Revisa el siguiente texto del estudiante sobre sus objetivos e hipótesis. Usa andamiaje socrático. Haz preguntas para que note si los verbos son medibles, si hay alineación entre el objetivo general y los específicos, y si la hipótesis responde al problema. No le des el texto corregido. Texto del alumno: {draft}'
+        },
+        'variables': {
+            title: 'Variables y Operacionalización',
+            instructions: 'Define tus variables (independiente y dependiente) y propone sus dimensiones e indicadores preliminares.',
+            placeholder: 'Escribe tus variables y dimensiones aquí...',
+            context: 'El estudiante está en un taller de operacionalización de variables.',
+            systemPrompt: 'Revisa el siguiente texto del estudiante sobre sus variables. Usa andamiaje socrático. Haz preguntas para que note si sus dimensiones realmente miden la variable y si los indicadores son observables/medibles. No le des el texto corregido. Texto del alumno: {draft}'
+        },
+        'metodologia': {
+            title: 'Diseño Metodológico',
+            instructions: 'Describe el enfoque (cuantitativo/cualitativo), alcance (exploratorio, descriptivo, correlacional, explicativo) y diseño (experimental/no experimental) de tu investigación.',
+            placeholder: 'Escribe tu diseño metodológico aquí...',
+            context: 'El estudiante está en un taller de diseño metodológico.',
+            systemPrompt: 'Revisa el siguiente texto del estudiante sobre su metodología. Usa andamiaje socrático. Haz preguntas para que note si su diseño es coherente con sus objetivos y si justificó bien su elección. No le des el texto corregido. Texto del alumno: {draft}'
+        }
+    };
+
+    let currentTopicId = 'planteamiento';
+    let topicDrafts = {
+        'planteamiento': '',
+        'objetivos': '',
+        'variables': '',
+        'metodologia': ''
+    };
+
+    // Save draft as user types
+    const draftTextarea = document.getElementById('workshop-draft');
+    draftTextarea.addEventListener('input', function(e) {
+        topicDrafts[currentTopicId] = e.target.value;
+    });
+
+    // Detectar copiar y pegar
+    draftTextarea.addEventListener('paste', function(e) {
+        // Mostrar advertencia
+        alert("¡Atención! Las preguntas con texto pegado valen 0 puntos. Debes redactar tu propia respuesta para desarrollar tu análisis.");
+        
+        // Registrar en backend de forma asíncrona
+        fetch('/api/record_paste', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({})
+        }).catch(err => console.error("Error logging paste", err));
+    });
+
+    function selectTopic(topicId) {
+        // Save current draft
+        topicDrafts[currentTopicId] = document.getElementById('workshop-draft').value;
+        
+        // Update tabs UI
+        document.querySelectorAll('.topic-tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        document.querySelector(`.topic-tab[onclick="selectTopic('${topicId}')"]`).classList.add('active');
+        
+        currentTopicId = topicId;
+        const data = topicsData[topicId];
+        
+        // Update editor UI
+        document.getElementById('current-topic-title').innerText = data.title;
+        document.getElementById('current-topic-instructions').innerText = data.instructions;
+        document.getElementById('workshop-draft').placeholder = data.placeholder;
+        
+        // Load draft for new topic
+        document.getElementById('workshop-draft').value = topicDrafts[topicId] || '';
+    }
+
+    function scrollToBottom() {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    function addBubble(role, text) {
+        const bubble = document.createElement('div');
+        bubble.className = `chat-bubble ${role}`;
+        bubble.textContent = text;
+        messagesContainer.appendChild(bubble);
+        scrollToBottom();
+    }
+
+    function showTyping() {
+        const typing = document.createElement('div');
+        typing.className = 'chat-bubble assistant';
+        typing.id = 'typing-indicator';
+        typing.innerHTML = '<div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>';
+        messagesContainer.appendChild(typing);
+        scrollToBottom();
+    }
+
+    function hideTyping() {
+        const el = document.getElementById('typing-indicator');
+        if (el) el.remove();
+    }
+
+    async function sendRequestToBuho(promptText, topicContext) {
+        showTyping();
+        try {
+            // Reusing the socratic chat API
+            const res = await fetch('/socratic/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    message: promptText, 
+                    session_id: sessionId,
+                    context: topicContext || "El estudiante está en un taller de redacción." 
+                })
+            });
+            const data = await res.json();
+            hideTyping();
+            
+            if (data.reply) {
+                addBubble('assistant', data.reply);
+                sessionId = data.session_id;
+                playSound('select');
+            } else {
+                addBubble('assistant', 'Hubo un error de conexión.');
+            }
+        } catch (err) {
+            hideTyping();
+            addBubble('assistant', 'Error de conexión.');
+        }
+    }
+
+    function askBuhoForReview() {
+        const draft = document.getElementById('workshop-draft').value.trim();
+        if (!draft) {
+            alert("Escribe algo en el panel izquierdo primero.");
+            return;
+        }
+        addBubble('user', "Por favor revisa mi avance en " + topicsData[currentTopicId].title + ":\n" + draft);
+        
+        const systemPrompt = topicsData[currentTopicId].systemPrompt.replace('{draft}', draft);
+        sendRequestToBuho(systemPrompt, topicsData[currentTopicId].context);
+    }
+    
+    function sendMessageToBuho() {
+        const input = document.getElementById('chat-input');
+        const message = input.value.trim();
+        if (!message) return;
+        
+        input.value = '';
+        addBubble('user', message);
+        sendRequestToBuho(message, topicsData[currentTopicId].context);
+    }
+
+    async function completeWorkshop() {
+        const draft = document.getElementById('workshop-draft').value.trim();
+        if (draft.length < 50) {
+            alert("Tu redacción es muy corta. ¡Esfuérzate un poco más!");
+            return;
+        }
+        
+        document.getElementById('complete-btn').disabled = true;
+        document.getElementById('complete-btn').innerText = "Guardando...";
+        
+        try {
+            await fetch('/lessons/api/complete-module', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ module_number: {{ phase_number }} })
+            });
+            alert("¡Taller completado con éxito! Has guardado tu progreso.");
+            window.location.href = '/dashboard';
+        } catch (e) {
+            alert("Error al guardar.");
+            document.getElementById('complete-btn').disabled = false;
+            document.getElementById('complete-btn').innerText = "Finalizar Taller ✅";
+        }
+    }
+</script>
+{% endblock %}

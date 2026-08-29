@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}Búho Metodólogo - Buhotech Labs{% endblock %}
+
+{% block content %}
+<div class="chat-container">
+    <!-- Chat Header -->
+    <div class="chat-header">
+        <a href="/dashboard" style="color:var(--slate-400); text-decoration:none; font-size:1.3rem; padding:0.25rem;">←</a>
+        <div class="chat-avatar">🦉</div>
+        <div>
+            <div style="font-family:var(--font-display); font-weight:800; color:white; font-size:1rem;">Búho Metodólogo</div>
+            <div style="font-size:0.7rem; color:var(--success-400); font-weight:600;">● En línea</div>
+        </div>
+    </div>
+
+    <!-- Messages -->
+    <div class="chat-messages" id="chat-messages">
+        {% if messages %}
+            {% for msg in messages %}
+            <div class="chat-bubble {{ msg.role }}">{{ msg.content }}</div>
+            {% endfor %}
+        {% else %}
+        <div class="chat-bubble assistant">
+            ¡Hola, detective! 🕵️‍♂️ Soy el Búho Metodólogo, tu tutor de Metodología de la Investigación. 
+            Puedes preguntarme sobre planteamiento de problemas, hipótesis, variables, diseños de investigación, 
+            marcos teóricos, o cualquier duda metodológica. ¿En qué tema te gustaría profundizar hoy?
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Input Area -->
+    <div class="chat-input-area">
+        <input 
+            type="text" 
+            class="chat-input" 
+            id="chat-input" 
+            placeholder="Escribe tu consulta metodológica..."
+            onkeypress="if(event.key==='Enter') sendMessage()"
+        >
+        <button class="chat-send-btn" onclick="sendMessage()" id="send-btn" title="Enviar">
+            ➤
+        </button>
+    </div>
+</div>
+
+<script>
+    let sessionId = {{ session_id | tojson if session_id else 'null' }};
+    const messagesContainer = document.getElementById('chat-messages');
+
+    // Scroll to bottom
+    function scrollToBottom() {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+    scrollToBottom();
+
+    // Add bubble
+    function addBubble(role, text) {
+        const bubble = document.createElement('div');
+        bubble.className = `chat-bubble ${role}`;
+        bubble.textContent = text;
+        messagesContainer.appendChild(bubble);
+        scrollToBottom();
+    }
+
+    // Show typing indicator
+    function showTyping() {
+        const typing = document.createElement('div');
+        typing.className = 'chat-bubble assistant';
+        typing.id = 'typing-indicator';
+        typing.innerHTML = '<div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>';
+        messagesContainer.appendChild(typing);
+        scrollToBottom();
+    }
+
+    function hideTyping() {
+        const el = document.getElementById('typing-indicator');
+        if (el) el.remove();
+    }
+
+    // Send message
+    async function sendMessage() {
+        const input = document.getElementById('chat-input');
+        const message = input.value.trim();
+        if (!message) return;
+
+        input.value = '';
+        input.disabled = true;
+        document.getElementById('send-btn').disabled = true;
+
+        // Add user bubble
+        addBubble('user', message);
+        showTyping();
+
+        try {
+            const res = await fetch('/socratic/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message, session_id: sessionId })
+            });
+            const data = await res.json();
+            hideTyping();
+
+            if (data.reply) {
+                addBubble('assistant', data.reply);
+                sessionId = data.session_id;
+                playSound('select');
+            } else {
+                addBubble('assistant', 'Lo siento, hubo un error. Intenta de nuevo. 🦉');
+            }
+        } catch (err) {
+            hideTyping();
+            addBubble('assistant', 'Error de conexión. Verifica tu internet. 🌐');
+        } finally {
+            input.disabled = false;
+            document.getElementById('send-btn').disabled = false;
+            input.focus();
+        }
+    }
+</script>
+{% endblock %}

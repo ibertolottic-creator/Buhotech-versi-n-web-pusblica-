@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}Mis Calificaciones - Buhotech Labs{% endblock %}
+
+{% block content %}
+<div style="padding:1.5rem; padding-bottom:6rem;">
+    <!-- Header -->
+    <div style="display:flex; align-items:center; gap:1rem; margin-bottom:2rem;">
+        <a href="/dashboard" style="color:var(--slate-400); text-decoration:none; font-size:1.3rem;">←</a>
+        <h1 style="font-size:1.4rem; color:white;">📊 Mis Calificaciones</h1>
+    </div>
+
+    <!-- Nota Final -->
+    <div class="glass-card text-center" style="margin-bottom:1.5rem;">
+        <div style="font-size:0.75rem; font-weight:700; color:var(--slate-400); text-transform:uppercase; letter-spacing:0.15em; margin-bottom:0.5rem;">Nota Final</div>
+        <div style="font-family:var(--font-display); font-weight:900; font-size:3.5rem; 
+            background:linear-gradient(135deg, var(--brand-400), var(--success-400)); 
+            -webkit-background-clip:text; -webkit-text-fill-color:transparent;">
+            {{ "%.1f"|format(grades.final_grade_20) }}
+        </div>
+        <div style="font-size:0.85rem; color:var(--slate-400); font-weight:600;">de 20 puntos</div>
+    </div>
+
+    <!-- Notas por Dimensión -->
+    <div class="grades-grid">
+        <div class="grade-card">
+            <div class="grade-value text-brand">{{ "%.1f"|format(grades.saber_grade) }}</div>
+            <div class="grade-label">Saber</div>
+        </div>
+        <div class="grade-card">
+            <div class="grade-value text-gold">{{ "%.1f"|format(grades.saber_hacer_grade) }}</div>
+            <div class="grade-label">Saber Hacer</div>
+        </div>
+        <div class="grade-card">
+            <div class="grade-value text-success">{{ "%.1f"|format(grades.saber_ser_grade) }}</div>
+            <div class="grade-label">Saber Ser</div>
+        </div>
+    </div>
+
+    <!-- Detalle por Niveles -->
+    <h3 style="font-size:1rem; color:var(--slate-300); margin-bottom:1rem; margin-top:2rem;">📚 Detalle por Nivel</h3>
+
+    <!-- Saber -->
+    <div class="glass-card" style="margin-bottom:0.75rem;">
+        <div style="font-weight:800; color:var(--brand-400); font-size:0.8rem; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.75rem;">Dimensión Cognitiva (Saber)</div>
+        <div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:0.3rem;">
+            <span style="color:var(--slate-400);">N1 - Recordar</span>
+            <span style="font-weight:800;">{{ "%.1f"|format(grades.saber_n1) }}</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:0.3rem;">
+            <span style="color:var(--slate-400);">N2 - Comprender</span>
+            <span style="font-weight:800;">{{ "%.1f"|format(grades.saber_n2) }}</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:0.85rem;">
+            <span style="color:var(--slate-400);">N3 - Analizar/Evaluar</span>
+            <span style="font-weight:800;">{{ "%.1f"|format(grades.saber_n3) }}</span>
+        </div>
+    </div>
+
+    <!-- Saber Hacer -->
+    <div class="glass-card" style="margin-bottom:0.75rem;">
+        <div style="font-weight:800; color:var(--gold-400); font-size:0.8rem; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.75rem;">Dimensión Procedimental (Saber Hacer)</div>
+        <div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:0.3rem;">
+            <span style="color:var(--slate-400);">N1 - Aplicar</span>
+            <span style="font-weight:800;">{{ "%.1f"|format(grades.saber_hacer_n1) }}</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:0.3rem;">
+            <span style="color:var(--slate-400);">N2 - Diagnosticar</span>
+            <span style="font-weight:800;">{{ "%.1f"|format(grades.saber_hacer_n2) }}</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:0.85rem;">
+            <span style="color:var(--slate-400);">N3 - Diseñar</span>
+            <span style="font-weight:800;">{{ "%.1f"|format(grades.saber_hacer_n3) }}</span>
+        </div>
+    </div>
+
+    <!-- Saber Ser -->
+    <div class="glass-card" style="margin-bottom:0.75rem;">
+        <div style="font-weight:800; color:var(--success-400); font-size:0.8rem; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.75rem;">Dimensión Actitudinal (Saber Ser)</div>
+        <div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:0.3rem;">
+            <span style="color:var(--slate-400);">N1 - Receptar</span>
+            <span style="font-weight:800;">{{ "%.1f"|format(grades.saber_ser_n1) }}</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:0.3rem;">
+            <span style="color:var(--slate-400);">N2 - Colaborar</span>
+            <span style="font-weight:800;">{{ "%.1f"|format(grades.saber_ser_n2) }}</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:0.85rem;">
+            <span style="color:var(--slate-400);">N3 - Autorregular</span>
+            <span style="font-weight:800;">{{ "%.1f"|format(grades.saber_ser_n3) }}</span>
+        </div>
+    </div>
+
+    <!-- Métricas -->
+    <h3 style="font-size:1rem; color:var(--slate-300); margin-bottom:1rem; margin-top:2rem;">📈 Métricas de Desempeño</h3>
+    <div class="glass-card">
+        <div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:0.5rem;">
+            <span style="color:var(--slate-400);">Preguntas respondidas</span>
+            <span style="font-weight:800;">{{ grades.total_questions_answered }}</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:0.5rem;">
+            <span style="color:var(--slate-400);">Respuestas correctas</span>
+            <span style="font-weight:800; color:var(--success-400);">{{ grades.total_correct }}</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:0.5rem;">
+            <span style="color:var(--slate-400);">Tiempo promedio</span>
+            <span style="font-weight:800;">{{ "%.0f"|format(grades.avg_response_time_ms) }} ms</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:0.85rem;">
+            <span style="color:var(--slate-400);">Respuestas al azar ⚠️</span>
+            <span style="font-weight:800; color:var(--accent-400);">{{ grades.fast_random_count }}</span>
+        </div>
+    </div>
+</div>
+
+<!-- Bottom Nav -->
+<div class="nav-bar">
+    <a href="/dashboard" class="nav-item"><span class="nav-icon">🏠</span><span>Inicio</span></a>
+    <a href="/socratic/chat" class="nav-item"><span class="nav-icon">🦉</span><span>Búho IA</span></a>
+    <a href="/grades" class="nav-item active"><span class="nav-icon">📊</span><span>Notas</span></a>
+</div>
+{% endblock %}

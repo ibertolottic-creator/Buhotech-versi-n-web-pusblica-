@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Buhotech Labs - Plataforma de aprendizaje adaptativo de Metodología de la Investigación asistida por IA">
+    <title>{% block title %}Buhotech Labs{% endblock %} 🦉</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <div class="app-container">
+        {% block content %}{% endblock %}
+    </div>
+
+    <script src="/static/js/sounds.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,32 @@
+Para tu tesis cuantitativa y cuasiexperimental, la Variable Independiente (VI): Aprendizaje adaptativo asistido por Inteligencia Artificial requiere una estructuración metodológica impecable.
+A continuación, te explico detalladamente cómo debes definirla operacionalmente y cuáles son sus dimensiones, fundamentándolas con la literatura científica y metodológica de tus fuentes (como Hernández-Sampieri, Rodríguez Aroca, Ennouamani y Mahani, y Sandoval Peña).
+1. Definición Operacional de la Variable Independiente
+De acuerdo con Hernández-Sampieri y Mendoza (2018), la definición operacional de una variable consiste en el conjunto de procedimientos, técnicas y actividades concretas que se deben realizar para medir o, en el caso de un diseño cuasiexperimental, manipular y aplicar una variable en la realidad 1.
+Al tratarse de tu variable independiente (el tratamiento o "estímulo" que tú aplicas como docente), su definición operacional no puede ser un cuestionario, sino el programa de intervención y el mecanismo de control de dicha intervención:
+Definición Operacional (Propuesta para tu Tesis):La variable "Aprendizaje adaptativo asistido por Inteligencia Artificial" se operacionaliza a través de la aplicación de un programa didáctico estructurado de sesiones prácticas de Metodología de la Investigación. En este programa, el estudiante interactúa de forma independiente con un chatbot socrático y una plataforma adaptativa para formular secuencialmente los componentes de su proyecto de tesis (planteamiento, hipótesis, variables y metodología). La correcta ejecución, consistencia y nivel de cumplimiento de las dimensiones del estímulo en cada sesión se registrarán de manera dicotómica mediante la aplicación de una Lista de Cotejo de Verificación Pedagógica completada por el docente-investigador.
+2. Dimensiones de la Variable Independiente
+Para descomposiciones de variables complejas de tecnología educativa, la literatura de tus fuentes (como Ennouamani y Mahani, 2017; Rodríguez Aroca, 2024) divide el aprendizaje adaptativo en componentes técnicos y pedagógicos específicos 2, 3.
+Te recomiendo estructurar la variable en las siguientes tres dimensiones, las cuales tienen un sólido respaldo en las investigaciones actuales sobre IA educativa:
+Dimensión 1: Retroalimentación automatizada (Feedback oportuno)
+Definición conceptual: Capacidad del sistema inteligente para diagnosticar el estado cognitivo inmediato del alumno ante un error en la formulación de sus tareas metodológicas y proporcionarle aclaraciones, comentarios formativos o andamiajes personalizados en tiempo real 4, 5.
+Indicadores empíricos:
+Sincronicidad: Inmediatez en la entrega de la retroalimentación ante una consulta o entrega 6.
+Formatividad del error: Capacidad del chatbot para explicar por qué el planteamiento de una variable es incorrecto en lugar de solo tacharlo de erróneo.
+Soporte de andamiaje: Provisión automatizada de ejemplos metodológicos alternativos y plantillas guía cuando el estudiante muestra confusión 4.
+Dimensión 2: Nivel de dificultad adaptativo (Micro-adaptabilidad)
+Definición conceptual: Capacidad del entorno virtual para ajustar dinámicamente el ritmo, el orden de los módulos y la complejidad de las actividades prácticas de investigación, adaptándose continuamente al nivel de conocimiento demostrado y velocidad de progreso de cada alumno 2, 7.
+Indicadores empíricos:
+Personalización de rutas: Asignación automática de lecturas metodológicas básicas o avanzadas según el rendimiento previo del alumno 5.
+Complejidad escalonada: Incremento progresivo de la dificultad de los ejercicios de opción múltiple de la plataforma según los aciertos logrados 8.
+Ritmo flexible: Autonomía del estudiante para avanzar al siguiente módulo solo cuando el sistema valide el logro de la competencia anterior 9.
+Dimensión 3: Interacción tutorial socrática (Agencia Conversacional)
+Definición conceptual: Diseño interactivo de la IA enfocado en el rol de tutor-guía. El chatbot está programado para evitar "atajos cognitivos" (no redactar la tesis por el alumno) 7, utilizando en su lugar el diálogo estructurado y preguntas abiertas que inviten al cuestionamiento y desarrollo del pensamiento crítico 10, 11.
+Indicadores empíricos:
+Rol interrogativo: Frecuencia con la que el bot responde con una repregunta orientadora en lugar de dar la respuesta correcta directa.
+Sentido lógico y coherencia: Capacidad del chatbot para recordar las interacciones pasadas y sostener un hilo conversacional enfocado en el proyecto de tesis del alumno 12.
+Fomento de la autorregulación: Estímulo de la autoevaluación del alumno, exigiéndole justificar por qué seleccionó determinado diseño o población 13.
+¿Cómo se defiende esto ante el jurado de la USMP?
+Al estructurarla de esta manera, le demuestras al jurado que:
+Hay coherencia cuasiexperimental: No estás midiendo la IA con un examen (eso sería medir conocimientos sobre IA); estás controlando la aplicación didáctica de la IA a través de dimensiones tangibles (feedback, adaptabilidad e interacción socrática) usando la lista de cotejo 14.
+No hay plagio ni facilismo: Al incluir la dimensión de "Interacción tutorial socrática", dejas en claro que la IA se usa como un catalizador pedagógico (para guiar el pensamiento crítico) y no como un generador automático que haga la tarea por el alumno (atajo cognitivo) 7.
+¿Te parece adecuado este planteamiento para consolidarlo en tu Matriz de Operacionalización de Variables definitiva?

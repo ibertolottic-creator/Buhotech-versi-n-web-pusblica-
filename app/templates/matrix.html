@@ -1,0 +1,311 @@
+{% extends "base.html" %}
+{% block title %}Matriz de Consistencia - Buhotech Labs{% endblock %}
+
+{% block content %}
+<style>
+    body {
+        background: linear-gradient(135deg, var(--slate-950) 0%, #1a1145 50%, var(--slate-900) 100%);
+        margin: 0;
+        height: 100vh;
+        overflow: hidden;
+    }
+    .app-container {
+        max-width: 100% !important;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        padding: 0;
+    }
+    .workshop-header {
+        padding: 1rem 1.5rem;
+        background: rgba(0, 0, 0, 0.4);
+        border-bottom: 1px solid var(--glass-border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .split-container {
+        display: flex;
+        flex: 1;
+        overflow: hidden;
+    }
+    /* Left Panel: Editor */
+    .editor-panel {
+        flex: 1;
+        padding: 2rem;
+        display: flex;
+        flex-direction: column;
+        border-right: 1px solid var(--glass-border);
+        background: rgba(255,255,255,0.02);
+        overflow-y: auto;
+    }
+    .editor-instructions {
+        margin-bottom: 1rem;
+        color: var(--slate-300);
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+    .matrix-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+        background: rgba(0,0,0,0.3);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+    }
+    .matrix-table th, .matrix-table td {
+        padding: 1rem;
+        border: 1px solid var(--glass-border);
+        text-align: left;
+    }
+    .matrix-table th {
+        background: rgba(255,255,255,0.05);
+        color: var(--brand-300);
+        font-weight: 600;
+        width: 20%;
+    }
+    .matrix-table td {
+        color: white;
+    }
+    .matrix-select {
+        width: 100%;
+        background: rgba(255,255,255,0.1);
+        border: 1px solid var(--glass-border);
+        color: white;
+        padding: 0.5rem;
+        border-radius: var(--radius-sm);
+        outline: none;
+    }
+    .matrix-select option {
+        background: var(--slate-900);
+        color: white;
+    }
+    
+    .editor-actions {
+        margin-top: 2rem;
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+    
+    /* Right Panel: Chat */
+    .chat-panel {
+        width: 400px;
+        display: flex;
+        flex-direction: column;
+        background: rgba(0,0,0,0.2);
+    }
+    
+    @media (max-width: 768px) {
+        .split-container {
+            flex-direction: column;
+        }
+        .chat-panel {
+            width: 100%;
+            height: 50%;
+            border-top: 1px solid var(--glass-border);
+        }
+    }
+</style>
+
+<div class="workshop-header">
+    <div style="display:flex; align-items:center; gap:1rem;">
+        <a href="/dashboard" style="color:var(--slate-400); text-decoration:none; font-size:1.5rem;">✕</a>
+        <h2 style="color:white; margin:0; font-size:1.2rem;">Fase {{ phase_number }}: Matriz de Consistencia</h2>
+    </div>
+    <div class="lesson-hearts" style="display:flex; align-items:center; gap:0.5rem; color:var(--accent-400); font-weight:bold;">
+        <span id="heart-icon">❤️</span>
+        <span id="lesson-hearts">{{ user.hearts }}</span>
+    </div>
+</div>
+
+<div class="split-container">
+    <!-- Left: Editor -->
+    <div class="editor-panel">
+        <h3 style="color:white; margin-bottom:0.5rem;">Matriz Interactiva</h3>
+        <div class="editor-instructions">
+            El Problema General ya ha sido definido. Selecciona en las listas desplegables el Objetivo, la Hipótesis y las Variables que mantienen una coherencia lógica perfecta.
+        </div>
+        
+        <table class="matrix-table">
+            <tr>
+                <th>Problema General</th>
+                <td>¿De qué manera el uso de la Inteligencia Artificial impacta en el rendimiento académico de los estudiantes universitarios?</td>
+            </tr>
+            <tr>
+                <th>Objetivo General</th>
+                <td>
+                    <select id="matrix-objetivo" class="matrix-select">
+                        <option value="" disabled selected>Selecciona una opción...</option>
+                        <option value="A">Conocer si los alumnos usan inteligencia artificial.</option>
+                        <option value="B">Determinar el impacto del uso de la Inteligencia Artificial en el rendimiento académico de los estudiantes universitarios.</option>
+                        <option value="C">Implementar un software de IA para mejorar las notas.</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <th>Hipótesis General</th>
+                <td>
+                    <select id="matrix-hipotesis" class="matrix-select">
+                        <option value="" disabled selected>Selecciona una opción...</option>
+                        <option value="A">El uso de la Inteligencia Artificial impacta significativamente en el rendimiento académico de los estudiantes universitarios.</option>
+                        <option value="B">Los alumnos que usan IA terminarán sus carreras más rápido.</option>
+                        <option value="C">La Inteligencia Artificial es el futuro de la educación.</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <th>Variable Independiente</th>
+                <td>
+                    <select id="matrix-vi" class="matrix-select">
+                        <option value="" disabled selected>Selecciona una opción...</option>
+                        <option value="A">Rendimiento académico.</option>
+                        <option value="B">Uso de la Inteligencia Artificial.</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <th>Variable Dependiente</th>
+                <td>
+                    <select id="matrix-vd" class="matrix-select">
+                        <option value="" disabled selected>Selecciona una opción...</option>
+                        <option value="A">Rendimiento académico.</option>
+                        <option value="B">Uso de la Inteligencia Artificial.</option>
+                    </select>
+                </td>
+            </tr>
+        </table>
+        
+        <div class="editor-actions">
+            <button class="btn btn-secondary" onclick="askBuhoForReview()" id="review-btn">
+                🦉 Verificar Coherencia
+            </button>
+            <button class="btn btn-primary" onclick="completeWorkshop()" id="complete-btn">
+                Finalizar Matriz ✅
+            </button>
+        </div>
+    </div>
+    
+    <!-- Right: Chat Socrático -->
+    <div class="chat-panel">
+        <div class="chat-messages" id="chat-messages" style="flex:1; padding:1.5rem; overflow-y:auto; display:flex; flex-direction:column; gap:1rem;">
+            <div class="chat-bubble assistant">
+                ¡Hola! Soy el Búho. Selecciona las opciones en la matriz y presiona "Verificar Coherencia". Revisaré si existe un hilo lógico entre tu problema, objetivo, hipótesis y variables.
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let sessionId = null;
+    const messagesContainer = document.getElementById('chat-messages');
+
+    function scrollToBottom() {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    function addBubble(role, text) {
+        const bubble = document.createElement('div');
+        bubble.className = `chat-bubble ${role}`;
+        bubble.textContent = text;
+        messagesContainer.appendChild(bubble);
+        scrollToBottom();
+    }
+
+    function showTyping() {
+        const typing = document.createElement('div');
+        typing.className = 'chat-bubble assistant';
+        typing.id = 'typing-indicator';
+        typing.innerHTML = '<div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>';
+        messagesContainer.appendChild(typing);
+        scrollToBottom();
+    }
+
+    function hideTyping() {
+        const el = document.getElementById('typing-indicator');
+        if (el) el.remove();
+    }
+
+    async function sendRequestToBuho(promptText) {
+        showTyping();
+        try {
+            // Reusing the socratic chat API
+            const res = await fetch('/socratic/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    message: promptText, 
+                    session_id: sessionId,
+                    context: "El estudiante está llenando una matriz de consistencia. Responde guiándolo socráticamente." 
+                })
+            });
+            const data = await res.json();
+            hideTyping();
+            
+            if (data.reply) {
+                addBubble('assistant', data.reply);
+                sessionId = data.session_id;
+                playSound('select');
+            } else {
+                addBubble('assistant', 'Hubo un error de conexión.');
+            }
+        } catch (err) {
+            hideTyping();
+            addBubble('assistant', 'Error de conexión.');
+        }
+    }
+
+    function askBuhoForReview() {
+        const obj = document.getElementById('matrix-objetivo').value;
+        const hip = document.getElementById('matrix-hipotesis').value;
+        const vi = document.getElementById('matrix-vi').value;
+        const vd = document.getElementById('matrix-vd').value;
+        
+        if (!obj || !hip || !vi || !vd) {
+            alert("Completa todas las opciones de la matriz primero.");
+            return;
+        }
+
+        let isCorrect = true;
+        let errors = [];
+        
+        if (obj !== 'B') { isCorrect = false; errors.push("El objetivo no es medible o no se alinea al problema."); }
+        if (hip !== 'A') { isCorrect = false; errors.push("La hipótesis no responde directamente a la pregunta."); }
+        if (vi !== 'B') { isCorrect = false; errors.push("La variable independiente es la causa (IA), no el efecto."); }
+        if (vd !== 'A') { isCorrect = false; errors.push("La variable dependiente es el efecto (Rendimiento)."); }
+
+        if (isCorrect) {
+            addBubble('user', "He seleccionado mis opciones y creo que son coherentes.");
+            addBubble('assistant', "¡Excelente trabajo! Has logrado una matriz de consistencia perfecta. Tu problema, objetivo, hipótesis y variables fluyen con total lógica horizontal. Puedes finalizar la matriz.");
+        } else {
+            addBubble('user', "He seleccionado mis opciones. ¿Tienen coherencia?");
+            const systemPrompt = `El estudiante falló en la matriz. Cometió los siguientes errores lógicos: ${errors.join(" ")}. Hazle una pregunta socrática muy breve para que se dé cuenta de su error principal. No le des las respuestas.`;
+            sendRequestToBuho(systemPrompt);
+        }
+    }
+
+    async function completeWorkshop() {
+        const obj = document.getElementById('matrix-objetivo').value;
+        const hip = document.getElementById('matrix-hipotesis').value;
+        const vi = document.getElementById('matrix-vi').value;
+        const vd = document.getElementById('matrix-vd').value;
+
+        if (obj !== 'B' || hip !== 'A' || vi !== 'B' || vd !== 'A') {
+            alert("Todavía tienes errores de coherencia. Presiona 'Verificar Coherencia' para recibir ayuda del Búho.");
+            return;
+        }
+        
+        document.getElementById('complete-btn').disabled = true;
+        document.getElementById('complete-btn').innerText = "Guardando...";
+        
+        try {
+            alert("¡Matriz completada con éxito! Pasemos al Taller de Redacción.");
+            window.location.href = '/lessons/workshop/{{ phase_number }}';
+        } catch (e) {
+            alert("Error al guardar.");
+            document.getElementById('complete-btn').disabled = false;
+            document.getElementById('complete-btn').innerText = "Finalizar Matriz ✅";
+        }
+    }
+</script>
+{% endblock %}

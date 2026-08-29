@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}Panel del Investigador - Buhotech Labs{% endblock %}
+
+{% block content %}
+<div style="padding:1.5rem; max-width:900px; margin:0 auto;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem;">
+        <div>
+            <div style="font-size:0.7rem; font-weight:700; color:var(--slate-500); text-transform:uppercase; letter-spacing:0.15em;">Panel del Investigador</div>
+            <h1 style="font-size:1.5rem; color:white;">📋 Buhotech Labs - Admin</h1>
+        </div>
+        <a href="/logout" class="btn btn-ghost" style="font-size:0.85rem;">Cerrar Sesión</a>
+    </div>
+
+    <!-- Resumen General -->
+    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem; margin-bottom:2rem;">
+        <div class="glass-card text-center">
+            <div style="font-family:var(--font-display); font-weight:900; font-size:2.5rem; color:var(--brand-400);">{{ total_students }}</div>
+            <div style="font-size:0.75rem; font-weight:700; color:var(--slate-400); text-transform:uppercase;">Estudiantes</div>
+        </div>
+        <div class="glass-card text-center">
+            <div style="font-family:var(--font-display); font-weight:900; font-size:2.5rem; color:var(--gold-400);">{{ avg_final }}</div>
+            <div style="font-size:0.75rem; font-weight:700; color:var(--slate-400); text-transform:uppercase;">Promedio (0-20)</div>
+        </div>
+        <div class="glass-card text-center">
+            <div style="font-family:var(--font-display); font-weight:900; font-size:2.5rem; color:var(--success-400);">{{ ai_stats.total_requests }}</div>
+            <div style="font-size:0.75rem; font-weight:700; color:var(--slate-400); text-transform:uppercase;">Consultas IA</div>
+        </div>
+    </div>
+
+    <!-- Acciones -->
+    <div style="display:flex; gap:1rem; margin-bottom:2rem; flex-wrap:wrap;">
+        <a href="/admin/export-csv" class="btn btn-primary">📥 Descargar CSV para SPSS</a>
+        <form method="POST" action="/admin/recalculate-grades" style="display:inline;">
+            <button type="submit" class="btn btn-ghost">🔄 Recalcular Notas</button>
+        </form>
+    </div>
+
+    <!-- Tabla de Estudiantes -->
+    <div class="glass-card" style="overflow-x:auto; padding:0;">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Estudiante</th>
+                    <th>XP</th>
+                    <th>❤️</th>
+                    <th>Módulo</th>
+                    <th>Saber</th>
+                    <th>S. Hacer</th>
+                    <th>S. Ser</th>
+                    <th>Final</th>
+                    <th>Preguntas</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in students %}
+                <tr>
+                    <td style="font-weight:700;">{{ s.username }}</td>
+                    <td>{{ s.xp }}</td>
+                    <td>{{ s.hearts }}</td>
+                    <td>{{ s.module }}</td>
+                    <td style="color:var(--brand-400); font-weight:700;">{{ "%.1f"|format(s.saber) }}</td>
+                    <td style="color:var(--gold-400); font-weight:700;">{{ "%.1f"|format(s.saber_hacer) }}</td>
+                    <td style="color:var(--success-400); font-weight:700;">{{ "%.1f"|format(s.saber_ser) }}</td>
+                    <td style="font-weight:900; font-size:1.05rem;">{{ "%.1f"|format(s.final) }}</td>
+                    <td>{{ s.total_q }}</td>
+                </tr>
+                {% endfor %}
+                {% if not students %}
+                <tr>
+                    <td colspan="9" style="text-align:center; color:var(--slate-500); padding:2rem;">Aún no hay estudiantes registrados</td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Estado del Orquestador de IA -->
+    <h3 style="font-size:1rem; color:var(--slate-300); margin:2rem 0 1rem;">🤖 Estado del Orquestador de IA</h3>
+    <div class="glass-card" style="overflow-x:auto; padding:0;">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Proveedor</th>
+                    <th>Modelo</th>
+                    <th>Peticiones</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in ai_stats.providers %}
+                <tr>
+                    <td style="font-weight:700;">{{ p.name }}</td>
+                    <td style="font-size:0.8rem; color:var(--slate-400);">{{ p.model }}</td>
+                    <td>{{ p.requests }}</td>
+                    <td>
+                        {% if p.available %}
+                        <span style="color:var(--success-400); font-weight:700;">● Activo</span>
+                        {% else %}
+                        <span style="color:var(--accent-400); font-weight:700;">● Saturado</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

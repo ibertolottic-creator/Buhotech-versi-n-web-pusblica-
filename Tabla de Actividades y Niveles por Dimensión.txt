@@ -1,0 +1,90 @@
+Matriz de Actividades Evaluativas por Dimensión y Niveles de Competencia
+Esta matriz organiza la evaluación del aprendizaje bajo el enfoque por competencias, desglosando cada dimensión en sus niveles progresivos de dominio cognitivo, procedimental y socioafectivo, junto con sus actividades e instrumentos representativos.
+1. Tabla General de Dimensiones, Niveles y Actividades
+Dimensión
+Nivel de Dominio
+Demanda del Desempeño
+Actividades Evaluativas Sugeridas
+Instrumentos y Evidencias
+SABER
+(Cognitiva / Conceptual)
+Nivel 1: Recordar
+(Conocimiento fáctico)
+Evocar datos, fechas, fórmulas, terminología técnica y definiciones de memoria.
+• Cuestionarios objetivos (opción múltiple, emparejamiento, verdadero/falso).
+• Identificación de partes en diagramas o esquemas mudos.
+• Glosarios técnicos estructurados.
+• Bancos de reactivos con clave fija.
+• Listas de cotejo de vocabulario básico.
+Nivel 2: Comprender
+(Apropiación semántica)
+Parafrasear con palabras propias, dar ejemplos inéditos, usar analogías y explicar relaciones causa-efecto.
+• Píldoras/videos explicativos breves.
+• Elaboración de mapas conceptuales y diagramas causales.
+• Ensayos explicativos o resúmenes en lenguaje no técnico.
+• Rúbricas de rigor y claridad conceptual.
+• Listas de verificación de relaciones lógicas.
+Nivel 3: Analizar y Evaluar
+(Juicio crítico)
+Deconstruir problemas complejos, contrastar modelos teóricos y juzgar la validez de argumentos o evidencias.
+• Ensayos argumentativos y de postura crítica.
+• Análisis comparativo de investigaciones o normativas.
+• Detección de falacias, sesgos metodológicos o inconsistencias.
+• Rúbricas analíticas de argumentación.
+• Matrices de análisis crítico y contraste teórico.
+SABER HACER
+(Procedimental / Desempeño)
+Nivel 1: Aplicar / Ejecutar
+(Procedimiento estandarizado)
+Seguir métodos, algoritmos, recetas o protocolos técnicos paso a paso ante situaciones controladas.
+• Demostraciones de laboratorio guiadas.
+• Ejercicios prácticos de cálculo o configuración estándar.
+• Simulación de procedimientos operativos básicos.
+• Listas de verificación (checklists) de pasos operativos.
+• Escalas de observación directa de destrezas.
+Nivel 2: Diagnosticar / Resolver
+(Transferencia a casos)
+Utilizar el conocimiento procedimental como herramienta para resolver problemas con incertidumbre o variables cambiantes.
+• Resolución de estudios de caso reales (PBL / ABP).
+• Detección, diagnóstico y corrección de fallos (troubleshooting/debugging).
+• Evaluaciones clínicas o técnicas simuladas (ECOE / OSCE).
+• Rúbricas de resolución y toma de decisiones.
+• Guías de evaluación de juicio situacional.
+• Informes técnicos de diagnóstico.
+Nivel 3: Crear / Diseñar
+(Producción e innovación)
+Integrar múltiples saberes para diseñar, prototipar o construir soluciones, artefactos o sistemas inéditos.
+• Proyectos integradores (Capstones).
+• Desarrollo de prototipos funcionales, software o modelos de negocio.
+• Diseño experimental o propuestas de intervención comunitaria.
+• Rúbricas analíticas de producto y sustentación.
+• Portafolios de evidencias de desempeño longitudinal.
+SABER SER Y CONVIVIR
+(Actitudinal / Socioafectiva)
+Nivel 1: Receptar y Responder
+(Cumplimiento y norma)
+Cumplir acuerdos, respetar normas de seguridad/convivencia y participar con disposición receptiva.
+• Foros de discusión académica moderados.
+• Cumplimiento puntual de pautas de entrega y códigos de conducta en talleres/laboratorios.
+• Registros anecdóticos de cumplimiento.
+• Listas de control de participación y puntualidad.
+Nivel 2: Valorar y Colaborar
+(Interpersonal y equipo)
+Trabajar coordinadamente, resolver discrepancias mediante el diálogo y dar retroalimentación constructiva a pares.
+• Dinámicas de trabajo colaborativo con roles rotativos.
+• Evaluación entre pares (peer-review).
+• Debates y mesas redondas con posturas asignadas.
+• Escalas de coevaluación interpares.
+• Rúbricas de trabajo en equipo y comunicación asertiva.
+Nivel 3: Autorregular y Decidir
+(Ética y autonomía)
+Actuar con ética profesional bajo presión, tomar decisiones ante dilemas morales y reflexionar sobre el propio aprendizaje.
+• Análisis y toma de postura ante dilemas éticos/legales complejos.
+• Diarios reflexivos y de metacognición.
+• Auditorías de integridad académica y manejo de datos.
+• Rúbricas de deliberación ética.
+• Portafolios reflexivos de autoevaluación.
+2. Criterios Clave para la Selección del Instrumento
+Alineación constructiva: La actividad evaluativa debe exigir exactamente el mismo nivel taxonómico que declara el resultado de aprendizaje (e.g., si el objetivo es diagnosticar, la prueba no puede ser un cuestionario de definición de conceptos).
+Evaluación auténtica: En los niveles superiores de Saber Hacer y Saber Ser, se debe priorizar la evaluación en entornos reales o simulaciones de alta fidelidad frente a pruebas de lápiz y papel.
+Triangulación de evidencias: Una competencia profesional se valida combinando evidencias de conocimiento (Saber), evidencias de proceso/producto (Saber Hacer) y evidencias actitudinales (Saber Ser).

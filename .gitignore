@@ -1,6 +1,45 @@
-node_modules/
-.env
-database.db
+# ============================================================
+# Buhotech Labs - .gitignore
+# ============================================================
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.venv/
+venv/
+env/
+*.egg-info/
 dist/
 build/
+
+# --- Node (legacy) ---
+node_modules/
+
+# --- Secrets & Environment ---
+.env
+.env.*
+*.env
+
+# --- Databases ---
+*.db
+*.sqlite3
+
+# --- IDE ---
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
 .DS_Store
+Thumbs.db
+
+# --- Docs (Word files with sensitive content) ---
+*.docx
+
+# --- Legacy code (kept for reference but not tracked) ---
+_legacy/
+
+# --- OS ---
+desktop.ini
