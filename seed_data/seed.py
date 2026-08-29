@@ -31,7 +31,6 @@ SABER_QUESTIONS = [
             {"id": "B", "text": "Copiar información de un libro para presentarla en clase."}
         ],
         "correct_answer": "A",
-        "image_filename": "Buhotech - Conocimiento Científico.png",
         "min_reading_time_ms": 2000, "expected_time_ms": 7000,
         "verification_text": "¡Correcto! Investigar es un proceso sistemático para descubrir algo nuevo o resolver dudas.",
         "rescue_text": "Recuerda que la investigación no es solo copiar, sino crear nuevo conocimiento."
@@ -45,7 +44,6 @@ SABER_QUESTIONS = [
             {"id": "B", "text": "Únicamente para cumplir un trámite y archivar el documento en la biblioteca."}
         ],
         "correct_answer": "A",
-        "image_filename": "Buhotech - Conocimiento Científico.png",
         "min_reading_time_ms": 2000, "expected_time_ms": 7000,
         "verification_text": "¡Exacto! Una tesis demuestra tu capacidad para aplicar la ciencia a problemas reales.",
         "rescue_text": "Una tesis es tu aporte profesional a la sociedad, no solo un trámite."
@@ -53,16 +51,15 @@ SABER_QUESTIONS = [
     {
         "dimension": "saber", "level": 1, "phase": "Fase 1: Entrenamiento Conceptual", "phase_number": 1,
         "question_type": "MAIN",
-        "text": "¿Qué es el plagio académico?",
+        "text": "¿Qué propósito principal tiene la 'Justificación' en una investigación?",
         "options": [
-            {"id": "A", "text": "Tomar ideas, textos o trabajos de otros y presentarlos como si fueran propios, sin citar la fuente."},
-            {"id": "B", "text": "Escribir muy rápido usando un teclado."}
+            {"id": "A", "text": "Explicar por qué es importante hacer el estudio y a quiénes va a beneficiar."},
+            {"id": "B", "text": "Copiar las conclusiones de otros autores para que el trabajo se vea más largo."}
         ],
         "correct_answer": "A",
-        "image_filename": "Buhotech -   Plagio vs. APA.png",
         "min_reading_time_ms": 2000, "expected_time_ms": 7000,
-        "verification_text": "¡Correcto! Siempre debemos dar crédito a los autores originales.",
-        "rescue_text": "El plagio es el equivalente a robar ideas intelectuales."
+        "verification_text": "¡Excelente! La justificación convence al lector de que el trabajo vale la pena.",
+        "rescue_text": "Recuerda: justificar es dar razones válidas de por qué tu trabajo es útil o necesario."
     },
     {
         "dimension": "saber", "level": 1, "phase": "Fase 1: Entrenamiento Conceptual", "phase_number": 1,
@@ -73,7 +70,6 @@ SABER_QUESTIONS = [
             {"id": "B", "text": "Una tarea o resumen que el profesor deja para la casa."}
         ],
         "correct_answer": "A",
-        "image_filename": "Buhotech - Conocimiento Científico.png",
         "min_reading_time_ms": 2000, "expected_time_ms": 7000,
         "verification_text": "¡Correcto! Un problema de investigación es el punto de partida que requiere investigación estructurada.",
         "rescue_text": "Recuerda que la investigación científica busca resolver vacíos de conocimiento."
@@ -87,7 +83,6 @@ SABER_QUESTIONS = [
             {"id": "B", "text": "Escribir las conclusiones finales."}
         ],
         "correct_answer": "A",
-        "image_filename": "Buhotech - HEURÍSTICA.png",
         "min_reading_time_ms": 2000, "expected_time_ms": 6000,
         "verification_text": "¡Exacto! No puedes investigar sin tener claro qué problema vas a resolver.",
         "rescue_text": "Si no sabes a dónde vas, ¿cómo podrías llegar? El problema es siempre lo primero."
@@ -101,7 +96,6 @@ SABER_QUESTIONS = [
             {"id": "B", "text": "Introducción, Desarrollo, Conclusión."}
         ],
         "correct_answer": "A",
-        "image_filename": "Buhotech - FORMULACIÓN DEL PROBLEMA.png",
         "min_reading_time_ms": 2500, "expected_time_ms": 8000,
         "verification_text": "Exacto: Macro (Mundial), Meso (Nacional), Micro (Local/Institucional).",
         "rescue_text": "Piensa en el tamaño: desde lo más grande (Macro) hasta lo más pequeño (Micro)."
@@ -116,7 +110,6 @@ SABER_QUESTIONS = [
             {"id": "C", "text": "Implementar una campaña para que los jóvenes usen menos el celular."}
         ],
         "correct_answer": "B",
-        "image_filename": "Buhotech - HEURÍSTICA.png",
         "min_reading_time_ms": 4000, "expected_time_ms": 15000,
         "verification_text": "Correcto. El verbo 'Determinar' es medible y las variables están delimitadas.",
         "rescue_text": "Busca un verbo medible (Determinar, Analizar) y una delimitación clara."
@@ -131,7 +124,6 @@ SABER_QUESTIONS = [
             {"id": "3", "left": "Hipótesis", "right": "Existe una relación significativa entre X e Y."}
         ],
         "correct_answer": "MATCH",
-        "image_filename": "Buhotech - MARCO TEÓRICO.png",
         "min_reading_time_ms": 4000, "expected_time_ms": 20000,
         "verification_text": "¡Perfecto! Has comprendido la alineación lógica.",
         "rescue_text": "El problema es pregunta, el objetivo es verbo, la hipótesis es afirmación."
@@ -145,7 +137,6 @@ SABER_QUESTIONS = [
             {"id": "B", "text": "preguntas / objetivos"}
         ],
         "correct_answer": "A",
-        "image_filename": "Buhotech - Conocimiento Científico.png",
         "min_reading_time_ms": 3000, "expected_time_ms": 10000,
         "verification_text": "Correcto. Variables -> Dimensiones -> Indicadores.",
         "rescue_text": "Recuerda la jerarquía: Variable -> Dimensión -> Indicador."
@@ -159,7 +150,6 @@ SABER_QUESTIONS = [
             {"id": "B", "text": "Dimensión: Promedio vigesimal 0-20 | Indicador: Notas de matemáticas"}
         ],
         "correct_answer": "A",
-        "image_filename": "Buhotech  - JUSTIFICACIÓN.png",
         "min_reading_time_ms": 4000, "expected_time_ms": 15000,
         "verification_text": "Correcto. El indicador siempre es la métrica exacta.",
         "rescue_text": "El indicador es cómo lo mides exactamente (números, rangos)."
@@ -167,14 +157,13 @@ SABER_QUESTIONS = [
     {
         "dimension": "saber", "level": 2, "phase": "Fase 1: Entrenamiento Conceptual", "phase_number": 1,
         "question_type": "MAIN",
-        "text": "Revisa el esquema de ayuda visual. Si tu investigación busca ver el efecto de aplicar un nuevo software sin un grupo de control, ¿qué tipo de diseño cuantitativo es?",
+        "text": "Si tu investigación busca ver el efecto de aplicar un nuevo software sin un grupo de control, ¿qué tipo de diseño cuantitativo es?",
         "options": [
             {"id": "A", "text": "Pre-experimental"},
             {"id": "B", "text": "Cuasi-experimental"},
             {"id": "C", "text": "Experimental Puro"}
         ],
         "correct_answer": "A",
-        "image_filename": "infografia_disenos.png",
         "min_reading_time_ms": 3000, "expected_time_ms": 15000,
         "verification_text": "Correcto. Sin grupo de control es pre-experimental.",
         "rescue_text": "Revisa el esquema: si no hay grupo de control, es el nivel más básico (pre-experimental)."
@@ -189,7 +178,6 @@ SABER_QUESTIONS = [
             {"id": "C", "text": "Experimental Puro"}
         ],
         "correct_answer": "A",
-        "image_filename": "infografia_disenos.png",
         "min_reading_time_ms": 3000, "expected_time_ms": 15000,
         "verification_text": "Correcto. Transversal significa 'en un solo momento'.",
         "rescue_text": "Si es en un único momento, atraviesa el tiempo una sola vez (Transversal)."
@@ -203,7 +191,6 @@ SABER_QUESTIONS = [
             {"id": "B", "text": "Fenomenológico (Resolver problema) / Investigación-Acción (Experiencias)."}
         ],
         "correct_answer": "A",
-        "image_filename": "infografia_disenos.png",
         "min_reading_time_ms": 3500, "expected_time_ms": 15000,
         "verification_text": "Exacto. Fenomenológico estudia el fenómeno desde la experiencia.",
         "rescue_text": "Fenómeno = Experiencia. Acción = Resolver un problema actuando."
@@ -275,26 +262,26 @@ SABER_SER_QUESTIONS = [
     {
         "dimension": "saber_ser", "level": 3, "phase": "Fase 3: Laboratorio Ético", "phase_number": 3,
         "question_type": "HONESTY",
-        "text": "Evaluación de Honestidad Académica: ¿Intentaste utilizar la función de copiar y pegar (pegar textos externos) durante el Taller de Redacción en la Fase 2?",
+        "text": "Evaluación de Honestidad y Telemetría: Recuerda que intentar copiar y pegar textos externos o marcar opciones aleatoriamente sin leer genera penalizaciones de puntos y alertas de fraude. ¿Fuiste 100% honesto y redactaste tu trabajo por cuenta propia?",
         "options": [
             {
                 "id": "A", 
-                "text": "Sí, utilicé la función para pegar textos.",
+                "text": "Sí, me esforcé y redacté todo por mi cuenta.",
                 "is_ethical": True,
-                "feedback": ""
+                "feedback": "La honestidad intelectual es la base del éxito."
             },
             {
                 "id": "B", 
-                "text": "No, redacté todo mi trabajo por mi cuenta.",
-                "is_ethical": True,
-                "feedback": ""
+                "text": "Debo admitir que usé funciones de pegar o marqué al azar (-10 pts).",
+                "is_ethical": False,
+                "feedback": "Admitir la falta es el primer paso. El profesionalismo exige rigor y esfuerzo propio."
             }
         ],
         "correct_answer": "HONESTY",
         "image_filename": "Buhotech -   Plagio vs. APA.png",
-        "min_reading_time_ms": 3000, "expected_time_ms": 15000,
-        "verification_text": "La honestidad es el pilar de la ciencia.",
-        "rescue_text": "Siempre di la verdad, los sistemas registran la telemetría."
+        "min_reading_time_ms": 4000, "expected_time_ms": 15000,
+        "verification_text": "El sistema valora la honestidad por encima de la perfección.",
+        "rescue_text": "Ser transparente sobre el uso de atajos es fundamental para tu integridad."
     }
 ]
 
