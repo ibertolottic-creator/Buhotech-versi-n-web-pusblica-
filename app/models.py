@@ -86,7 +86,7 @@ class Question(Base):
     # Contenido
     text = Column(Text, nullable=False)
     options = Column(JSON, nullable=False)  # [{"id": "A", "text": "..."}, ...]
-    correct_answer = Column(String(5), nullable=False)
+    correct_answer = Column(String(50), nullable=False)
     image_filename = Column(String(200), nullable=True)
     
     # Métricas de comportamiento
@@ -113,7 +113,7 @@ class UserResponse(Base):
     question_id = Column(String, ForeignKey("questions.id"), nullable=False)
     
     # Resultado
-    selected_answer = Column(String(5), nullable=False)
+    selected_answer = Column(String(50), nullable=False)
     is_correct = Column(Boolean, nullable=False)
     response_time_ms = Column(Integer, nullable=False)
     failed_attempts = Column(Integer, default=0)
@@ -195,7 +195,7 @@ class DilemmaResponse(Base):
     user_id = Column(String, ForeignKey("users.id"), nullable=False, index=True)
     question_id = Column(String, ForeignKey("questions.id"), nullable=False)
     
-    choice = Column(String(5), nullable=False)          # La opción elegida
+    choice = Column(String(50), nullable=False)          # La opción elegida
     justification = Column(Text, nullable=True)         # Justificación escrita del alumno
     ai_feedback = Column(Text, nullable=True)           # Retroalimentación ética de la IA
     is_ethical = Column(Boolean, nullable=True)          # ¿Fue la decisión ética correcta?
