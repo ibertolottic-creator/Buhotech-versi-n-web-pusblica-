@@ -24,7 +24,15 @@ class Settings:
     
     # Derivamos la URL síncrona según el motor
     if DATABASE_URL.startswith("postgresql+asyncpg"):
-        DATABASE_URL_SYNC: str = DATABASE_URL.replace("+asyncpg", "")
+        # Extraer parámetros de conexión (ej. ?sslmode=require) para la síncrona
+        base_url = DATABASE_URL.split("?")[0]
+        query_params = ""
+        if "?" in DATABASE_URL:
+            query_params = "?" + DATABASE_URL.split("?")[1]
+            
+        DATABASE_URL_SYNC: str = base_url.replace("+asyncpg", "") + query_params
+        # Para asyncpg (FastAPI), limpiamos parámetros que causan conflicto como sslmode
+        DATABASE_URL = base_url
     else:
         DATABASE_URL_SYNC: str = DATABASE_URL.replace("+aiosqlite", "")
 
