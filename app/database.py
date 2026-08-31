@@ -7,7 +7,11 @@ from sqlalchemy import create_engine
 from app.config import settings
 
 # Motor asíncrono para FastAPI
-async_engine = create_async_engine(settings.DATABASE_URL, echo=False)
+engine_kwargs = {"echo": False}
+if "neon.tech" in settings.DATABASE_URL:
+    engine_kwargs["connect_args"] = {"ssl": "require"}
+
+async_engine = create_async_engine(settings.DATABASE_URL, **engine_kwargs)
 AsyncSessionLocal = async_sessionmaker(async_engine, class_=AsyncSession, expire_on_commit=False)
 
 # Motor síncrono para seed/scripts
