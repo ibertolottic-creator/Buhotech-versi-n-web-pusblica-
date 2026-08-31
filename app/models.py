@@ -113,7 +113,7 @@ class UserResponse(Base):
     question_id = Column(String, ForeignKey("questions.id"), nullable=False)
     
     # Resultado
-    selected_answer = Column(String(50), nullable=False)
+    selected_answer = Column(Text, nullable=False)
     is_correct = Column(Boolean, nullable=False)
     response_time_ms = Column(Integer, nullable=False)
     failed_attempts = Column(Integer, default=0)
