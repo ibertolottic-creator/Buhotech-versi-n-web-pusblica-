@@ -31,6 +31,7 @@ SABER_QUESTIONS = [
             {"id": "B", "text": "Copiar información de un libro para presentarla en clase."}
         ],
         "correct_answer": "A",
+        "image_filename": "Buhotech - Conocimiento Científico.png",
         "min_reading_time_ms": 2000, "expected_time_ms": 7000,
         "verification_text": "¡Correcto! Investigar es un proceso sistemático para descubrir algo nuevo o resolver dudas.",
         "rescue_text": "Recuerda que la investigación no es solo copiar, sino crear nuevo conocimiento."
@@ -44,6 +45,7 @@ SABER_QUESTIONS = [
             {"id": "B", "text": "Únicamente para cumplir un trámite y archivar el documento en la biblioteca."}
         ],
         "correct_answer": "A",
+        "image_filename": "Buhotech - Conocimiento Científico.png",
         "min_reading_time_ms": 2000, "expected_time_ms": 7000,
         "verification_text": "¡Exacto! Una tesis demuestra tu capacidad para aplicar la ciencia a problemas reales.",
         "rescue_text": "Una tesis es tu aporte profesional a la sociedad, no solo un trámite."
@@ -57,6 +59,7 @@ SABER_QUESTIONS = [
             {"id": "B", "text": "Copiar las conclusiones de otros autores para que el trabajo se vea más largo."}
         ],
         "correct_answer": "A",
+        "image_filename": "Buhotech  - JUSTIFICACIÓN.png",
         "min_reading_time_ms": 2000, "expected_time_ms": 7000,
         "verification_text": "¡Excelente! La justificación convence al lector de que el trabajo vale la pena.",
         "rescue_text": "Recuerda: justificar es dar razones válidas de por qué tu trabajo es útil o necesario."
@@ -70,6 +73,7 @@ SABER_QUESTIONS = [
             {"id": "B", "text": "Una tarea o resumen que el profesor deja para la casa."}
         ],
         "correct_answer": "A",
+        "image_filename": "Buhotech - FORMULACIÓN DEL PROBLEMA.png",
         "min_reading_time_ms": 2000, "expected_time_ms": 7000,
         "verification_text": "¡Correcto! Un problema de investigación es el punto de partida que requiere investigación estructurada.",
         "rescue_text": "Recuerda que la investigación científica busca resolver vacíos de conocimiento."
@@ -83,6 +87,7 @@ SABER_QUESTIONS = [
             {"id": "B", "text": "Escribir las conclusiones finales."}
         ],
         "correct_answer": "A",
+        "image_filename": "Buhotech - FORMULACIÓN DEL PROBLEMA.png",
         "min_reading_time_ms": 2000, "expected_time_ms": 6000,
         "verification_text": "¡Exacto! No puedes investigar sin tener claro qué problema vas a resolver.",
         "rescue_text": "Si no sabes a dónde vas, ¿cómo podrías llegar? El problema es siempre lo primero."
@@ -96,6 +101,7 @@ SABER_QUESTIONS = [
             {"id": "B", "text": "Introducción, Desarrollo, Conclusión."}
         ],
         "correct_answer": "A",
+        "image_filename": "Buhotech - Metodo del Embudo.png",
         "min_reading_time_ms": 2500, "expected_time_ms": 8000,
         "verification_text": "Exacto: Macro (Mundial), Meso (Nacional), Micro (Local/Institucional).",
         "rescue_text": "Piensa en el tamaño: desde lo más grande (Macro) hasta lo más pequeño (Micro)."
@@ -110,6 +116,7 @@ SABER_QUESTIONS = [
             {"id": "C", "text": "Implementar una campaña para que los jóvenes usen menos el celular."}
         ],
         "correct_answer": "B",
+        "image_filename": "Buhotech - OBJETIVOS.png",
         "min_reading_time_ms": 4000, "expected_time_ms": 15000,
         "verification_text": "Correcto. El verbo 'Determinar' es medible y las variables están delimitadas.",
         "rescue_text": "Busca un verbo medible (Determinar, Analizar) y una delimitación clara."
@@ -124,6 +131,7 @@ SABER_QUESTIONS = [
             {"id": "3", "left": "Hipótesis", "right": "Existe una relación significativa entre X e Y."}
         ],
         "correct_answer": "MATCH",
+        "image_filename": "Buhotech - Hipótesis.png",
         "min_reading_time_ms": 4000, "expected_time_ms": 20000,
         "verification_text": "¡Perfecto! Has comprendido la alineación lógica.",
         "rescue_text": "El problema es pregunta, el objetivo es verbo, la hipótesis es afirmación."
@@ -137,6 +145,7 @@ SABER_QUESTIONS = [
             {"id": "B", "text": "preguntas / objetivos"}
         ],
         "correct_answer": "A",
+        "image_filename": "Buhotech - VACIADO DE DATOS.png",
         "min_reading_time_ms": 3000, "expected_time_ms": 10000,
         "verification_text": "Correcto. Variables -> Dimensiones -> Indicadores.",
         "rescue_text": "Recuerda la jerarquía: Variable -> Dimensión -> Indicador."
@@ -150,6 +159,7 @@ SABER_QUESTIONS = [
             {"id": "B", "text": "Dimensión: Promedio vigesimal 0-20 | Indicador: Notas de matemáticas"}
         ],
         "correct_answer": "A",
+        "image_filename": "Buhotech -  ANÁLISIS ESTADÍSTICO.png",
         "min_reading_time_ms": 4000, "expected_time_ms": 15000,
         "verification_text": "Correcto. El indicador siempre es la métrica exacta.",
         "rescue_text": "El indicador es cómo lo mides exactamente (números, rangos)."
@@ -164,6 +174,7 @@ SABER_QUESTIONS = [
             {"id": "C", "text": "Experimental Puro"}
         ],
         "correct_answer": "A",
+        "image_filename": "Buhotech - INVESTIGACIÓN CUASIEXPERIMENTAL.png",
         "min_reading_time_ms": 3000, "expected_time_ms": 15000,
         "verification_text": "Correcto. Sin grupo de control es pre-experimental.",
         "rescue_text": "Revisa el esquema: si no hay grupo de control, es el nivel más básico (pre-experimental)."
@@ -178,6 +189,7 @@ SABER_QUESTIONS = [
             {"id": "C", "text": "Experimental Puro"}
         ],
         "correct_answer": "A",
+        "image_filename": "Buhotech - INVESTIGACIÓN TRANSVERSAL.png",
         "min_reading_time_ms": 3000, "expected_time_ms": 15000,
         "verification_text": "Correcto. Transversal significa 'en un solo momento'.",
         "rescue_text": "Si es en un único momento, atraviesa el tiempo una sola vez (Transversal)."
@@ -191,6 +203,7 @@ SABER_QUESTIONS = [
             {"id": "B", "text": "Fenomenológico (Resolver problema) / Investigación-Acción (Experiencias)."}
         ],
         "correct_answer": "A",
+        "image_filename": "Buhotech - Fenomenología.png",
         "min_reading_time_ms": 3500, "expected_time_ms": 15000,
         "verification_text": "Exacto. Fenomenológico estudia el fenómeno desde la experiencia.",
         "rescue_text": "Fenómeno = Experiencia. Acción = Resolver un problema actuando."
@@ -231,57 +244,19 @@ SABER_HACER_QUESTIONS = [
 SABER_SER_QUESTIONS = [
     {
         "dimension": "saber_ser", "level": 3, "phase": "Fase 3: Laboratorio Ético", "phase_number": 3,
-        "question_type": "SCENARIO",
+        "question_type": "DILEMMA",
         "text": "Escenario: Un grupo de estudiantes descubre cómo hacer que la IA les escriba la tesis completa sin que ellos tengan que leer, analizar, ni entender los problemas. Logran graduarse usando esta técnica. ¿Qué pasaría si todos los profesionales del país aprobaran sus carreras copiando a la IA?",
         "options": [
-            {
-                "id": "A", 
-                "text": "La sociedad avanzaría más rápido porque tendríamos más graduados en menos tiempo.",
-                "is_ethical": False,
-                "feedback": "Tener graduados que no saben pensar críticamente es un gran riesgo para el país."
-            },
-            {
-                "id": "B", 
-                "text": "Se perdería el pensamiento crítico, la capacidad de resolver problemas reales y se tomarían decisiones sin comprender la ciencia, llevando a errores graves.",
-                "is_ethical": True,
-                "feedback": "¡Exacto! El valor del ser humano radica en su capacidad de análisis crítico y ético, algo que no se puede delegar ciegamente a una máquina."
-            },
-            {
-                "id": "C", 
-                "text": "No pasaría nada; el título es solo un trámite y la IA siempre tendrá la razón.",
-                "is_ethical": False,
-                "feedback": "Las IAs alucinan y cometen errores. Depender de ellas sin juicio crítico es peligroso."
-            }
+            {"id": "A", "text": "Colapso del juicio crítico y de la capacidad resolutiva: se tendrían profesionales incapaces de abordar y solucionar problemas reales de manera autónoma y ética."},
+            {"id": "B", "text": "Aceleraría enormemente el desarrollo del país, pues la IA resolvería todo en segundos sin requerir esfuerzo mental humano."},
+            {"id": "C", "text": "No habría repercusiones negativas, ya que en el mundo laboral solo importa entregar productos y no el entendimiento."},
+            {"id": "D", "text": "Únicamente afectaría a las universidades, mientras que las empresas e industrias operarían con total normalidad."}
         ],
-        "correct_answer": "SCENARIO",
+        "correct_answer": "A",
         "image_filename": "Buhotech -   Plagio vs. APA.png",
-        "min_reading_time_ms": 6000, "expected_time_ms": 30000,
-        "verification_text": "El pensamiento crítico es irreemplazable.",
-        "rescue_text": "Reflexiona sobre qué pasa cuando nadie entiende cómo funcionan las cosas."
-    },
-    {
-        "dimension": "saber_ser", "level": 3, "phase": "Fase 3: Laboratorio Ético", "phase_number": 3,
-        "question_type": "HONESTY",
-        "text": "Evaluación de Honestidad y Telemetría: Recuerda que intentar copiar y pegar textos externos o marcar opciones aleatoriamente sin leer genera penalizaciones de puntos y alertas de fraude. ¿Fuiste 100% honesto y redactaste tu trabajo por cuenta propia?",
-        "options": [
-            {
-                "id": "A", 
-                "text": "Sí, me esforcé y redacté todo por mi cuenta.",
-                "is_ethical": True,
-                "feedback": "La honestidad intelectual es la base del éxito."
-            },
-            {
-                "id": "B", 
-                "text": "Debo admitir que usé funciones de pegar o marqué al azar (-10 pts).",
-                "is_ethical": False,
-                "feedback": "Admitir la falta es el primer paso. El profesionalismo exige rigor y esfuerzo propio."
-            }
-        ],
-        "correct_answer": "HONESTY",
-        "image_filename": "Buhotech -   Plagio vs. APA.png",
-        "min_reading_time_ms": 4000, "expected_time_ms": 15000,
-        "verification_text": "El sistema valora la honestidad por encima de la perfección.",
-        "rescue_text": "Ser transparente sobre el uso de atajos es fundamental para tu integridad."
+        "min_reading_time_ms": 4000, "expected_time_ms": 30000,
+        "verification_text": "¡Exacto! La investigación formativa no es un trámite, sino la base para desarrollar rigor, criterio y ética. La IA debe ser un asistente para potenciar el análisis, nunca un sustituto de la comprensión y el razonamiento humano.",
+        "rescue_text": "Reflexiona sobre las consecuencias de delegar todo el pensamiento a una máquina: sin comprensión no hay verdadera competencia profesional."
     }
 ]
 
@@ -317,10 +292,10 @@ def seed():
             session.add(admin)
 
         session.commit()
-        print(f"✅ {len(all_questions)} preguntas insertadas exitosamente (Unidad 3: Metodología):")
-        print(f"   📚 Saber: {len(SABER_QUESTIONS)}")
-        print(f"   🔧 Saber Hacer: {len(SABER_HACER_QUESTIONS)}")
-        print(f"   ⚖️ Saber Ser: {len(SABER_SER_QUESTIONS)}")
+        print(f"[OK] {len(all_questions)} preguntas insertadas exitosamente (Unidad 3: Metodologia):")
+        print(f"   - Saber: {len(SABER_QUESTIONS)}")
+        print(f"   - Saber Hacer: {len(SABER_HACER_QUESTIONS)}")
+        print(f"   - Saber Ser: {len(SABER_SER_QUESTIONS)}")
 
 if __name__ == "__main__":
     seed()

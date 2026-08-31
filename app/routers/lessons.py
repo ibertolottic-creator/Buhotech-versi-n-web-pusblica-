@@ -83,7 +83,7 @@ async def play_lesson(request: Request, phase_number: int, db: AsyncSession = De
     # Serializar opciones para JavaScript
     questions_data = []
     for q in questions:
-        questions_data.append({
+        q_data = {
             "id": q.id,
             "text": q.text,
             "options": q.options if isinstance(q.options, list) else [],
@@ -97,7 +97,16 @@ async def play_lesson(request: Request, phase_number: int, db: AsyncSession = De
             "dimension": q.dimension,
             "level": q.level,
             "question_type": q.question_type,
-        })
+        }
+        
+        # Corrección para preguntas tipo SCENARIO/DILEMMA donde el correct_answer es "SCENARIO" y las opciones tienen "is_ethical"
+        if q.question_type in ["SCENARIO", "DILEMMA"] and isinstance(q.options, list):
+            for opt in q.options:
+                if isinstance(opt, dict) and opt.get("is_ethical") is True:
+                    q_data["correct_answer"] = opt.get("id")
+                    break
+                    
+        questions_data.append(q_data)
 
     return templates.TemplateResponse(request=request, name="lesson.html", context={
         "request": request,
@@ -172,6 +181,15 @@ async def submit_response(request: Request, db: AsyncSession = Depends(get_db)):
             else:
                 is_correct = True
                 feedback_text = "¡Excelente! Mantuviste la integridad académica durante todo el taller."
+    elif question.question_type in ["SCENARIO", "DILEMMA"] and isinstance(question.options, list):
+        # Para dilemas/escenarios éticos, la corrección y el feedback están en la misma opción
+        selected_opt = next((opt for opt in question.options if isinstance(opt, dict) and opt.get("id") == selected_answer), None)
+        if selected_opt and "is_ethical" in selected_opt:
+            is_correct = selected_opt["is_ethical"]
+            feedback_text = selected_opt.get("feedback", question.verification_text if is_correct else question.rescue_text)
+        else:
+            is_correct = selected_answer == question.correct_answer
+            feedback_text = question.verification_text if is_correct else question.rescue_text
     else:
         is_correct = selected_answer == question.correct_answer
         feedback_text = question.verification_text if is_correct else question.rescue_text
@@ -427,6 +445,48 @@ async def get_hint(request: Request, db: AsyncSession = Depends(get_db)):
     
     return JSONResponse({"hint": ai_res.text})
 
+@router.post("/api/record-infographic-view")
+async def record_infographic_view(request: Request, db: AsyncSession = Depends(get_db)):
+    """Incrementa el contador de vistas de infografía."""
+    user = await get_current_user(request, db)
+    if not user:
+        return JSONResponse({"error": "No autenticado"}, status_code=401)
+    
+    user.infographic_views = (user.infographic_views or 0) + 1
+    await db.commit()
+    return JSONResponse({"status": "success", "views": user.infographic_views})
+
+@router.post("/api/workshop-submit")
+async def workshop_submit(request: Request, db: AsyncSession = Depends(get_db)):
+    """Guarda las respuestas del taller en la base de datos."""
+    user = await get_current_user(request, db)
+    if not user:
+        return JSONResponse({"error": "No autenticado"}, status_code=401)
+        
+    data = await request.json()
+    workshop_type = data.get("workshop_type", "Fase 2")
+    submission_data = data.get("submission_data", {})
+    
+    from app.models import WorkshopSubmission
+    
+    # Eliminar entrega previa del mismo taller si existe
+    await db.execute(
+        WorkshopSubmission.__table__.delete().where(
+            WorkshopSubmission.user_id == user.id,
+            WorkshopSubmission.workshop_type == workshop_type
+        )
+    )
+    
+    submission = WorkshopSubmission(
+        user_id=user.id,
+        workshop_type=workshop_type,
+        submission_data=submission_data,
+        grade=None  # Pendiente de IA o Docente
+    )
+    db.add(submission)
+    await db.commit()
+    return JSONResponse({"status": "success"})
+
 @router.post("/api/complete-module")
 async def complete_module(request: Request, db: AsyncSession = Depends(get_db)):
     """Desbloquea el siguiente módulo al completar el actual."""
@@ -443,6 +503,9 @@ async def complete_module(request: Request, db: AsyncSession = Depends(get_db)):
         await db.refresh(user)
 
     grades = await calculate_grades(user.id, db)
+
+    # Include pasted_count for Fase 3 attitudinal reveal
+    grades["pasted_count"] = user.pasted_text_count or 0
 
     return JSONResponse({
         "unlocked_module": user.unlocked_module,

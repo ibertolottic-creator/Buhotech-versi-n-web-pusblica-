@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+{% block title %}Reporte de Calificaciones - Buhotech Labs{% endblock %}
+
+{% block content %}
+<style>
+    body { background: var(--slate-900); color: var(--slate-200); }
+    .report-container {
+        max-width: 900px;
+        margin: 2rem auto;
+        background: white;
+        color: #333;
+        padding: 3rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    .report-header {
+        text-align: center;
+        border-bottom: 2px solid #eee;
+        padding-bottom: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    .report-header h1 { color: #1e293b; margin-bottom: 0.5rem; }
+    .report-header p { color: #64748b; font-size: 1.1rem; }
+    
+    .grades-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2.5rem;
+    }
+    .grade-box {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 1.5rem;
+        text-align: center;
+    }
+    .grade-box.final { background: #eff6ff; border-color: #bfdbfe; }
+    .grade-box.penalty { background: #fef2f2; border-color: #fecaca; }
+    
+    .grade-title { font-size: 0.85rem; text-transform: uppercase; color: #64748b; font-weight: 700; margin-bottom: 0.5rem; }
+    .grade-value { font-size: 2.5rem; font-weight: 800; color: #0f172a; }
+    
+    h3 { color: #334155; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.5rem; margin-top: 2rem; margin-bottom: 1rem; }
+    
+    .telemetry-table, .answers-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 2rem;
+        font-size: 0.95rem;
+    }
+    .telemetry-table th, .answers-table th {
+        background: #f1f5f9;
+        color: #475569;
+        padding: 12px;
+        text-align: left;
+        border: 1px solid #cbd5e1;
+    }
+    .telemetry-table td, .answers-table td {
+        padding: 12px;
+        border: 1px solid #cbd5e1;
+    }
+    .answers-table tr:nth-child(even) { background: #f8fafc; }
+    
+    .print-btn {
+        display: block;
+        width: 250px;
+        margin: 2rem auto;
+        padding: 1rem;
+        background: var(--brand-500);
+        color: white;
+        text-align: center;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: bold;
+        cursor: pointer;
+        border: none;
+        font-size: 1.1rem;
+    }
+    
+    @media print {
+        body { background: white; }
+        .report-container { box-shadow: none; padding: 0; margin: 0; max-width: 100%; }
+        .print-btn { display: none; }
+        .navbar { display: none; }
+    }
+</style>
+
+<div class="report-container">
+    <div class="report-header">
+        <h1>Boleta de Calificaciones Oficial</h1>
+        <p>Buhotech Labs - Metodología de la Investigación</p>
+        <p style="font-size: 0.95rem; margin-top:0.5rem; font-weight: bold;">Estudiante: {{ user.username }}</p>
+    </div>
+
+    <div class="grades-grid">
+        <div class="grade-box">
+            <div class="grade-title">Saber (Cognitiva)</div>
+            <div class="grade-value">{{ grades.saber_grade }}<span style="font-size:1rem;color:#94a3b8">/20</span></div>
+            <div style="font-size:0.75rem; color:#64748b; margin-top:0.5rem;">Peso: 50%</div>
+        </div>
+        <div class="grade-box">
+            <div class="grade-title">Saber Hacer (Procedimental)</div>
+            {% if grades.saber_hacer_grade == 0.0 %}
+            <div class="grade-value" style="font-size: 1.1rem; color: #ef4444; margin-top: 0.5rem; line-height: 1.2;">
+                Pendiente de calificar por el docente
+            </div>
+            {% else %}
+            <div class="grade-value">{{ grades.saber_hacer_grade }}<span style="font-size:1rem;color:#94a3b8">/20</span></div>
+            {% endif %}
+            <div style="font-size:0.75rem; color:#64748b; margin-top:0.5rem;">Peso: 50%</div>
+        </div>
+        <div class="grade-box penalty">
+            <div class="grade-title">Sanción Actitudinal</div>
+            <div class="grade-value" style="color:#ef4444">-{{ grades.actitudinal_penalty }}</div>
+            <div style="font-size:0.75rem; color:#64748b; margin-top:0.5rem;">Deducción Directa</div>
+        </div>
+        <div class="grade-box final">
+            <div class="grade-title">Nota Final</div>
+            <div class="grade-value" style="color:#2563eb">{{ grades.final_grade_20 }}<span style="font-size:1rem;color:#94a3b8">/20</span></div>
+        </div>
+    </div>
+
+    <h3>Telemetría de Comportamiento (Saber Ser)</h3>
+    <table class="telemetry-table">
+        <tr>
+            <th>Intentos de Copiar/Pegar</th>
+            <td>{{ user.pasted_text_count }} (Integridad Académica)</td>
+        </tr>
+        <tr>
+            <th>Respuestas Impulsivas</th>
+            <td>{{ grades.fast_random_count }} (Sin leer la pregunta)</td>
+        </tr>
+        <tr>
+            <th>Intentos Fallidos (Persistencia)</th>
+            <td>{{ grades.total_failed_attempts }}</td>
+        </tr>
+        <tr>
+            <th>Tiempo Promedio de Respuesta</th>
+            <td>{{ grades.avg_response_time_ms }} ms</td>
+        </tr>
+    </table>
+
+    <h3>Respuestas Procedimentales (Talleres y Abiertas)</h3>
+    <p style="font-size:0.9rem; color:#64748b; margin-bottom:1rem;">
+        <em>Nota para el docente: Las siguientes respuestas son evidencia del trabajo del estudiante. En caso de fallas en la evaluación por IA, utilice esta sección para validar la nota de la dimensión Saber Hacer.</em>
+    </p>
+    
+    {% if workshops and workshops|length > 0 %}
+    <table class="answers-table">
+        <thead>
+            <tr>
+                <th>Tipo de Taller / Fase</th>
+                <th>Datos Enviados por el Estudiante</th>
+                <th>Nota IA</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for w in workshops %}
+            <tr>
+                <td style="font-weight: 600;">Taller: {{ w.workshop_type | capitalize }}</td>
+                <td>
+                    {% if w.submission_data is mapping %}
+                        <table style="width: 100%; border-collapse: collapse; margin-top: 0.5rem; margin-bottom: 0.5rem; border: 1px solid var(--glass-border);">
+                        {% for key, value in w.submission_data.items() %}
+                            <tr>
+                                <td style="padding: 0.5rem; font-weight: bold; border: 1px solid var(--glass-border); width: 25%; background-color: rgba(255,255,255,0.02); text-transform: capitalize;">{{ key }}</td>
+                                <td style="padding: 0.5rem; border: 1px solid var(--glass-border); font-size: 0.9rem; line-height: 1.4;">{{ value }}</td>
+                            </tr>
+                        {% endfor %}
+                        </table>
+                    {% elif w.submission_data is string %}
+                        <p style="margin-bottom:0.5rem; font-size:0.9rem; line-height: 1.4;">{{ w.submission_data }}</p>
+                    {% else %}
+                        <pre style="white-space: pre-wrap; font-family:inherit; margin:0; font-size:0.85rem;">{{ w.submission_data | tojson(indent=2) }}</pre>
+                    {% endif %}
+                </td>
+                <td style="text-align: center; font-weight: bold; color: {% if w.grade %}var(--brand-500){% else %}#ef4444{% endif %};">
+                    {{ w.grade if w.grade else 'Pendiente' }}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="color:#64748b; font-style:italic;">No hay entregas de talleres registradas aún.</p>
+    {% endif %}
+
+    <button class="print-btn" onclick="window.print()">🖨️ Descargar en PDF</button>
+    <div style="text-align: center; margin-top:0.5rem; font-size:0.85rem; color:#64748b;" class="print-btn-container">
+        * Al hacer clic, selecciona "Guardar como PDF" en tu navegador.
+    </div>
+    <div style="text-align: center; margin-top:1rem;" class="print-btn-container">
+        <a href="/dashboard" style="color:var(--brand-500); text-decoration:none;">Volver al Dashboard</a>
+    </div>
+</div>
+{% endblock %}

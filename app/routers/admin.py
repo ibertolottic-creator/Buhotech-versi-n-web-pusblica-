@@ -53,6 +53,7 @@ async def admin_dashboard(request: Request, db: AsyncSession = Depends(get_db)):
             "saber": grade.saber_grade if grade else 0,
             "saber_hacer": grade.saber_hacer_grade if grade else 0,
             "saber_ser": grade.saber_ser_grade if grade else 0,
+            "penalty": (grade.actitudinal_penalty if grade and hasattr(grade, "actitudinal_penalty") else 0) or 0,
             "final": grade.final_grade_20 if grade else 0,
             "total_q": grade.total_questions_answered if grade else 0,
         })
@@ -64,8 +65,7 @@ async def admin_dashboard(request: Request, db: AsyncSession = Depends(get_db)):
     # Estadísticas del orquestador de IA
     ai_stats = ai_orchestrator.get_stats()
 
-    return templates.TemplateResponse("admin/dashboard.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "admin/dashboard.html", {
         "admin": admin,
         "students": students,
         "total_students": total_students,
@@ -77,8 +77,11 @@ async def admin_dashboard(request: Request, db: AsyncSession = Depends(get_db)):
 @router.get("/export-csv")
 async def export_csv(request: Request, db: AsyncSession = Depends(get_db)):
     """Descarga el dataset CSV para IBM SPSS."""
+    from app.config import settings
     admin = await get_admin_user(request, db)
-    if not admin:
+    provided_pwd = request.query_params.get("pwd")
+    
+    if not admin and provided_pwd != settings.ADMIN_PASSWORD:
         return RedirectResponse("/", status_code=302)
 
     # Recalcular notas de todos los estudiantes

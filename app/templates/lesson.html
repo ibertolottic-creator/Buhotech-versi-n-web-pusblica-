@@ -175,18 +175,19 @@
         if (q.question_type === 'MAIN' || q.question_type === 'RAPID' || q.question_type === 'DILEMMA' || q.question_type === 'SCENARIO' || q.question_type === 'FILL_BLANK' || q.question_type === 'HONESTY') {
             html += '<div class="options-container">';
             for (const opt of q.options) {
-                // escape quotes for onclick
-                const safeText = opt.text.replace(/'/g, "\\'");
                 html += `
-                    <button class="option-btn" data-id="${opt.id}" onclick="selectOption(this, '${opt.id}', '${q.question_type}', '${safeText}')">
+                    <button class="option-btn" data-id="${opt.id}" data-qtype="${q.question_type}">
                         <span class="option-marker">${opt.id}</span>
-                        <span>${opt.text}</span>
+                        <span class="option-text">${opt.text}</span>
                     </button>`;
             }
             html += '</div>';
         } else if (q.question_type === 'TEXT') {
             html += `
                 <div style="margin-top: 1rem;">
+                    <div style="background: rgba(255,255,255,0.05); border-left: 3px solid var(--brand-400); padding: 0.75rem; border-radius: var(--radius-sm); margin-bottom: 1rem; font-size: 0.85rem; color: var(--slate-300);">
+                        <strong>Nota:</strong> Tu respuesta procedimental se guardará en tu reporte. Si la evaluación por IA falla, el docente revisará tu reporte para completar tu calificación.
+                    </div>
                     <textarea id="text-answer" class="text-input" rows="4" maxlength="300" 
                         placeholder="Escribe tu respuesta aquí..." 
                         onpaste="handlePaste(event)" oninput="checkText()"></textarea>
@@ -236,6 +237,17 @@
         document.getElementById('lesson-content').innerHTML = html;
         document.getElementById('check-bar').style.display = 'none';
         document.getElementById('feedback-drawer').style.display = 'none';
+
+        // Attach click listeners via event delegation (avoids inline onclick issues)
+        document.querySelectorAll('.option-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const optId = this.dataset.id;
+                const qType = this.dataset.qtype;
+                const optText = this.querySelector('.option-text')?.textContent || '';
+                selectOption(this, optId, qType, optText);
+            });
+        });
+
         startTime = Date.now();
     }
 
@@ -390,7 +402,7 @@
                 failedAttempts++;
             }
 
-            if (q.question_type === 'MAIN' || q.question_type === 'RAPID' || q.question_type === 'DILEMMA' || q.question_type === 'SCENARIO' || q.question_type === 'FILL_BLANK') {
+            if (q.question_type === 'MAIN' || q.question_type === 'RAPID' || q.question_type === 'DILEMMA' || q.question_type === 'SCENARIO' || q.question_type === 'FILL_BLANK' || q.question_type === 'HONESTY') {
                 document.querySelectorAll('.option-btn').forEach(btn => {
                     const id = btn.dataset.id;
                     btn.disabled = true;
@@ -486,32 +498,85 @@
             playSound('success');
             
             if (PHASE_NUMBER === 3) {
+                // Calcular indicadores actitudinales para la revelación
+                const penalty = data.grades.actitudinal_penalty || 0;
+                const fastCount = data.grades.fast_random_count || 0;
+                const failedAttempts = data.grades.total_failed_attempts || 0;
+                const pastedCount = data.grades.pasted_count || 0;
+
                 document.getElementById('lesson-content').innerHTML = `
-                    <div style="text-align:center; padding:2rem;">
-                        <div style="font-size:4rem; margin-bottom:1rem; animation: float 2s ease-in-out infinite;">📊</div>
-                        <h2 style="font-family:var(--font-display); font-size:1.8rem; color:white; margin-bottom:1.5rem;">Reporte de Autorregulación</h2>
-                        <div class="grades-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2rem;">
-                            <div class="grade-card" style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--glass-border);">
-                                <div class="grade-value text-gold" style="font-size: 2rem; font-weight: bold; margin-bottom: 0.5rem;">${data.grades.total_failed_attempts || 0}</div>
-                                <div class="grade-label" style="font-size: 0.75rem; color: var(--slate-400); text-transform: uppercase;">Intentos Fallidos<br>(Persistencia)</div>
+                    <div style="text-align:center; padding:2rem; max-width:650px; margin:0 auto;">
+                        <!-- Fase 1: Revelación dramática -->
+                        <div id="reveal-phase-1" style="animation: fadeInUp 0.8s ease-out;">
+                            <div style="font-size:4rem; margin-bottom:1rem; animation: float 2s ease-in-out infinite;">🔍</div>
+                            <h2 style="font-family:var(--font-display); font-size:1.6rem; color:var(--gold-400); margin-bottom:1rem;">Momento de la Verdad</h2>
+                            <div style="background: rgba(255,255,255,0.05); border:1px solid var(--glass-border); border-radius:var(--radius-lg); padding:1.5rem; margin-bottom:1.5rem; text-align:left;">
+                                <p style="color:var(--brand-300); font-weight:700; font-size:1.05rem; margin-bottom:0.75rem;">🦉 El Búho tiene algo que contarte...</p>
+                                <p style="color:var(--slate-200); line-height:1.7; font-size:0.95rem;">
+                                    Esta pregunta ética que acabas de responder no es la única evaluación de tu <strong style="color:var(--success-400)">dimensión actitudinal</strong>. 
+                                    <br><br>
+                                    <strong style="color:var(--gold-400)">Tu evaluación actitudinal se estuvo midiendo desde el inicio del aplicativo.</strong>
+                                </p>
                             </div>
-                            <div class="grade-card" style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--glass-border);">
-                                <div class="grade-value text-fire" style="font-size: 2rem; font-weight: bold; margin-bottom: 0.5rem;">${data.grades.fast_random_count || 0}</div>
-                                <div class="grade-label" style="font-size: 0.75rem; color: var(--slate-400); text-transform: uppercase;">Respuestas<br>Impulsivas</div>
-                            </div>
-                            <div class="grade-card" style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--glass-border);">
-                                <div class="grade-value text-success" style="font-size: 2rem; font-weight: bold; margin-bottom: 0.5rem;">${data.grades.final_grade_20 || 0}</div>
-                                <div class="grade-label" style="font-size: 0.75rem; color: var(--slate-400); text-transform: uppercase;">Nota Final<br>(Vigesimal)</div>
-                            </div>
+                            <button class="btn btn-primary btn-lg btn-block" onclick="showRevealPhase2()" style="max-width:400px; margin:0 auto;">
+                                ¿Cómo me evaluaron? 👀
+                            </button>
                         </div>
-                        <p style="color:var(--slate-300); font-size:0.95rem; margin:1.5rem 0; line-height:1.5;">
-                            Este reporte evalúa tu esfuerzo, reflexión y persistencia, más allá de solo tus aciertos. 
-                            ¡La investigación requiere paciencia y método!
-                        </p>
-                        <a href="/dashboard" class="btn btn-primary btn-lg btn-block">Volver al Dashboard</a>
+
+                        <!-- Fase 2: Explicación de la telemetría oculta -->
+                        <div id="reveal-phase-2" style="display:none;">
+                            <div style="font-size:3rem; margin-bottom:1rem; animation: float 2s ease-in-out infinite;">📡</div>
+                            <h2 style="font-family:var(--font-display); font-size:1.4rem; color:white; margin-bottom:1.5rem;">Telemetría de Comportamiento Ético</h2>
+                            <p style="color:var(--slate-300); font-size:0.9rem; margin-bottom:1.5rem; line-height:1.6;">
+                                Durante <strong>todas las fases</strong>, el sistema registró silenciosamente indicadores de tu comportamiento académico real:
+                            </p>
+
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:1.5rem;">
+                                <div style="background:rgba(255,255,255,0.05); padding:1rem; border-radius:var(--radius-md); border:1px solid var(--glass-border); text-align:center;">
+                                    <div style="font-size:1.1rem; margin-bottom:0.3rem;">⏱️</div>
+                                    <div style="font-size:1.8rem; font-weight:800; color:${fastCount > 0 ? 'var(--accent-400)' : 'var(--success-400)'}; margin-bottom:0.25rem;">${fastCount}</div>
+                                    <div style="font-size:0.7rem; color:var(--slate-400); text-transform:uppercase; letter-spacing:0.05em;">Respuestas<br>Impulsivas</div>
+                                    <div style="font-size:0.7rem; color:var(--slate-500); margin-top:0.25rem; font-style:italic;">Respondiste sin leer</div>
+                                </div>
+                                <div style="background:rgba(255,255,255,0.05); padding:1rem; border-radius:var(--radius-md); border:1px solid var(--glass-border); text-align:center;">
+                                    <div style="font-size:1.1rem; margin-bottom:0.3rem;">📋</div>
+                                    <div style="font-size:1.8rem; font-weight:800; color:${pastedCount > 0 ? 'var(--accent-400)' : 'var(--success-400)'}; margin-bottom:0.25rem;">${pastedCount}</div>
+                                    <div style="font-size:0.7rem; color:var(--slate-400); text-transform:uppercase; letter-spacing:0.05em;">Intentos de<br>Copiar/Pegar</div>
+                                    <div style="font-size:0.7rem; color:var(--slate-500); margin-top:0.25rem; font-style:italic;">Integridad académica</div>
+                                </div>
+                                <div style="background:rgba(255,255,255,0.05); padding:1rem; border-radius:var(--radius-md); border:1px solid var(--glass-border); text-align:center;">
+                                    <div style="font-size:1.1rem; margin-bottom:0.3rem;">🔄</div>
+                                    <div style="font-size:1.8rem; font-weight:800; color:var(--brand-300); margin-bottom:0.25rem;">${failedAttempts}</div>
+                                    <div style="font-size:0.7rem; color:var(--slate-400); text-transform:uppercase; letter-spacing:0.05em;">Intentos<br>Fallidos</div>
+                                    <div style="font-size:0.7rem; color:var(--slate-500); margin-top:0.25rem; font-style:italic;">Persistencia ante el error</div>
+                                </div>
+                                <div style="background:rgba(255,255,255,0.05); padding:1rem; border-radius:var(--radius-md); border:1px solid var(--glass-border); text-align:center;">
+                                    <div style="font-size:1.1rem; margin-bottom:0.3rem;">⚖️</div>
+                                    <div style="font-size:1.8rem; font-weight:800; color:${penalty > 0 ? 'var(--accent-400)' : 'var(--success-400)'}; margin-bottom:0.25rem;">-${penalty}</div>
+                                    <div style="font-size:0.7rem; color:var(--slate-400); text-transform:uppercase; letter-spacing:0.05em;">Sanción<br>Actitudinal</div>
+                                    <div style="font-size:0.7rem; color:var(--slate-500); margin-top:0.25rem; font-style:italic;">Deducción al promedio</div>
+                                </div>
+                            </div>
+
+                            <div style="background:linear-gradient(135deg, rgba(99,102,241,0.1), rgba(16,185,129,0.1)); border:1px solid var(--glass-border); border-radius:var(--radius-lg); padding:1.25rem; margin-bottom:1.5rem; text-align:left;">
+                                <p style="color:var(--slate-200); font-size:0.9rem; line-height:1.7;">
+                                    🦉 <strong>Reflexión del Búho:</strong> En la investigación científica, la <em>ética</em> no es solo responder bien a un dilema, sino actuar con integridad en cada paso del proceso. 
+                                    Tu nota final refleja no solo tu conocimiento, sino tu <strong style="color:var(--gold-400)">actitud como investigador</strong>.
+                                </p>
+                            </div>
+
+                            <div style="background:rgba(0,0,0,0.3); border-radius:var(--radius-md); padding:1rem; margin-bottom:1.5rem;">
+                                <div style="font-size:0.7rem; color:var(--slate-400); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem;">Nota Final Ponderada</div>
+                                <div style="font-size:2.5rem; font-weight:900; font-family:var(--font-display); color:${(data.grades.final_grade_20 || 0) >= 11 ? 'var(--success-400)' : 'var(--accent-400)'};">${data.grades.final_grade_20 || 0}<span style="font-size:1rem; color:var(--slate-400);">/20</span></div>
+                            </div>
+
+                            <a href="/grades" class="btn btn-primary btn-lg btn-block" style="max-width:400px; margin:0 auto;">Ver Reporte Completo 📊</a>
+                            <a href="/dashboard" class="btn btn-secondary btn-lg btn-block" style="max-width:400px; margin:0.75rem auto 0;">Volver al Dashboard</a>
+                        </div>
                     </div>
                     <style>
                         @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-15px)} }
+                        @keyframes fadeInUp { from { opacity:0; transform:translateY(30px); } to { opacity:1; transform:translateY(0); } }
                     </style>
                 `;
             } else {
@@ -544,6 +609,13 @@
 
     function exitLesson() {
         window.location.href = '/dashboard';
+    }
+
+    function showRevealPhase2() {
+        document.getElementById('reveal-phase-1').style.display = 'none';
+        const phase2 = document.getElementById('reveal-phase-2');
+        phase2.style.display = 'block';
+        phase2.style.animation = 'fadeInUp 0.8s ease-out';
     }
 
     renderQuestion();

@@ -5,7 +5,7 @@
 <!-- Header -->
 <div style="padding:1.25rem 1.5rem; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--glass-border);">
     <div>
-        <div style="font-size:0.7rem; font-weight:700; color:var(--slate-500); text-transform:uppercase; letter-spacing:0.15em;">Detective</div>
+        <div style="font-size:0.7rem; font-weight:700; color:var(--slate-500); text-transform:uppercase; letter-spacing:0.15em;">Investigador</div>
         <h2 style="font-family:var(--font-display); font-weight:900; font-size:1.2rem; color:white;">¡Hola, {{ user.username }}!</h2>
     </div>
     <a href="/logout" style="color:var(--slate-500); text-decoration:none; font-size:1.2rem; padding:0.5rem;" title="Cerrar Sesión">🚪</a>
@@ -34,6 +34,13 @@
         </div>
         <div class="stat-label">XP</div>
     </div>
+</div>
+
+<!-- Botón de Reporte -->
+<div style="text-align:center; padding: 1rem 1.5rem 0;">
+    <a href="/report" class="btn btn-secondary btn-block" style="display:flex; justify-content:center; align-items:center; gap:0.5rem; background:rgba(99,102,241,0.15); border:1px solid rgba(99,102,241,0.4); color:var(--brand-300);">
+        🖨️ Ver / Imprimir Boleta Oficial
+    </a>
 </div>
 
 <!-- Ruta de Módulos -->

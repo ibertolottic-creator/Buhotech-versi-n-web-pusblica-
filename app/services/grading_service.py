@@ -4,7 +4,7 @@ Calcula las notas por cada dimensión de competencia y nivel taxonómico.
 """
 from sqlalchemy import select, func, Integer, case
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.models import UserResponse, CompetencyGrade, WorkshopSubmission, DilemmaResponse
+from app.models import UserResponse, CompetencyGrade, WorkshopSubmission, DilemmaResponse, User
 
 
 async def calculate_grades(user_id: str, db: AsyncSession) -> dict:
@@ -13,12 +13,13 @@ async def calculate_grades(user_id: str, db: AsyncSession) -> dict:
     - SABER (Cognitiva): basada en respuestas correctas a preguntas conceptuales.
     - SABER HACER (Procedimental): basada en talleres y ejercicios prácticos.
     - SABER SER (Actitudinal): basada en dilemas éticos y comportamiento.
+    - SANCIÓN ACTITUDINAL: deducción acumulativa directa al promedio final (máx 10 pts).
     
     Retorna un diccionario con todas las notas y métricas.
     """
     grades = {
         "saber_grade": 0.0, "saber_hacer_grade": 0.0, "saber_ser_grade": 0.0,
-        "final_grade_20": 0.0,
+        "final_grade_20": 0.0, "actitudinal_penalty": 0.0,
         "saber_n1": 0.0, "saber_n2": 0.0, "saber_n3": 0.0,
         "saber_hacer_n1": 0.0, "saber_hacer_n2": 0.0, "saber_hacer_n3": 0.0,
         "saber_ser_n1": 0.0, "saber_ser_n2": 0.0, "saber_ser_n3": 0.0,
@@ -110,14 +111,6 @@ async def calculate_grades(user_id: str, db: AsyncSession) -> dict:
     quiz_avg_ser = (grades["saber_ser_n1"] * 0.25 + grades["saber_ser_n2"] * 0.35 + grades["saber_ser_n3"] * 0.40)
     grades["saber_ser_grade"] = round(quiz_avg_ser * 0.5 + dilemma_score * 0.5, 2) if dilemma_score > 0 else round(quiz_avg_ser, 2)
 
-    # --- Promedio Final Ponderado (0-20) ---
-    grades["final_grade_20"] = round(
-        grades["saber_grade"] * 0.35 +
-        grades["saber_hacer_grade"] * 0.40 +
-        grades["saber_ser_grade"] * 0.25,
-        2
-    )
-
     # --- Métricas adicionales ---
     metrics = await db.execute(
         select(
@@ -134,6 +127,39 @@ async def calculate_grades(user_id: str, db: AsyncSession) -> dict:
     grades["avg_response_time_ms"] = round(m[2] or 0, 1)
     grades["fast_random_count"] = m[3] or 0
     grades["total_failed_attempts"] = m[4] or 0
+
+    # --- Sanción Actitudinal Acumulada (Deducción directa al Promedio Final, Tope: 10 pts) ---
+    # Obtener telemetría del usuario (intentos de pegado / plagio)
+    user_res = await db.execute(select(User).where(User.id == user_id))
+    user_obj = user_res.scalar_one_or_none()
+    pasted_count = user_obj.pasted_text_count if user_obj else 0
+    infographic_views = user_obj.infographic_views if user_obj else 0
+
+    # Decisiones no éticas en dilemas
+    unethical_count = ((dr_row.total or 0) - (dr_row.ethical or 0)) if (dr_row.total or 0) > 0 else 0
+
+    # Adivinanza al azar (después del primer intento de gracia)
+    excess_fast_random = max(0, grades["fast_random_count"] - 1)
+
+    # Cálculo acumulativo de sanción:
+    # - Cada decisión antiética: 3.0 pts
+    # - Cada intento de pegado (plagio): 2.0 pts
+    # - Respuestas al azar excesivas: 1.0 pt
+    raw_penalty = (unethical_count * 3.0) + (pasted_count * 2.0) + (excess_fast_random * 1.0)
+    
+    # Bonificación por repasar infografía (0.5 pts por vez, máx 4 pts de recuperación)
+    bonus = min(infographic_views * 0.5, 4.0)
+    raw_penalty = max(0.0, raw_penalty - bonus)
+    
+    actitudinal_penalty = round(min(raw_penalty, 10.0), 2)
+    grades["actitudinal_penalty"] = actitudinal_penalty
+
+    # --- Promedio Final Ponderado (0-20) con Deducción Directa ---
+    base_weighted = (
+        grades["saber_grade"] * 0.50 +
+        grades["saber_hacer_grade"] * 0.50
+    )
+    grades["final_grade_20"] = max(0.0, round(base_weighted - actitudinal_penalty, 2))
 
     # Guardar en la tabla de calificaciones
     existing = await db.execute(

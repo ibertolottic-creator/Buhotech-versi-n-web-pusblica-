@@ -22,6 +22,8 @@ async def login_page(request: Request, db: AsyncSession = Depends(get_db)):
         result = await db.execute(select(User).where(User.id == user_id))
         user = result.scalar_one_or_none()
         if user:
+            if user.role == "admin":
+                return RedirectResponse("/admin", status_code=302)
             return RedirectResponse("/dashboard", status_code=302)
     
     # Si no existe, crear respuesta
@@ -49,7 +51,11 @@ async def login(request: Request, username: str = Form(...), db: AsyncSession = 
         await db.commit()
         await db.refresh(user)
 
-    response = RedirectResponse("/dashboard", status_code=302)
+    if user.role == "admin":
+        response = RedirectResponse("/admin", status_code=302)
+    else:
+        response = RedirectResponse("/dashboard", status_code=302)
+        
     response.set_cookie("user_id", user.id, httponly=True, max_age=86400 * 30)
     return response
 

@@ -4,9 +4,16 @@
 {% block content %}
 <div style="padding:1.5rem; padding-bottom:6rem;">
     <!-- Header -->
-    <div style="display:flex; align-items:center; gap:1rem; margin-bottom:2rem;">
+    <div style="display:flex; align-items:center; gap:1rem; margin-bottom:1rem;">
         <a href="/dashboard" style="color:var(--slate-400); text-decoration:none; font-size:1.3rem;">←</a>
         <h1 style="font-size:1.4rem; color:white;">📊 Mis Calificaciones</h1>
+    </div>
+
+    <!-- Botón de Reporte Oficial -->
+    <div style="margin-bottom: 2rem;">
+        <a href="/report" class="btn btn-secondary btn-block" style="display:flex; justify-content:center; align-items:center; gap:0.5rem; background:rgba(99,102,241,0.15); border:1px solid rgba(99,102,241,0.4); color:var(--brand-300);">
+            🖨️ Ver / Imprimir Boleta Oficial
+        </a>
     </div>
 
     <!-- Nota Final -->
@@ -18,6 +25,11 @@
             {{ "%.1f"|format(grades.final_grade_20) }}
         </div>
         <div style="font-size:0.85rem; color:var(--slate-400); font-weight:600;">de 20 puntos</div>
+        {% if grades.actitudinal_penalty and grades.actitudinal_penalty > 0 %}
+        <div style="margin-top:0.75rem; display:inline-block; padding:0.35rem 0.85rem; background:rgba(239, 68, 68, 0.15); border:1px solid rgba(239, 68, 68, 0.35); border-radius:12px; font-size:0.8rem; color:#fca5a5; font-weight:700;">
+            ⚠️ Sanción Actitudinal directa: -{{ "%.1f"|format(grades.actitudinal_penalty) }} pts (Tope máx: 10)
+        </div>
+        {% endif %}
     </div>
 
     <!-- Notas por Dimensión -->
@@ -27,7 +39,11 @@
             <div class="grade-label">Saber</div>
         </div>
         <div class="grade-card">
+            {% if grades.saber_hacer_grade == 0.0 %}
+            <div class="grade-value text-gold" style="font-size: 1rem; color: #ef4444; line-height: 1.2; margin-top: 0.5rem; margin-bottom: 0.5rem;">Pendiente de calificar por el docente</div>
+            {% else %}
             <div class="grade-value text-gold">{{ "%.1f"|format(grades.saber_hacer_grade) }}</div>
+            {% endif %}
             <div class="grade-label">Saber Hacer</div>
         </div>
         <div class="grade-card">

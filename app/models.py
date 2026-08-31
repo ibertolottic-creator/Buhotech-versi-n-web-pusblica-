@@ -40,6 +40,7 @@ class User(Base):
     
     # Telemetría actitudinal adicional
     pasted_text_count = Column(Integer, default=0)
+    infographic_views = Column(Integer, default=0)
 
     # Relaciones
     responses = relationship("UserResponse", back_populates="user", lazy="selectin")
@@ -226,8 +227,9 @@ class CompetencyGrade(Base):
     saber_hacer_grade = Column(Float, default=0.0)
     saber_ser_grade = Column(Float, default=0.0)
     
-    # Promedio ponderado final
+    # Promedio ponderado final y sanción actitudinal
     final_grade_20 = Column(Float, default=0.0)
+    actitudinal_penalty = Column(Float, default=0.0)  # Sanción directa acumulada (tope máx: 10 pts)
     
     # Detalle por niveles (para análisis fino en SPSS)
     saber_n1 = Column(Float, default=0.0)   # Recordar

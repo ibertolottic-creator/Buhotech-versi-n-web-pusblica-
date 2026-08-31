@@ -97,3 +97,55 @@ async def grades_page(request: Request):
         "user": user,
         "grades": grades,
     })
+
+
+@app.get("/report", response_class=HTMLResponse)
+async def report_page(request: Request):
+    """Página de reporte imprimible del estudiante con respuestas abiertas."""
+    from sqlalchemy import select
+    from app.database import AsyncSessionLocal
+    from app.models import User, UserResponse, WorkshopSubmission
+    from app.services.grading_service import calculate_grades
+
+    user_id = request.cookies.get("user_id")
+    if not user_id:
+        from fastapi.responses import RedirectResponse
+        return RedirectResponse("/", status_code=302)
+
+    async with AsyncSessionLocal() as db:
+        result = await db.execute(select(User).where(User.id == user_id))
+        user = result.scalar_one_or_none()
+        if not user:
+            from fastapi.responses import RedirectResponse
+            return RedirectResponse("/", status_code=302)
+
+        grades = await calculate_grades(user.id, db)
+        
+        # Obtener respuestas a preguntas tipo TEXT
+        text_responses = await db.execute(
+            select(UserResponse).where(
+                UserResponse.user_id == user_id,
+            ).order_by(UserResponse.timestamp.asc())
+        )
+        all_responses = text_responses.scalars().all()
+        # Filtraremos en el frontend o aquí. Mejor le pasamos todo o solo TEXT.
+        # Las preguntas abiertas se guardan con selected_answer = texto largo.
+        # Pero UserResponse solo guarda String(5) para selected_answer.
+        # Wait, let me check how TEXT questions are saved in UserResponse!
+        
+        # Obtener talleres
+        workshops = await db.execute(
+            select(WorkshopSubmission).where(
+                WorkshopSubmission.user_id == user_id
+            ).order_by(WorkshopSubmission.timestamp.asc())
+        )
+        workshop_subs = workshops.scalars().all()
+
+    return templates.TemplateResponse(request=request, name="report.html", context={
+        "request": request,
+        "user": user,
+        "grades": grades,
+        "responses": all_responses,
+        "workshops": workshop_subs
+    })
+

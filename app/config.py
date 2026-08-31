@@ -21,7 +21,15 @@ class Settings:
 
     # Base de datos
     DATABASE_URL: str = os.getenv("DATABASE_URL", f"sqlite+aiosqlite:///{BASE_DIR / 'buhotech.db'}")
-    DATABASE_URL_SYNC: str = DATABASE_URL.replace("+aiosqlite", "")
+    
+    # Derivamos la URL síncrona según el motor
+    if DATABASE_URL.startswith("postgresql+asyncpg"):
+        DATABASE_URL_SYNC: str = DATABASE_URL.replace("+asyncpg", "")
+    else:
+        DATABASE_URL_SYNC: str = DATABASE_URL.replace("+aiosqlite", "")
+
+    # Acceso Admin
+    ADMIN_PASSWORD: str = os.getenv("ADMIN_PASSWORD", "admin123")
 
     # --- Pool de claves Gemini ---
     GEMINI_API_KEYS: list[str] = [

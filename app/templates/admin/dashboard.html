@@ -47,6 +47,7 @@
                     <th>Saber</th>
                     <th>S. Hacer</th>
                     <th>S. Ser</th>
+                    <th>Sanción</th>
                     <th>Final</th>
                     <th>Preguntas</th>
                 </tr>
@@ -61,13 +62,16 @@
                     <td style="color:var(--brand-400); font-weight:700;">{{ "%.1f"|format(s.saber) }}</td>
                     <td style="color:var(--gold-400); font-weight:700;">{{ "%.1f"|format(s.saber_hacer) }}</td>
                     <td style="color:var(--success-400); font-weight:700;">{{ "%.1f"|format(s.saber_ser) }}</td>
+                    <td style="color:{% if s.penalty > 0 %}#fca5a5; font-weight:800;{% else %}var(--slate-500);{% endif %}">
+                        {% if s.penalty > 0 %}-{{ "%.1f"|format(s.penalty) }}{% else %}0.0{% endif %}
+                    </td>
                     <td style="font-weight:900; font-size:1.05rem;">{{ "%.1f"|format(s.final) }}</td>
                     <td>{{ s.total_q }}</td>
                 </tr>
                 {% endfor %}
                 {% if not students %}
                 <tr>
-                    <td colspan="9" style="text-align:center; color:var(--slate-500); padding:2rem;">Aún no hay estudiantes registrados</td>
+                    <td colspan="10" style="text-align:center; color:var(--slate-500); padding:2rem;">Aún no hay estudiantes registrados</td>
                 </tr>
                 {% endif %}
             </tbody>
