@@ -253,8 +253,18 @@
                     Redacta un ejemplo de problema usando el método del embudo (Macro, Meso, Micro). Presiona "Pedir revisión al Búho" para recibir retroalimentación socrática.
                 </div>
 
-                <div style="background: rgba(255,255,255,0.04); border-left: 3px solid var(--brand-400); padding: 0.6rem 0.8rem; border-radius: var(--radius-sm); margin-bottom: 0.75rem; font-size: 0.8rem; color: var(--slate-300);">
-                    💡 <strong>Orientación:</strong> Escribe con tus propias palabras. La IA analizará tu razonamiento con preguntas reflexivas.
+                <div style="background: rgba(255,255,255,0.04); border-left: 3px solid var(--brand-400); padding: 0.6rem 0.8rem; border-radius: var(--radius-sm); margin-bottom: 0.65rem; font-size: 0.8rem; color: var(--slate-300);">
+                    💡 <strong>Orientación:</strong> Redacta con tus propias palabras. Si requieres andamiaje de apoyo, utiliza las ayudas guiadas:
+                </div>
+
+                <!-- Botones de Andamiaje Pedagógico (Respaldo en caso de duda o falla de IA) -->
+                <div style="display:flex; gap:0.5rem; margin-bottom:0.75rem;">
+                    <button type="button" onclick="requestScaffolding(1)" class="btn btn-secondary" style="flex:1; font-size:0.78rem; padding:0.4rem 0.6rem; background:rgba(99,102,241,0.18); border:1px solid rgba(99,102,241,0.35); color:var(--brand-300); font-weight:600; cursor:pointer;" title="1ª Ayuda: Recibe una explicación metodológica paso a paso">
+                        💡 1ª Ayuda: Explicación
+                    </button>
+                    <button type="button" onclick="requestScaffolding(2)" class="btn btn-secondary" style="flex:1; font-size:0.78rem; padding:0.4rem 0.6rem; background:rgba(234,179,8,0.18); border:1px solid rgba(234,179,8,0.35); color:var(--gold-300); font-weight:600; cursor:pointer;" title="2ª Ayuda: Revisa un ejemplo real modelado de tesis">
+                        📝 2ª Ayuda: Ejemplo de Tesis
+                    </button>
                 </div>
 
                 <textarea id="workshop-draft" class="workshop-textarea" placeholder="Escribe aquí tu avance..." maxlength="700" oninput="updateWordCount(this)"></textarea>
@@ -374,30 +384,51 @@
                 instructions: 'Redacta un ejemplo de problema usando el método del embudo (Macro: contexto mundial/regional, Meso: nacional, Micro: local/institucional). Guíate de la infografía a la derecha.',
                 placeholder: 'Ejemplo: A nivel mundial el estrés laboral afecta al 60% de profesionales (Macro). En el Perú, las mypes presentan... (Meso). Específicamente en la empresa XYZ se observa... (Micro)',
                 image: 'Buhotech - Metodo del Embudo.png',
-                caption: '💡 <strong>Método del Embudo:</strong> 1) <strong>Macro:</strong> Contexto mundial/internacional. 2) <strong>Meso:</strong> Situación nacional (Perú o tu país). 3) <strong>Micro:</strong> La empresa o institución concreta delimitando síntomas, causas directas y pronóstico si no se resuelve.'
+                caption: '💡 <strong>Método del Embudo:</strong> 1) <strong>Macro:</strong> Contexto mundial/internacional. 2) <strong>Meso:</strong> Situación nacional (Perú o tu país). 3) <strong>Micro:</strong> La empresa o institución concreta delimitando síntomas, causas directas y pronóstico si no se resuelve.',
+                help1: '🦉 <strong>1ª Ayuda - Explicación (Método del Embudo):</strong><br>El planteamiento se redacta desde lo general hasta lo específico en 3 niveles:<br>• <strong>1. Macro (Internacional):</strong> ¿Cómo se manifiesta el problema en el mundo o Latinoamérica? Cita organismos de referencia (OMS, OIT, UNESCO).<br>• <strong>2. Meso (Nacional):</strong> Aterriza la realidad en el Perú (o tu país) con estadísticas oficiales (INEI, ministerios o gremios).<br>• <strong>3. Micro (Local/Institucional):</strong> Describe la situación en la empresa o institución donde harás tu tesis: síntomas observables (lo que pasa), causas directas (por qué pasa) y pronóstico (qué ocurrirá si no se interviene).',
+                help2: '🦉 <strong>2ª Ayuda - Ejemplo Modelado de Tesis:</strong><br><em>«A nivel mundial, la OIT (2023) reporta que el 60% de trabajadores experimentan sobrecarga laboral que merma la productividad (Macro). En el Perú, datos del INEI señalan que 4 de cada 10 organizaciones presentan alta rotación atribuida a climas laborales deficientes (Meso). Específicamente en la empresa Inversiones ABC S.A.C., sede Lima 2024, los colaboradores manifiestan desmotivación, demoras de 48 horas en entrega de pedidos y conflictos internos, lo que genera pérdidas económicas y deserción del talento si no se implementa un plan de mejora organizacional (Micro).»</em>'
             },
             'objetivos': {
                 title: 'Objetivos e Hipótesis',
                 instructions: 'Formula el Objetivo General (verbo en infinitivo + dos variables + delimitación) y la Hipótesis afirmativa correspondiente.',
                 placeholder: 'Objetivo General: Determinar la relación entre el clima organizacional y la productividad laboral en los trabajadores de la empresa ABC, 2024.\nHipótesis: Existe una relación significativa entre el clima organizacional y la productividad laboral...',
                 image: 'pregunta_objetivos_hipotesis_infografia.jpg',
-                caption: '💡 <strong>Objetivos e Hipótesis:</strong> Inicia el Objetivo General con un verbo medible en infinitivo (Determinar, Establecer, Demostrar). La Hipótesis responde de forma afirmativa y comprobable al objetivo. Ambos deben mencionar <strong>exactamente las dos mismas variables</strong>.'
+                caption: '💡 <strong>Objetivos e Hipótesis:</strong> Inicia el Objetivo General con un verbo medible en infinitivo (Determinar, Establecer, Demostrar). La Hipótesis responde de forma afirmativa y comprobable al objetivo. Ambos deben mencionar <strong>exactamente las dos mismas variables</strong>.',
+                help1: '🦉 <strong>1ª Ayuda - Explicación (Objetivos e Hipótesis):</strong><br>• <strong>Objetivo General:</strong> Inicia siempre con un verbo en infinitivo medible (Determinar, Establecer, Demostrar, Evaluar). Debe articular tu Variable Independiente (V1) y tu Variable Dependiente (V2), la población de estudio, el lugar y el año.<br>• <strong>Hipótesis General:</strong> Es la respuesta tentativa y afirmativa al objetivo general. No lleva verbo en infinitivo; afirma la existencia de relación directa, inversa o de incidencia entre ambas variables.',
+                help2: '🦉 <strong>2ª Ayuda - Ejemplo Modelado de Tesis:</strong><br>• <strong>Objetivo General:</strong> Determinar la relación entre el clima organizacional y el desempeño laboral en los colaboradores de la empresa Inversiones ABC S.A.C., Lima, 2024.<br>• <strong>Hipótesis General:</strong> Existe una relación directa y significativa entre el clima organizacional y el desempeño laboral en los colaboradores de la empresa Inversiones ABC S.A.C., Lima, 2024.'
             },
             'variables': {
                 title: 'Variables y Operacionalización',
                 instructions: 'Identifica las dos variables principales de tu estudio y propone al menos dos dimensiones teóricas con sus indicadores para cada una.',
                 placeholder: 'Variable 1: Clima Organizacional (Dimensiones: Comunicación interna, Liderazgo directivo).\nVariable 2: Rendimiento Laboral (Dimensiones: Eficiencia, Cumplimiento de metas).',
                 image: 'Operacionalización_de_la_Variable.png',
-                caption: '💡 <strong>Operacionalización:</strong> Variable ➔ Dimensiones (aspectos teóricos) ➔ Indicadores (métricas o preguntas observables que se medirán en el instrumento).'
+                caption: '💡 <strong>Operacionalización:</strong> Variable ➔ Dimensiones (aspectos teóricos) ➔ Indicadores (métricas o preguntas observables que se medirán en el instrumento).',
+                help1: '🦉 <strong>1ª Ayuda - Explicación (Operacionalización de Variables):</strong><br>Operacionalizar es convertir conceptos teóricos abstractos en elementos empíricamente observables:<br>• <strong>Identificación:</strong> Define con exactitud la Variable 1 (Independiente / Causa) y la Variable 2 (Dependiente / Efecto).<br>• <strong>Dimensiones:</strong> Subtemas o componentes teóricos que integran cada variable (mínimo 2 por variable).<br>• <strong>Indicadores:</strong> Métricas, preguntas o parámetros observables con los que recopilarás datos (ej: escala Likert de 5 niveles).',
+                help2: '🦉 <strong>2ª Ayuda - Ejemplo Modelado de Tesis:</strong><br><strong>Variable 1: Clima Organizacional</strong><br>• Dimensión 1: Liderazgo directivo (Indicadores: Comunicación horizontal, apoyo del jefe, retroalimentación).<br>• Dimensión 2: Condiciones laborales (Indicadores: Ergonomía, herramientas laborales, seguridad física).<br><br><strong>Variable 2: Desempeño Laboral</strong><br>• Dimensión 1: Eficiencia operativa (Indicadores: Precisión de tareas, cumplimiento de plazos).<br>• Dimensión 2: Compromiso institucional (Indicadores: Puntualidad, proactividad, trabajo en equipo).'
             },
             'metodologia': {
                 title: 'Diseño Metodológico',
                 instructions: 'Define el enfoque (Cuantitativo o Cualitativo), alcance (Descriptivo, Correlacional o Explicativo) y diseño (No experimental transversal o Experimental).',
                 placeholder: 'Enfoque cuantitativo, nivel correlacional, diseño no experimental transversal. Se aplicará un cuestionario en un solo momento a una muestra de colaboradores...',
                 image: 'Diseños Metodològicos.png',
-                caption: '💡 <strong>Diseño Metodológico:</strong> Si recopilas datos en un único corte de tiempo para medir la relación entre variables sin manipular la realidad, tu diseño es <strong>No Experimental Transversal</strong>.'
+                caption: '💡 <strong>Diseño Metodológico:</strong> Si recopilas datos en un único corte de tiempo para medir la relación entre variables sin manipular la realidad, tu diseño es <strong>No Experimental Transversal</strong>.',
+                help1: '🦉 <strong>1ª Ayuda - Explicación (Marco Metodológico):</strong><br>Debes fundamentar las 3 decisiones científicas de tu método:<br>• <strong>Enfoque:</strong> Cuantitativo (si recolectarás datos numéricos y probarás hipótesis con estadística) o Cualitativo (análisis de vivencias o significados).<br>• <strong>Alcance:</strong> Descriptivo (caracteriza variables), Correlacional (mide asociación entre variables) o Explicativo (causa y efecto).<br>• <strong>Diseño:</strong> No experimental de corte transversal (si aplicas tus encuestas en un solo momento temporal sin alterar la realidad) o Experimental (con pretest y grupo de control).',
+                help2: '🦉 <strong>2ª Ayuda - Ejemplo Modelado de Tesis:</strong><br><em>«La investigación presenta un enfoque cuantitativo, dado que se recolectarán datos numéricos mediante cuestionarios para someter a prueba la hipótesis con el coeficiente Rho de Spearman. El alcance es correlacional porque analiza el grado de relación entre ambas variables. El diseño es no experimental, de corte transversal, debido a que las variables no serán manipuladas y los datos se medirán en un solo momento temporal en una muestra censal de 45 colaboradores de la empresa Inversiones ABC S.A.C.»</em>'
             }
         };
+
+        function requestScaffolding(level) {
+            const topic = topicsData[currentTopicId];
+            if (!topic) return;
+
+            showRightTab('chat');
+
+            if (level === 1) {
+                addBubble('assistant', topic.help1);
+            } else if (level === 2) {
+                addBubble('assistant', topic.help2);
+            }
+        }
 
         let currentTopicId = 'planteamiento';
         let topicDrafts = {

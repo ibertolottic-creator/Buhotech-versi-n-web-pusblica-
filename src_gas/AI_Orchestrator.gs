@@ -52,28 +52,36 @@ function getKeys() {
   };
 }
 
-// BASE DE CONOCIMIENTO (RAG CERRADO DE METODOLOGÍA)
+// BASE DE CONOCIMIENTO (RAG CERRADO DE METODOLOGÍA CON ANDAMIAJE PEDAGÓGICO)
 const RAG_KNOWLEDGE_BASE = {
   planteamiento: {
     name: "Planteamiento del Problema",
     rules: "Método del embudo estricto: Macro (contexto mundial o internacional), Meso (contexto nacional/país) y Micro (contexto local/institución/empresa). Debe formular claramente síntomas, causas y pronóstico con delimitación espacial y temporal.",
-    checklist: ["macro", "meso", "micro", "mundial", "perú", "empresa", "institución", "problema", "síntoma", "causa", "efecto", "delimitación"]
+    checklist: ["macro", "meso", "micro", "mundial", "perú", "empresa", "institución", "problema", "síntoma", "causa", "efecto", "delimitación"],
+    help1_explicacion: "🦉 1ª Ayuda - Explicación (Método del Embudo):\nEl planteamiento se redacta desde lo general hasta lo específico en 3 niveles:\n1. Macro (Internacional): ¿Cómo se manifiesta el problema en el mundo o Latinoamérica? Cita organismos de referencia (ej: OMS, OIT, UNESCO).\n2. Meso (Nacional): Aterriza la realidad en el Perú (o tu país) con estadísticas oficiales (INEI, ministerios o gremios sectoriales).\n3. Micro (Local/Institucional): Describe la situación en la empresa o institución donde harás tu tesis: síntomas observables (lo que pasa), causas directas (por qué pasa) y pronóstico (qué ocurrirá si no se interviene).",
+    help2_ejemplo: "🦉 2ª Ayuda - Ejemplo Modelado de Tesis:\n«A nivel mundial, la OIT (2023) reporta que el 60% de trabajadores experimentan sobrecarga laboral que merma la productividad (Macro). En el Perú, datos del INEI señalan que 4 de cada 10 organizaciones presentan alta rotación atribuida a climas laborales deficientes (Meso). Específicamente en la empresa Inversiones ABC S.A.C., sede Lima 2024, los colaboradores manifiestan desmotivación, demoras de 48 horas en entrega de pedidos y conflictos internos, lo que genera pérdidas económicas y deserción del talento si no se implementa un plan de mejora organizacional (Micro).»"
   },
   objetivos: {
     name: "Objetivos e Hipótesis",
     rules: "El Objetivo General debe iniciar obligatoriamente con un verbo en infinitivo medible (Determinar, Establecer, Analizar, Evaluar, Demostrar). Debe contener ambas variables delimitadas. La Hipótesis debe ser una respuesta afirmativa y coherente que responda directamente al objetivo general.",
     verbs: ["determinar", "establecer", "analizar", "evaluar", "demostrar", "identificar", "describir", "relacionar", "comparar"],
-    checklist: ["objetivo", "hipótesis", "relación", "significativa", "variable"]
+    checklist: ["objetivo", "hipótesis", "relación", "significativa", "variable"],
+    help1_explicacion: "🦉 1ª Ayuda - Explicación (Objetivos e Hipótesis):\n1. Objetivo General: Inicia siempre con un verbo en infinitivo medible (Determinar, Establecer, Demostrar, Evaluar). Debe articular tu Variable Independiente (V1) y tu Variable Dependiente (V2), la población de estudio, el lugar y el año.\n2. Hipótesis General: Es la respuesta tentativa y afirmativa al objetivo general. No lleva verbo en infinitivo; afirma la existencia de relación directa, inversa o de incidencia entre ambas variables.",
+    help2_ejemplo: "🦉 2ª Ayuda - Ejemplo Modelado de Tesis:\n• Objetivo General: Determinar la relación entre el clima organizacional y el desempeño laboral en los colaboradores de la empresa Inversiones ABC S.A.C., Lima, 2024.\n• Hipótesis General: Existe una relación directa y significativa entre el clima organizacional y el desempeño laboral en los colaboradores de la empresa Inversiones ABC S.A.C., Lima, 2024."
   },
   variables: {
     name: "Variables y Operacionalización",
     rules: "Operacionalización científica de variables. Variable 1 (Independiente/predictora) y Variable 2 (Dependiente/criterio). Cada variable debe desglosarse en dimensiones teóricas claras y cada dimensión en indicadores observables y medibles cuantitativa o cualitativamente.",
-    checklist: ["variable", "dimensión", "indicador", "escala", "medición", "operacional"]
+    checklist: ["variable", "dimensión", "indicador", "escala", "medición", "operacional"],
+    help1_explicacion: "🦉 1ª Ayuda - Explicación (Operacionalización de Variables):\nOperacionalizar es convertir conceptos teóricos abstractos en elementos empíricamente observables:\n1. Identificación: Define con exactitud la Variable 1 (Independiente / Causa) y la Variable 2 (Dependiente / Efecto).\n2. Dimensiones: Son los subtemas o componentes teóricos que integran cada variable (mínimo 2 por variable).\n3. Indicadores: Son las métricas, preguntas o parámetros observables con los que recopilarás datos (ej: escala Likert de 5 niveles).",
+    help2_ejemplo: "🦉 2ª Ayuda - Ejemplo Modelado de Tesis:\nVariable 1: Clima Organizacional\n• Dimensión 1: Liderazgo directivo (Indicadores: Comunicación horizontal, apoyo del jefe, retroalimentación).\n• Dimensión 2: Condiciones de trabajo (Indicadores: Ergonomía, herramientas laborales, seguridad física).\n\nVariable 2: Desempeño Laboral\n• Dimensión 1: Eficiencia operativa (Indicadores: Precisión de tareas, cumplimiento de plazos, calidad del entregable).\n• Dimensión 2: Compromiso institucional (Indicadores: Puntualidad, proactividad, trabajo cooperativo)."
   },
   metodologia: {
     name: "Diseño Metodológico",
     rules: "Enfoque (Cuantitativo, Cualitativo o Mixto). Alcance o Nivel (Exploratorio, Descriptivo, Correlacional o Explicativo). Diseño (No experimental transversal, No experimental longitudinal, o Experimental puro/cuasiexperimental). Debe justificarse según los objetivos de la tesis.",
-    checklist: ["cuantitativo", "cualitativo", "correlacional", "descriptivo", "explicativo", "experimental", "no experimental", "transversal", "longitudinal", "diseño", "enfoque"]
+    checklist: ["cuantitativo", "cualitativo", "correlacional", "descriptivo", "explicativo", "experimental", "no experimental", "transversal", "longitudinal", "diseño", "enfoque"],
+    help1_explicacion: "🦉 1ª Ayuda - Explicación (Marco Metodológico):\nDebes fundamentar las 3 decisiones científicas de tu método:\n1. Enfoque: Cuantitativo (si recolectarás datos numéricos y probarás hipótesis con estadística) o Cualitativo (análisis de vivencias o significados).\n2. Alcance o Nivel: Descriptivo (caracteriza variables), Correlacional (mide asociación entre variables) o Explicativo (causa y efecto).\n3. Diseño: No experimental de corte transversal (si aplicas tus encuestas en un solo momento temporal sin alterar la realidad) o Experimental (con pretest y grupo de control).",
+    help2_ejemplo: "🦉 2ª Ayuda - Ejemplo Modelado de Tesis:\n«La investigación presenta un enfoque cuantitativo, dado que se recolectarán datos numéricos mediante cuestionarios para someter a prueba la hipótesis con el coeficiente Rho de Spearman. El alcance es correlacional porque analiza el grado de relación entre ambas variables. El diseño es no experimental, de corte transversal, debido a que las variables no serán manipuladas y los datos se medirán en un solo momento temporal en una muestra censal de 45 colaboradores de la empresa Inversiones ABC S.A.C.»"
   }
 };
 
@@ -173,7 +181,15 @@ function evaluateWithLocalRAG(topicKey, userMessage, ragInfo) {
     return "🦉 ¡Hola! Soy el Búho Metodólogo de Buhotech Labs. Estoy aquí para acompañar la redacción y rigor metodológico de tu tesis. ¿Qué parte de tu propuesta en " + ragInfo.name + " deseas estructurar o afinar hoy?";
   }
 
-  // 2. Detectar si el estudiante está haciendo una CONSULTA o pregunta pedagógica
+  // 1.5 Detectar solicitudes de 1ª Ayuda (Explicación) o 2ª Ayuda (Ejemplo Modelado)
+  if (text.includes("ejemplo") || text.includes("2ª ayuda") || text.includes("2da ayuda") || text.includes("segunda ayuda") || text.includes("modelo") || text.includes("caso")) {
+    if (ragInfo.help2_ejemplo) return ragInfo.help2_ejemplo;
+  }
+  if (text.includes("explicaci") || text.includes("1ª ayuda") || text.includes("1ra ayuda") || text.includes("primera ayuda") || text.includes("cómo hacer") || text.includes("como hacer") || text.includes("pautas")) {
+    if (ragInfo.help1_explicacion) return ragInfo.help1_explicacion;
+  }
+
+  // 2. Detectar si el estudiante está haciendo una CONSULTA o pregunta pedagógica general
   const isQuestion = text.includes("?") || 
                      text.includes("cómo") || text.includes("como") || 
                      text.includes("qué es") || text.includes("que es") || 
