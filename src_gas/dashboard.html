@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Dashboard - Buhotech Labs</title>
+    <?!= include('styles'); ?>
+    <style>
+        .badge-ser {
+            background: rgba(168, 85, 247, 0.15) !important;
+            color: #c084fc !important;
+        }
+        .module-card.completed {
+            border-color: var(--success-500);
+            background: rgba(16, 185, 129, 0.08);
+        }
+        .module-card.completed::before {
+            background: var(--success-500);
+            box-shadow: 0 0 10px var(--success-500);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        
+        <header style="padding:1.5rem 1.5rem 0.5rem; display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; align-items:center; gap:0.75rem;">
+                <div style="font-size:2.5rem; animation: float 3s ease-in-out infinite;">🦉</div>
+                <div>
+                    <h2 style="font-size:1.1rem; margin:0;" id="welcomeName">Cargando...</h2>
+                    <p style="font-size:0.8rem; color:var(--slate-400); margin:0;">Agencia de Investigadores</p>
+                </div>
+            </div>
+            
+            <button onclick="logout()" class="btn btn-ghost" style="padding:0.5rem; font-size:1.2rem; background:rgba(255,255,255,0.05); border-radius:50%; width:2.5rem; height:2.5rem; border:1px solid rgba(255,255,255,0.1); cursor:pointer;" title="Cerrar sesión">
+                🚪
+            </button>
+        </header>
+
+        <!-- Stats -->
+        <div class="stats-row">
+            <div class="stat-item">
+                <span class="stat-value text-fire">🔥 <span id="streak">0</span></span>
+                <span class="stat-label">Racha</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value text-gold">⚡ <span id="xp">0</span></span>
+                <span class="stat-label">XP</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value text-accent">❤️ <span id="hearts">10</span></span>
+                <span class="stat-label">Vidas</span>
+            </div>
+        </div>
+
+        <!-- Botón Ver Boleta Oficial / Calificaciones -->
+        <div style="padding: 0.5rem 1.5rem 0; text-align:center;">
+            <a href="<?= url ?>?page=grades" target="_top" class="btn btn-secondary btn-block" style="display:flex; justify-content:center; align-items:center; gap:0.5rem; text-decoration:none; font-size:0.85rem; padding:0.6rem 1rem; border-radius:12px; background:rgba(99,102,241,0.15); border:1px solid rgba(99,102,241,0.3); color:var(--brand-300);">
+                📊 Ver Reporte y Calificaciones de Tesis
+            </a>
+        </div>
+
+        <main style="flex:1; padding:1.5rem; overflow-y:auto; padding-bottom:6rem;">
+            <h3 style="margin-bottom:1.5rem; font-size:1.25rem; color:var(--slate-200);">Tu Ruta de Aprendizaje</h3>
+            
+            <div class="module-path">
+                
+                <!-- Fase 1: Cognitiva -->
+                <a href="<?= url ?>?page=lesson&phase=1" target="_top" id="card-fase-1" class="module-card current" style="text-decoration: none;">
+                    <div class="module-icon">🧠</div>
+                    <div class="module-info">
+                        <div class="module-number">Fase 1</div>
+                        <div class="module-title">Entrenamiento Cognitivo</div>
+                        <div style="font-size:0.75rem; color:var(--slate-400); margin-top:0.2rem;">Conceptos clave y método del embudo</div>
+                        <div style="margin-top:0.5rem;">
+                            <span class="module-badge badge-saber">Dimensión Saber</span>
+                        </div>
+                    </div>
+                    <div style="font-size:1.4rem; display:flex; align-items:center;" id="status-icon-1">▶️</div>
+                </a>
+
+                <!-- Fase 2: Procedimental -->
+                <a href="<?= url ?>?page=workshop" target="_top" id="card-fase-2" class="module-card locked" style="text-decoration: none;">
+                    <div class="module-icon">🛠️</div>
+                    <div class="module-info">
+                        <div class="module-number">Fase 2</div>
+                        <div class="module-title">Taller Metodológico (Con IA)</div>
+                        <div style="font-size:0.75rem; color:var(--slate-400); margin-top:0.2rem;">Redacción asistida por el Búho Socrático</div>
+                        <div style="margin-top:0.5rem;">
+                            <span class="module-badge badge-hacer">Dimensión Saber Hacer</span>
+                        </div>
+                    </div>
+                    <div style="font-size:1.4rem; display:flex; align-items:center;" id="status-icon-2">🔒</div>
+                </a>
+
+                <!-- Fase 3: Actitudinal -->
+                <a href="<?= url ?>?page=lesson&phase=3" target="_top" id="card-fase-3" class="module-card locked" style="text-decoration: none;">
+                    <div class="module-icon">⚖️</div>
+                    <div class="module-info">
+                        <div class="module-number">Fase 3</div>
+                        <div class="module-title">Laboratorio Ético y Telemetría</div>
+                        <div style="font-size:0.75rem; color:var(--slate-400); margin-top:0.2rem;">Dilemas morales y revelación de integridad</div>
+                        <div style="margin-top:0.5rem;">
+                            <span class="module-badge badge-ser">Dimensión Saber Ser</span>
+                        </div>
+                    </div>
+                    <div style="font-size:1.4rem; display:flex; align-items:center;" id="status-icon-3">🔒</div>
+                </a>
+
+            </div>
+        </main>
+        
+    </div>
+
+    <script>
+        const APP_URL = "<?= url ?>";
+
+        window.onload = function() {
+            var userId = localStorage.getItem('user_id');
+            var username = localStorage.getItem('username');
+            
+            if (!userId) {
+                window.top.location.href = APP_URL + "?page=login";
+                return;
+            }
+            
+            document.getElementById('welcomeName').textContent = "Hola, " + username;
+
+            // Consultar datos reales y progreso desde el backend
+            google.script.run
+                .withSuccessHandler(function(res) {
+                    if (res.success && res.user) {
+                        const u = res.user;
+                        document.getElementById('xp').textContent = u.xp || 0;
+                        document.getElementById('hearts').textContent = (u.hearts !== undefined) ? u.hearts : 10;
+                        document.getElementById('streak').textContent = u.streak_days || 0;
+
+                        const unlocked = parseInt(u.unlocked_module || 1);
+                        updateModuleStates(unlocked);
+                    }
+                })
+                .rpcGetUserData(userId);
+        };
+
+        function updateModuleStates(unlocked) {
+            // Fase 1
+            const card1 = document.getElementById('card-fase-1');
+            const icon1 = document.getElementById('status-icon-1');
+            if (unlocked > 1) {
+                card1.className = "module-card completed";
+                icon1.textContent = "✅";
+            } else {
+                card1.className = "module-card current";
+                icon1.textContent = "▶️";
+            }
+
+            // Fase 2
+            const card2 = document.getElementById('card-fase-2');
+            const icon2 = document.getElementById('status-icon-2');
+            if (unlocked >= 2) {
+                if (unlocked > 2) {
+                    card2.className = "module-card completed";
+                    icon2.textContent = "✅";
+                } else {
+                    card2.className = "module-card current";
+                    icon2.textContent = "▶️";
+                }
+            } else {
+                card2.className = "module-card locked";
+                icon2.textContent = "🔒";
+                card2.onclick = function(e) {
+                    e.preventDefault();
+                    alert("Completa la Fase 1 para desbloquear el Taller Metodológico.");
+                };
+            }
+
+            // Fase 3
+            const card3 = document.getElementById('card-fase-3');
+            const icon3 = document.getElementById('status-icon-3');
+            if (unlocked >= 3) {
+                card3.className = "module-card current";
+                icon3.textContent = "▶️";
+            } else {
+                card3.className = "module-card locked";
+                icon3.textContent = "🔒";
+                card3.onclick = function(e) {
+                    e.preventDefault();
+                    alert("Completa las fases previas para desbloquear el Laboratorio Ético.");
+                };
+            }
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.top.location.href = APP_URL + "?page=login";
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,821 @@
+/**
+ * Database.gs
+ * Maneja todas las interacciones con Google Sheets usando LockService 
+ * para evitar colisiones de escritura.
+ */
+
+// Si no se define, se usará la hoja activa (Script vinculado a un Google Sheet)
+// En caso de ser independiente, deberemos cambiar esto a SpreadsheetApp.openById("ID_DEL_SHEET")
+const SPREADSHEET_ID = PropertiesService.getScriptProperties().getProperty("SPREADSHEET_ID");
+
+function getSpreadsheet() {
+  if (SPREADSHEET_ID) {
+    return SpreadsheetApp.openById(SPREADSHEET_ID);
+  }
+  return SpreadsheetApp.getActiveSpreadsheet();
+}
+
+/**
+ * Obtiene todos los registros de una hoja como una lista de objetos.
+ * Asume que la primera fila son los encabezados.
+ */
+function getRecords(sheetName) {
+  const sheet = getSpreadsheet().getSheetByName(sheetName);
+  if (!sheet) return [];
+  
+  const data = sheet.getDataRange().getValues();
+  if (data.length <= 1) return [];
+  
+  const headers = data[0];
+  const records = [];
+  
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    const record = {};
+    for (let j = 0; j < headers.length; j++) {
+      record[headers[j]] = row[j];
+    }
+    // Guardar el número de fila real (base 1)
+    record._rowNumber = i + 1;
+    records.push(record);
+  }
+  
+  return records;
+}
+
+/**
+ * Inserta un nuevo registro de forma segura usando LockService.
+ */
+function insertRecord(sheetName, recordObj) {
+  const lock = LockService.getScriptLock();
+  // Esperar hasta 10 segundos por el lock
+  if (!lock.tryLock(10000)) {
+    throw new Error("Sistema ocupado, por favor intenta de nuevo.");
+  }
+  
+  try {
+    const sheet = getSpreadsheet().getSheetByName(sheetName);
+    if (!sheet) throw new Error("Hoja no encontrada: " + sheetName);
+    
+    // Optimización ultra-rápida (para soportar 70+ alumnos concurrentes):
+    // Solo leemos la Fila 1 (encabezados) en vez de toda la hoja
+    const lastCol = sheet.getLastColumn() || 1;
+    const headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+    
+    // Construir la nueva fila basándose en los encabezados
+    const newRow = [];
+    for (let i = 0; i < headers.length; i++) {
+      const colName = headers[i];
+      let value = recordObj[colName];
+      if (value === undefined || value === null) value = "";
+      
+      // Si el valor es un objeto o array (como options de JSON), convertirlo a string
+      if (typeof value === 'object') {
+         value = JSON.stringify(value);
+      }
+      
+      newRow.push(value);
+    }
+    
+    sheet.appendRow(newRow);
+    return true;
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/**
+ * Actualiza un registro existente buscando por ID u otra llave.
+ */
+function updateRecord(sheetName, keyColumn, keyValue, updatesObj) {
+  const lock = LockService.getScriptLock();
+  if (!lock.tryLock(10000)) {
+    throw new Error("Sistema ocupado, por favor intenta de nuevo.");
+  }
+  
+  try {
+    const sheet = getSpreadsheet().getSheetByName(sheetName);
+    if (!sheet) throw new Error("Hoja no encontrada: " + sheetName);
+    
+    const data = sheet.getDataRange().getValues();
+    const headers = data[0];
+    const keyIndex = headers.indexOf(keyColumn);
+    
+    if (keyIndex === -1) throw new Error("Columna de llave no encontrada: " + keyColumn);
+    
+    let rowIndex = -1;
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][keyIndex] == keyValue) {
+        rowIndex = i;
+        break;
+      }
+    }
+    
+    if (rowIndex === -1) return false; // No se encontró
+    
+    // Actualizar celdas
+    for (const key in updatesObj) {
+      const colIndex = headers.indexOf(key);
+      if (colIndex !== -1) {
+        let value = updatesObj[key];
+        if (typeof value === 'object') value = JSON.stringify(value);
+        sheet.getRange(rowIndex + 1, colIndex + 1).setValue(value);
+      }
+    }
+    
+    return true;
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/**
+ * Encuentra un registro por columna
+ */
+function findRecordBy(sheetName, keyColumn, keyValue) {
+  const records = getRecords(sheetName);
+  return records.find(r => r[keyColumn] == keyValue) || null;
+}
+
+function findRecordsBy(sheetName, keyColumn, keyValue) {
+  const records = getRecords(sheetName);
+  return records.filter(r => r[keyColumn] == keyValue);
+}
+
+// -------------------------------------------------------------
+// Funciones Específicas del Dominio (Buhotech)
+// -------------------------------------------------------------
+
+function getUserByUsername(username) {
+  return findRecordBy("users", "username", username);
+}
+
+function getUserById(userId) {
+  return findRecordBy("users", "id", userId);
+}
+
+function createUser(username) {
+  const existing = getUserByUsername(username);
+  if (existing) return existing;
+  
+  const userId = Utilities.getUuid();
+  const newUser = {
+    id: userId,
+    username: username,
+    role: "student",
+    xp: 0,
+    hearts: 10,
+    streak_days: 0,
+    unlocked_module: 1,
+    last_played: new Date().toISOString(),
+    created_at: new Date().toISOString(),
+    pasted_text_count: 0,
+    infographic_views: 0
+  };
+  
+  insertRecord("users", newUser);
+  return newUser;
+}
+
+function saveUserResponse(responseObj) {
+  responseObj.timestamp = new Date().toISOString();
+  if (!responseObj.id) responseObj.id = Utilities.getUuid();
+  insertRecord("user_responses", responseObj);
+}
+
+function saveSocraticMessage(userId, aiProvider, aiModel, userMsg, aiMsg, topic) {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const sessions = findRecordsBy("socratic_sessions", "user_id", userId);
+    let session = sessions.find(s => s.topic === topic && s.created_at && String(s.created_at).startsWith(today));
+    
+    if (!session) {
+      session = {
+        id: Utilities.getUuid(),
+        user_id: userId,
+        messages: JSON.stringify([
+          {role: "user", content: userMsg},
+          {role: "assistant", content: aiMsg}
+        ]),
+        ai_provider: aiProvider,
+        ai_model: aiModel,
+        total_interactions: 1,
+        topic: topic,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      insertRecord("socratic_sessions", session);
+    } else {
+      let msgs = [];
+      try { msgs = JSON.parse(session.messages); } catch(e) {}
+      msgs.push({role: "user", content: userMsg});
+      msgs.push({role: "assistant", content: aiMsg});
+      
+      updateRecord("socratic_sessions", "id", session.id, {
+        messages: JSON.stringify(msgs),
+        total_interactions: parseInt(session.total_interactions || 0) + 1,
+        updated_at: new Date().toISOString()
+      });
+    }
+  } catch(e) {
+    Logger.log("Error al guardar mensaje socrático: " + e.toString());
+  }
+}
+
+function saveWorkshopSubmission(userId, workshopType, submissionData, aiFeedback, grade, aiProvider) {
+  insertRecord("workshop_submissions", {
+    id: Utilities.getUuid(),
+    user_id: userId,
+    workshop_type: workshopType,
+    submission_data: JSON.stringify(submissionData),
+    ai_feedback: aiFeedback,
+    grade: grade,
+    ai_provider: aiProvider,
+    timestamp: new Date().toISOString()
+  });
+}
+
+
+
+/**
+ * Obtiene las preguntas para una fase específica.
+ * Lee desde la hoja 'questions' si existe y tiene datos; si no, usa el banco base.
+ */
+function getQuestionsForPhase(phaseNumber) {
+  phaseNumber = parseInt(phaseNumber || 1);
+  try {
+    const sheetQuestions = getRecords('questions');
+    if (sheetQuestions && sheetQuestions.length > 0) {
+      const filtered = sheetQuestions.filter(q => parseInt(q.phase_number) === phaseNumber);
+      if (filtered.length > 0) {
+        return filtered.map(q => {
+          let opts = q.options;
+          if (typeof opts === 'string') {
+            try { opts = JSON.parse(opts); } catch(e) { opts = []; }
+          }
+          return {
+            id: q.id,
+            text: q.text,
+            options: opts,
+            correct_answer: q.correct_answer,
+            image_filename: q.image_filename,
+            min_reading_time_ms: parseInt(q.min_reading_time_ms || 3000),
+            expected_time_ms: parseInt(q.expected_time_ms || 10000),
+            verification_text: q.verification_text,
+            rescue_text: q.rescue_text,
+            phase: q.phase,
+            dimension: q.dimension,
+            level: parseInt(q.level || 1),
+            question_type: q.question_type
+          };
+        });
+      }
+    }
+  } catch(e) {
+    console.warn('Error leyendo hoja questions:', e);
+  }
+  
+  // Banco de respaldo garantizado
+  const SEED_QUESTIONS = [
+  {
+    "id": "4fe225e3-9596-450b-94f1-0b16e9c2fd17",
+    "dimension": "saber",
+    "level": 1,
+    "phase": "Fase 1: Entrenamiento Conceptual",
+    "phase_number": 1,
+    "question_type": "MAIN",
+    "text": "¿Qué significa investigar científicamente?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Buscar nuevos conocimientos o soluciones a un problema de forma sistemática."
+      },
+      {
+        "id": "B",
+        "text": "Copiar información de un libro para presentarla en clase."
+      }
+    ],
+    "correct_answer": "A",
+    "image_filename": "Buhotech - Conocimiento Científico.png",
+    "min_reading_time_ms": 2000,
+    "expected_time_ms": 7000,
+    "verification_text": "¡Correcto! Investigar es un proceso sistemático para descubrir algo nuevo o resolver dudas.",
+    "rescue_text": "Recuerda que la investigación no es solo copiar, sino crear nuevo conocimiento.",
+    "weight": 1.0
+  },
+  {
+    "id": "51758155-52f2-4218-8087-dfbae0340919",
+    "dimension": "saber",
+    "level": 1,
+    "phase": "Fase 1: Entrenamiento Conceptual",
+    "phase_number": 1,
+    "question_type": "MAIN",
+    "text": "¿Para qué sirve hacer una tesis?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Para demostrar que puedes investigar y resolver un problema real de tu carrera."
+      },
+      {
+        "id": "B",
+        "text": "Únicamente para cumplir un trámite y archivar el documento en la biblioteca."
+      }
+    ],
+    "correct_answer": "A",
+    "image_filename": "Buhotech - Conocimiento Científico.png",
+    "min_reading_time_ms": 2000,
+    "expected_time_ms": 7000,
+    "verification_text": "¡Exacto! Una tesis demuestra tu capacidad para aplicar la ciencia a problemas reales.",
+    "rescue_text": "Una tesis es tu aporte profesional a la sociedad, no solo un trámite.",
+    "weight": 1.0
+  },
+  {
+    "id": "00332bd0-7dc8-4517-b09a-fde55f33b9f3",
+    "dimension": "saber",
+    "level": 1,
+    "phase": "Fase 1: Entrenamiento Conceptual",
+    "phase_number": 1,
+    "question_type": "MAIN",
+    "text": "¿Qué propósito principal tiene la 'Justificación' en una investigación?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Explicar por qué es importante hacer el estudio y a quiénes va a beneficiar."
+      },
+      {
+        "id": "B",
+        "text": "Copiar las conclusiones de otros autores para que el trabajo se vea más largo."
+      }
+    ],
+    "correct_answer": "A",
+    "image_filename": "Buhotech  - JUSTIFICACIÓN.png",
+    "min_reading_time_ms": 2000,
+    "expected_time_ms": 7000,
+    "verification_text": "¡Excelente! La justificación convence al lector de que el trabajo vale la pena.",
+    "rescue_text": "Recuerda: justificar es dar razones válidas de por qué tu trabajo es útil o necesario.",
+    "weight": 1.0
+  },
+  {
+    "id": "8f491660-b987-4d2e-99d6-3bc96ad11ef7",
+    "dimension": "saber",
+    "level": 1,
+    "phase": "Fase 1: Entrenamiento Conceptual",
+    "phase_number": 1,
+    "question_type": "MAIN",
+    "text": "¿Qué es un problema de investigación?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Una dificultad o duda teórica o práctica que necesita ser resuelta mediante el método científico."
+      },
+      {
+        "id": "B",
+        "text": "Una tarea o resumen que el profesor deja para la casa."
+      }
+    ],
+    "correct_answer": "A",
+    "image_filename": "Buhotech - FORMULACIÓN DEL PROBLEMA.png",
+    "min_reading_time_ms": 2000,
+    "expected_time_ms": 7000,
+    "verification_text": "¡Correcto! Un problema de investigación es el punto de partida que requiere investigación estructurada.",
+    "rescue_text": "Recuerda que la investigación científica busca resolver vacíos de conocimiento.",
+    "weight": 1.0
+  },
+  {
+    "id": "20947e5d-a270-4787-b002-069998eac0ab",
+    "dimension": "saber",
+    "level": 1,
+    "phase": "Fase 1: Entrenamiento Conceptual",
+    "phase_number": 1,
+    "question_type": "MAIN",
+    "text": "¿Cuál es el primer paso clave al iniciar cualquier tesis o investigación científica?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Plantear y delimitar el problema de investigación."
+      },
+      {
+        "id": "B",
+        "text": "Escribir las conclusiones finales."
+      }
+    ],
+    "correct_answer": "A",
+    "image_filename": "Buhotech - FORMULACIÓN DEL PROBLEMA.png",
+    "min_reading_time_ms": 2000,
+    "expected_time_ms": 6000,
+    "verification_text": "¡Exacto! No puedes investigar sin tener claro qué problema vas a resolver.",
+    "rescue_text": "Si no sabes a dónde vas, ¿cómo podrías llegar? El problema es siempre lo primero.",
+    "weight": 1.0
+  },
+  {
+    "id": "06971534-5021-462d-bf36-ce087b2b52aa",
+    "dimension": "saber",
+    "level": 1,
+    "phase": "Fase 1: Entrenamiento Conceptual",
+    "phase_number": 1,
+    "question_type": "MAIN",
+    "text": "El método del embudo para plantear un problema consiste en redactar desde lo general a lo particular. ¿Cuáles son los tres niveles lógicos?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Macro, Meso, Micro."
+      },
+      {
+        "id": "B",
+        "text": "Introducción, Desarrollo, Conclusión."
+      }
+    ],
+    "correct_answer": "A",
+    "image_filename": "Buhotech - Metodo del Embudo.png",
+    "min_reading_time_ms": 2500,
+    "expected_time_ms": 8000,
+    "verification_text": "Exacto: Macro (Mundial), Meso (Nacional), Micro (Local/Institucional).",
+    "rescue_text": "Piensa en el tamaño: desde lo más grande (Macro) hasta lo más pequeño (Micro).",
+    "weight": 1.0
+  },
+  {
+    "id": "8b70d5c3-3420-4abd-89f7-f3e4c9917cf4",
+    "dimension": "saber",
+    "level": 2,
+    "phase": "Fase 1: Entrenamiento Conceptual",
+    "phase_number": 1,
+    "question_type": "MAIN",
+    "text": "¿Cuál de los siguientes es el mejor ejemplo de un **objetivo general** correctamente formulado y medible?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Conocer un poco sobre cómo afecta el internet a los niños de hoy."
+      },
+      {
+        "id": "B",
+        "text": "Determinar la relación entre el uso de redes sociales y el rendimiento académico en estudiantes de secundaria del Colegio San Marcos (2024)."
+      },
+      {
+        "id": "C",
+        "text": "Implementar una campaña para que los jóvenes usen menos el celular."
+      }
+    ],
+    "correct_answer": "B",
+    "image_filename": "Buhotech - OBJETIVOS.png",
+    "min_reading_time_ms": 4000,
+    "expected_time_ms": 15000,
+    "verification_text": "Correcto. El verbo 'Determinar' es medible y las variables están delimitadas.",
+    "rescue_text": "Busca un verbo medible (Determinar, Analizar) y una delimitación clara.",
+    "weight": 1.0
+  },
+  {
+    "id": "04607624-f4ca-498c-a47b-ace59371f7ca",
+    "dimension": "saber",
+    "level": 2,
+    "phase": "Fase 1: Entrenamiento Conceptual",
+    "phase_number": 1,
+    "question_type": "MATCH",
+    "text": "Empareja cada elemento para mantener la coherencia (Matriz de Consistencia):",
+    "options": [
+      {
+        "id": "1",
+        "left": "Problema",
+        "right": "¿Existe relación entre X e Y?"
+      },
+      {
+        "id": "2",
+        "left": "Objetivo",
+        "right": "Determinar la relación entre X e Y."
+      },
+      {
+        "id": "3",
+        "left": "Hipótesis",
+        "right": "Existe una relación significativa entre X e Y."
+      }
+    ],
+    "correct_answer": "MATCH",
+    "image_filename": "Buhotech - Hipótesis.png",
+    "min_reading_time_ms": 4000,
+    "expected_time_ms": 20000,
+    "verification_text": "¡Perfecto! Has comprendido la alineación lógica.",
+    "rescue_text": "El problema es pregunta, el objetivo es verbo, la hipótesis es afirmación.",
+    "weight": 1.0
+  },
+  {
+    "id": "2d56eb39-002b-4582-be43-b532dc94bc0a",
+    "dimension": "saber",
+    "level": 2,
+    "phase": "Fase 1: Entrenamiento Conceptual",
+    "phase_number": 1,
+    "question_type": "FILL_BLANK",
+    "text": "La operacionalización es el proceso de pasar de un concepto abstracto (Variable) a uno medible a través de ______ (componentes temáticos) y ______ (formas de medir).",
+    "options": [
+      {
+        "id": "A",
+        "text": "dimensiones / indicadores"
+      },
+      {
+        "id": "B",
+        "text": "preguntas / objetivos"
+      }
+    ],
+    "correct_answer": "A",
+    "image_filename": "Buhotech - VACIADO DE DATOS.png",
+    "min_reading_time_ms": 3000,
+    "expected_time_ms": 10000,
+    "verification_text": "Correcto. Variables -> Dimensiones -> Indicadores.",
+    "rescue_text": "Recuerda la jerarquía: Variable -> Dimensión -> Indicador.",
+    "weight": 1.0
+  },
+  {
+    "id": "f63d8970-e402-449f-a0f9-cd94be27f10b",
+    "dimension": "saber",
+    "level": 3,
+    "phase": "Fase 1: Entrenamiento Conceptual",
+    "phase_number": 1,
+    "question_type": "MAIN",
+    "text": "Dada la variable 'Rendimiento Académico', ¿cuál es la clasificación correcta?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Dimensión: Notas de matemáticas | Indicador: Promedio vigesimal 0-20"
+      },
+      {
+        "id": "B",
+        "text": "Dimensión: Promedio vigesimal 0-20 | Indicador: Notas de matemáticas"
+      }
+    ],
+    "correct_answer": "A",
+    "image_filename": "Buhotech -  ANÁLISIS ESTADÍSTICO.png",
+    "min_reading_time_ms": 4000,
+    "expected_time_ms": 15000,
+    "verification_text": "Correcto. El indicador siempre es la métrica exacta.",
+    "rescue_text": "El indicador es cómo lo mides exactamente (números, rangos).",
+    "weight": 1.0
+  },
+  {
+    "id": "23400d6c-7fdc-42a9-9db4-678bf643619a",
+    "dimension": "saber",
+    "level": 2,
+    "phase": "Fase 1: Entrenamiento Conceptual",
+    "phase_number": 1,
+    "question_type": "MAIN",
+    "text": "Si tu investigación busca ver el efecto de aplicar un nuevo software sin un grupo de control, ¿qué tipo de diseño cuantitativo es?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Pre-experimental"
+      },
+      {
+        "id": "B",
+        "text": "Cuasi-experimental"
+      },
+      {
+        "id": "C",
+        "text": "Experimental Puro"
+      }
+    ],
+    "correct_answer": "A",
+    "image_filename": "Buhotech - INVESTIGACIÓN CUASIEXPERIMENTAL.png",
+    "min_reading_time_ms": 3000,
+    "expected_time_ms": 15000,
+    "verification_text": "Correcto. Sin grupo de control es pre-experimental.",
+    "rescue_text": "Revisa el esquema: si no hay grupo de control, es el nivel más básico (pre-experimental).",
+    "weight": 1.0
+  },
+  {
+    "id": "7e2ea04e-5f1a-411e-9c70-3accef061295",
+    "dimension": "saber",
+    "level": 2,
+    "phase": "Fase 1: Entrenamiento Conceptual",
+    "phase_number": 1,
+    "question_type": "MAIN",
+    "text": "Si solo vas a observar y recolectar datos en un único momento del tiempo sin manipular nada, tu diseño es...",
+    "options": [
+      {
+        "id": "A",
+        "text": "No experimental, Transversal"
+      },
+      {
+        "id": "B",
+        "text": "No experimental, Longitudinal"
+      },
+      {
+        "id": "C",
+        "text": "Experimental Puro"
+      }
+    ],
+    "correct_answer": "A",
+    "image_filename": "Buhotech - INVESTIGACIÓN TRANSVERSAL.png",
+    "min_reading_time_ms": 3000,
+    "expected_time_ms": 15000,
+    "verification_text": "Correcto. Transversal significa 'en un solo momento'.",
+    "rescue_text": "Si es en un único momento, atraviesa el tiempo una sola vez (Transversal).",
+    "weight": 1.0
+  },
+  {
+    "id": "148d099c-077c-4975-9824-50712b87d0d5",
+    "dimension": "saber",
+    "level": 3,
+    "phase": "Fase 1: Entrenamiento Conceptual",
+    "phase_number": 1,
+    "question_type": "MAIN",
+    "text": "De los diseños cualitativos, ¿cuál se enfoca en comprender las experiencias vividas (Fenomenológico) y cuál busca resolver un problema de la comunidad con su participación (Investigación-Acción)?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Fenomenológico (Experiencias) / Investigación-Acción (Resolver problema)."
+      },
+      {
+        "id": "B",
+        "text": "Fenomenológico (Resolver problema) / Investigación-Acción (Experiencias)."
+      }
+    ],
+    "correct_answer": "A",
+    "image_filename": "Buhotech - Fenomenología.png",
+    "min_reading_time_ms": 3500,
+    "expected_time_ms": 15000,
+    "verification_text": "Exacto. Fenomenológico estudia el fenómeno desde la experiencia.",
+    "rescue_text": "Fenómeno = Experiencia. Acción = Resolver un problema actuando.",
+    "weight": 1.0
+  },
+  {
+    "id": "ecd7195c-c39d-4321-868d-9be8e0ec3127",
+    "dimension": "saber_hacer",
+    "level": 2,
+    "phase": "Fase 2: Aplicación Procedimental",
+    "phase_number": 2,
+    "question_type": "MATRIX",
+    "text": "Matriz de Consistencia Interactiva. Selecciona en los recuadros las opciones correctas para mantener la coherencia horizontal.",
+    "options": [],
+    "correct_answer": "MATRIX",
+    "image_filename": "Buhotech - FORMULACIÓN DEL PROBLEMA.png",
+    "min_reading_time_ms": 1000,
+    "expected_time_ms": 5000,
+    "verification_text": "¡Has completado la Matriz!",
+    "rescue_text": "Debes completar la matriz manteniendo la coherencia horizontal.",
+    "weight": 1.0
+  },
+  {
+    "id": "cb0cb7ca-449f-44a6-9609-d2e6ecbf362c",
+    "dimension": "saber_hacer",
+    "level": 3,
+    "phase": "Fase 2: Aplicación Procedimental",
+    "phase_number": 2,
+    "question_type": "WORKSHOP",
+    "text": "Taller Socrático: Usa las pestañas para redactar tu planteamiento, objetivos, variables y metodología guiado por el Búho.",
+    "options": [],
+    "correct_answer": "WORKSHOP",
+    "image_filename": "Buhotech - FORMULACIÓN DEL PROBLEMA.png",
+    "min_reading_time_ms": 1000,
+    "expected_time_ms": 5000,
+    "verification_text": "¡Has completado el taller!",
+    "rescue_text": "Debes completar el taller con la ayuda del Búho.",
+    "weight": 1.0
+  },
+  {
+    "id": "274eaf6d-15e9-4977-8544-6317a0057f7f",
+    "dimension": "saber_ser",
+    "level": 3,
+    "phase": "Fase 3: Laboratorio Ético",
+    "phase_number": 3,
+    "question_type": "SCENARIO",
+    "text": "Escenario: Un grupo de estudiantes descubre cómo hacer que la IA les escriba la tesis completa sin que ellos tengan que leer, analizar, ni entender los problemas. Logran graduarse usando esta técnica. ¿Qué pasaría si todos los profesionales del país aprobaran sus carreras copiando a la IA?",
+    "options": [
+      {
+        "id": "A",
+        "text": "La sociedad avanzaría más rápido porque tendríamos más graduados en menos tiempo.",
+        "is_ethical": false,
+        "feedback": "Tener graduados que no saben pensar críticamente es un gran riesgo para el país."
+      },
+      {
+        "id": "B",
+        "text": "Se perdería el pensamiento crítico, la capacidad de resolver problemas reales y se tomarían decisiones sin comprender la ciencia, llevando a errores graves.",
+        "is_ethical": true,
+        "feedback": "¡Exacto! El valor del ser humano radica en su capacidad de análisis crítico y ético, algo que no se puede delegar ciegamente a una máquina."
+      },
+      {
+        "id": "C",
+        "text": "No pasaría nada; el título es solo un trámite y la IA siempre tendrá la razón.",
+        "is_ethical": false,
+        "feedback": "Las IAs alucinan y cometen errores. Depender de ellas sin juicio crítico es peligroso."
+      }
+    ],
+    "correct_answer": "SCENARIO",
+    "image_filename": "Buhotech -   Plagio vs. APA.png",
+    "min_reading_time_ms": 6000,
+    "expected_time_ms": 30000,
+    "verification_text": "El pensamiento crítico es irreemplazable.",
+    "rescue_text": "Reflexiona sobre qué pasa cuando nadie entiende cómo funcionan las cosas.",
+    "weight": 1.0
+  }
+];
+  return SEED_QUESTIONS.filter(q => q.phase_number === phaseNumber);
+}
+
+/**
+ * Calcula la calificación vigesimal completa (0-20) y actualiza la fila del usuario
+ * en la hoja 'competency_grades'. Garantiza exactamente 1 fila por usuario con todas sus métricas.
+ */
+function calculateAndSaveGrades(userId) {
+  const user = findRecordBy("users", "id", userId);
+  if (!user) return null;
+
+  const userResponses = findRecordsBy("user_responses", "user_id", userId);
+  
+  // 1. SABER (Cognitiva) por niveles taxonómicos (N1: 25%, N2: 35%, N3: 40%)
+  let n1_total = 0, n1_correct = 0;
+  let n2_total = 0, n2_correct = 0;
+  let n3_total = 0, n3_correct = 0;
+  
+  let totalTime = 0;
+  let fastRandomCount = 0;
+  let totalFailed = 0;
+  let totalCorrect = 0;
+  
+  userResponses.forEach(r => {
+    const isCorr = (r.is_correct === true || r.is_correct === "true" || r.is_correct === 1);
+    const lvl = parseInt(r.level || 1);
+    const dim = String(r.dimension || 'saber').toLowerCase();
+    
+    if (isCorr) totalCorrect++;
+    totalTime += parseFloat(r.response_time_ms || 0);
+    totalFailed += parseInt(r.failed_attempts || 0);
+    if (r.behavior_flag === "FAST_RANDOM") fastRandomCount++;
+    
+    if (dim === "saber") {
+      if (lvl === 1) { n1_total++; if (isCorr) n1_correct++; }
+      else if (lvl === 2) { n2_total++; if (isCorr) n2_correct++; }
+      else if (lvl >= 3) { n3_total++; if (isCorr) n3_correct++; }
+    }
+  });
+
+  const saber_n1 = n1_total > 0 ? (n1_correct / n1_total * 20) : 0;
+  const saber_n2 = n2_total > 0 ? (n2_correct / n2_total * 20) : 0;
+  const saber_n3 = n3_total > 0 ? (n3_correct / n3_total * 20) : 0;
+  const saber_grade = Math.round(((saber_n1 * 0.25) + (saber_n2 * 0.35) + (saber_n3 * 0.40)) * 100) / 100;
+
+  // 2. SABER HACER (Procedimental)
+  let sh_total = 0, sh_correct = 0;
+  userResponses.filter(r => String(r.dimension).toLowerCase() === "saber_hacer").forEach(r => {
+    sh_total++;
+    if (r.is_correct === true || r.is_correct === "true" || r.is_correct === 1) sh_correct++;
+  });
+  const quiz_hacer = sh_total > 0 ? (sh_correct / sh_total * 20) : (saber_grade * 0.9);
+  
+  // Talleres
+  const workshops = findRecordsBy("workshop_submissions", "user_id", userId);
+  let ws_sum = 0;
+  workshops.forEach(w => ws_sum += parseFloat(w.grade || 0));
+  const ws_avg = workshops.length > 0 ? (ws_sum / workshops.length) : 0;
+  const saber_hacer_grade = ws_avg > 0 ? Math.round((quiz_hacer * 0.6 + ws_avg * 0.4) * 100) / 100 : Math.round(quiz_hacer * 100) / 100;
+
+  // 3. SABER SER (Actitudinal)
+  let ss_total = 0, ss_correct = 0;
+  userResponses.filter(r => String(r.dimension).toLowerCase() === "saber_ser").forEach(r => {
+    ss_total++;
+    if (r.is_correct === true || r.is_correct === "true" || r.is_correct === 1) ss_correct++;
+  });
+  const saber_ser_grade = ss_total > 0 ? Math.round((ss_correct / ss_total * 20) * 100) / 100 : 20.0;
+
+  // 4. SANCIÓN ACTITUDINAL (Puntos en contra deducidos - Tope: 10 pts)
+  const pastedCount = parseInt(user.pasted_text_count || 0);
+  const infographicViews = parseInt(user.infographic_views || 0);
+  const unethicalCount = Math.max(0, ss_total - ss_correct);
+  const excessFastRandom = Math.max(0, fastRandomCount - 1);
+  
+  // Fórmula tesis: 3pts por decisión no ética + 2pts por pegar texto + 1pt por adivinar al azar
+  const rawPenalty = (unethicalCount * 3.0) + (pastedCount * 2.0) + (excessFastRandom * 1.0);
+  const bonus = Math.min(infographicViews * 0.5, 4.0); // Bonificación por estudiar infografía
+  const actitudinal_penalty = Math.round(Math.min(10.0, Math.max(0.0, rawPenalty - bonus)) * 100) / 100;
+
+  // 5. NOTA FINAL VIGESIMAL PONDERADA (0-20)
+  const baseWeighted = (saber_grade * 0.50) + (saber_hacer_grade * 0.50);
+  const final_grade_20 = Math.max(0.0, Math.round((baseWeighted - actitudinal_penalty) * 100) / 100);
+
+  const avgResponseTime = userResponses.length > 0 ? Math.round(totalTime / userResponses.length) : 0;
+
+  // Registro consolidado (1 fila por estudiante en competency_grades)
+  const record = {
+    id: Utilities.getUuid(),
+    user_id: userId,
+    username: user.username,
+    saber_grade: saber_grade,
+    saber_hacer_grade: saber_hacer_grade,
+    saber_ser_grade: saber_ser_grade,
+    final_grade_20: final_grade_20,
+    actitudinal_penalty: actitudinal_penalty,
+    total_questions_answered: userResponses.length,
+    total_correct: totalCorrect,
+    total_socratic_interactions: 0,
+    avg_response_time_ms: avgResponseTime,
+    fast_random_count: fastRandomCount,
+    total_failed_attempts: totalFailed,
+    calculated_at: new Date().toISOString()
+  };
+
+  // Buscar si ya existe la fila en 'competency_grades' para este usuario
+  const existingGrade = findRecordBy("competency_grades", "user_id", userId);
+  if (existingGrade) {
+    updateRecord("competency_grades", "user_id", userId, record);
+  } else {
+    insertRecord("competency_grades", record);
+  }
+
+  return record;
+}

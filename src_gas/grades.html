@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mis Calificaciones - Buhotech Labs</title>
+    <?!= include('styles'); ?>
+    <style>
+        .grades-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+        .grade-card {
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-lg);
+            padding: 1rem 0.5rem;
+            text-align: center;
+        }
+        .grade-value {
+            font-family: var(--font-display);
+            font-size: 1.6rem;
+            font-weight: 800;
+            margin-bottom: 0.25rem;
+        }
+        .grade-label {
+            font-size: 0.75rem;
+            color: var(--slate-400);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+        }
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.6rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header style="padding:1.5rem 1.5rem 0.5rem; display:flex; align-items:center; gap:1rem;">
+            <a href="<?= url ?>?page=dashboard" target="_top" style="color:var(--slate-400); text-decoration:none; font-size:1.4rem;">←</a>
+            <h1 style="font-size:1.3rem; margin:0; color:white;">📊 Reporte de Tesis</h1>
+        </header>
+
+        <main style="flex:1; padding:1.5rem; overflow-y:auto; padding-bottom:5rem;">
+            
+            <!-- Nota Final -->
+            <div class="glass-card" style="text-align:center; margin-bottom:1.5rem;">
+                <div style="font-size:0.75rem; font-weight:700; color:var(--slate-400); text-transform:uppercase; letter-spacing:0.15em; margin-bottom:0.5rem;">Nota Final Vigesimal</div>
+                <div id="final-grade" style="font-family:var(--font-display); font-weight:900; font-size:3.8rem; background:linear-gradient(135deg, var(--brand-400), var(--success-400)); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">
+                    --
+                </div>
+                <div style="font-size:0.85rem; color:var(--slate-400); font-weight:600;">Escala de 0 a 20 puntos</div>
+                <div id="penalty-badge" style="display:none; margin-top:0.75rem; padding:0.4rem 0.85rem; background:rgba(239, 68, 68, 0.15); border:1px solid rgba(239, 68, 68, 0.35); border-radius:12px; font-size:0.8rem; color:#fca5a5; font-weight:700;">
+                    ⚠️ Puntos en contra (Sanción Actitudinal): -<span id="penalty-val">0</span> pts
+                </div>
+            </div>
+
+            <!-- Notas por Dimensión -->
+            <h3 style="font-size:0.9rem; color:var(--slate-300); margin-bottom:0.75rem; text-transform:uppercase; letter-spacing:0.05em;">Dimensiones de Competencia</h3>
+            <div class="grades-grid">
+                <div class="grade-card">
+                    <div class="grade-value text-brand" id="saber-grade">--</div>
+                    <div class="grade-label">Saber (Cognitiva)</div>
+                </div>
+                <div class="grade-card">
+                    <div class="grade-value text-gold" id="hacer-grade">--</div>
+                    <div class="grade-label">Saber Hacer</div>
+                </div>
+                <div class="grade-card">
+                    <div class="grade-value text-success" id="ser-grade">--</div>
+                    <div class="grade-label">Saber Ser</div>
+                </div>
+            </div>
+
+            <!-- Métricas y Telemetría -->
+            <div class="glass-card" style="margin-top:1.5rem;">
+                <h3 style="font-size:0.95rem; color:var(--brand-300); margin-bottom:1rem;">📡 Indicadores de Comportamiento y Rigor</h3>
+                
+                <div class="metric-row">
+                    <span style="color:var(--slate-300);">Preguntas Respondidas</span>
+                    <strong id="answered-count" style="color:white;">--</strong>
+                </div>
+                <div class="metric-row">
+                    <span style="color:var(--slate-300);">Aciertos Totales</span>
+                    <strong id="correct-count" style="color:var(--success-400);">--</strong>
+                </div>
+                <div class="metric-row">
+                    <span style="color:var(--slate-300);">Respuestas Impulsivas (&lt;2s)</span>
+                    <strong id="fast-count" style="color:var(--warning-400);">--</strong>
+                </div>
+                <div class="metric-row">
+                    <span style="color:var(--slate-300);">Intentos de Copiar/Pegar</span>
+                    <strong id="paste-count" style="color:var(--accent-400);">--</strong>
+                </div>
+                <div class="metric-row">
+                    <span style="color:var(--slate-300);">Tiempo Promedio de Reflexión</span>
+                    <strong id="avg-time" style="color:var(--brand-300);">--</strong>
+                </div>
+                <div class="metric-row">
+                    <span style="color:var(--slate-300);">Persistencia (Intentos fallidos)</span>
+                    <strong id="failed-count" style="color:var(--slate-400);">--</strong>
+                </div>
+            </div>
+
+            <p style="font-size:0.75rem; color:var(--slate-500); text-align:center; margin-top:1.5rem; line-height:1.5;">
+                Estos datos se consolidan en tiempo real en la pestaña <code>competency_grades</code> de Google Sheets.<br>
+                Cada alumno cuenta con una fila única lista para exportar a SPSS/Excel.
+            </p>
+
+        </main>
+    </div>
+
+    <script>
+        window.onload = function() {
+            const userId = localStorage.getItem('user_id');
+            if (!userId) {
+                window.top.location.href = "<?= url ?>?page=login";
+                return;
+            }
+
+            google.script.run
+                .withSuccessHandler(function(res) {
+                    if (res.success && res.grades) {
+                        const g = res.grades;
+                        document.getElementById('final-grade').textContent = (g.final_grade_20 !== undefined) ? g.final_grade_20.toFixed(1) : "0.0";
+                        document.getElementById('saber-grade').textContent = (g.saber_grade !== undefined) ? g.saber_grade.toFixed(1) : "--";
+                        document.getElementById('hacer-grade').textContent = (g.saber_hacer_grade !== undefined) ? g.saber_hacer_grade.toFixed(1) : "--";
+                        document.getElementById('ser-grade').textContent = (g.saber_ser_grade !== undefined) ? g.saber_ser_grade.toFixed(1) : "--";
+
+                        if (g.actitudinal_penalty > 0) {
+                            document.getElementById('penalty-val').textContent = g.actitudinal_penalty.toFixed(1);
+                            document.getElementById('penalty-badge').style.display = "inline-block";
+                        }
+
+                        document.getElementById('answered-count').textContent = g.total_questions_answered || 0;
+                        document.getElementById('correct-count').textContent = g.total_correct || 0;
+                        document.getElementById('fast-count').textContent = g.fast_random_count || 0;
+                        document.getElementById('paste-count').textContent = g.pasted_count || 0;
+                        document.getElementById('avg-time').textContent = Math.round((g.avg_response_time_ms || 0) / 1000) + " s";
+                        document.getElementById('failed-count').textContent = g.total_failed_attempts || 0;
+                    }
+                })
+                .rpcGetGrades(userId);
+        };
+    </script>
+</body>
+</html>
