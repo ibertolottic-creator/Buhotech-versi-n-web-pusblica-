@@ -262,35 +262,29 @@ SABER_SER_QUESTIONS = [
 
 def seed():
     with Session(engine) as session:
-        # Avoid foreign key constraint errors by only seeding if empty
-        existing_questions = session.query(Question).count()
+        # Repoblar incondicionalmente para desarrollo
+        session.query(Question).delete()
+        session.commit()
+
         all_questions = SABER_QUESTIONS + SABER_HACER_QUESTIONS + SABER_SER_QUESTIONS
-        
-        if existing_questions == 0:
-            for q_data in all_questions:
-                q = Question(
-                    id=generate_uuid(),
-                    dimension=q_data["dimension"],
-                    level=q_data["level"],
-                    phase=q_data["phase"],
-                    phase_number=q_data["phase_number"],
-                    question_type=q_data["question_type"],
-                    text=q_data["text"],
-                    options=q_data["options"],
-                    correct_answer=q_data["correct_answer"],
-                    image_filename=q_data.get("image_filename"),
-                    min_reading_time_ms=q_data["min_reading_time_ms"],
-                    expected_time_ms=q_data["expected_time_ms"],
-                    verification_text=q_data["verification_text"],
-                    rescue_text=q_data["rescue_text"],
-                )
-                session.add(q)
-            print(f"[OK] {len(all_questions)} preguntas insertadas exitosamente (Unidad 3: Metodologia):")
-            print(f"   - Saber: {len(SABER_QUESTIONS)}")
-            print(f"   - Saber Hacer: {len(SABER_HACER_QUESTIONS)}")
-            print(f"   - Saber Ser: {len(SABER_SER_QUESTIONS)}")
-        else:
-            print(f"[INFO] La base de datos ya contiene {existing_questions} preguntas. Omitiendo poblamiento de preguntas.")
+        for q_data in all_questions:
+            q = Question(
+                id=generate_uuid(),
+                dimension=q_data["dimension"],
+                level=q_data["level"],
+                phase=q_data["phase"],
+                phase_number=q_data["phase_number"],
+                question_type=q_data["question_type"],
+                text=q_data["text"],
+                options=q_data["options"],
+                correct_answer=q_data["correct_answer"],
+                image_filename=q_data.get("image_filename"),
+                min_reading_time_ms=q_data["min_reading_time_ms"],
+                expected_time_ms=q_data["expected_time_ms"],
+                verification_text=q_data["verification_text"],
+                rescue_text=q_data["rescue_text"],
+            )
+            session.add(q)
 
         admin_exists = session.query(User).filter_by(role="admin").first()
         if not admin_exists:
@@ -298,6 +292,10 @@ def seed():
             session.add(admin)
 
         session.commit()
+        print(f"[OK] {len(all_questions)} preguntas insertadas exitosamente (Unidad 3: Metodologia):")
+        print(f"   - Saber: {len(SABER_QUESTIONS)}")
+        print(f"   - Saber Hacer: {len(SABER_HACER_QUESTIONS)}")
+        print(f"   - Saber Ser: {len(SABER_SER_QUESTIONS)}")
 
 if __name__ == "__main__":
     seed()
