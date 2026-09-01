@@ -5,20 +5,21 @@
  * Incluye motor de RAG Local Autónomo que garantiza funcionamiento sin errores.
  */
 
-function getAllGeminiKeys() {
+function getKeysByPrefix(prefix) {
   try {
     const props = PropertiesService.getScriptProperties().getProperties();
     const keys = [];
 
-    // 1. Clave exacta por defecto
-    if (props["GEMINI_API_KEY"]) {
-      const k = props["GEMINI_API_KEY"].trim();
+    // 1. Clave exacta por defecto (ej: GEMINI_API_KEY, GROQ_API_KEY, MISTRAL_API_KEY, META_API_KEY)
+    const exactName = prefix.toUpperCase() + "_API_KEY";
+    if (props[exactName]) {
+      const k = props[exactName].trim();
       if (k) keys.push(k);
     }
 
-    // 2. Detectar todas las claves con sufijos (ej: GEMINI_API_KEY_coorduva, GEMINI_API_KEY_permanencia_posgrado, etc.)
+    // 2. Detectar claves con números o sufijos (ej: GEMINI_API_KEY_1, GEMINI_API_KEY_coorduva, etc.)
     for (const keyName in props) {
-      if (keyName.toUpperCase().includes("GEMINI") && keyName !== "GEMINI_API_KEY") {
+      if (keyName.toUpperCase().includes(prefix.toUpperCase()) && keyName !== exactName) {
         const val = (props[keyName] || "").trim();
         if (val && val.length > 5 && !keys.includes(val)) {
           keys.push(val);
@@ -28,18 +29,26 @@ function getAllGeminiKeys() {
 
     return keys;
   } catch(e) {
-    Logger.log("Error leyendo propiedades: " + e.toString());
+    Logger.log("Error leyendo propiedades para " + prefix + ": " + e.toString());
     return [];
   }
 }
 
 function getKeys() {
-  const props = PropertiesService.getScriptProperties();
-  const allGemini = getAllGeminiKeys();
+  const geminiPool = getKeysByPrefix("GEMINI");
+  const groqPool = getKeysByPrefix("GROQ");
+  const mistralPool = getKeysByPrefix("MISTRAL");
+  const metaPool = getKeysByPrefix("META");
+
   return {
-    gemini: allGemini.length > 0 ? allGemini[0] : null,
-    geminiPool: allGemini,
-    groq: props.getProperty("GROQ_API_KEY")
+    gemini: geminiPool[0] || null,
+    geminiPool: geminiPool,
+    groq: groqPool[0] || null,
+    groqPool: groqPool,
+    mistral: mistralPool[0] || null,
+    mistralPool: mistralPool,
+    meta: metaPool[0] || null,
+    metaPool: metaPool
   };
 }
 
@@ -69,11 +78,10 @@ const RAG_KNOWLEDGE_BASE = {
 };
 
 /**
- * Orquesta la revisión socrática con RAG cerrado.
+ * Orquesta la revisión socrática con RAG cerrado y cascada multiproveedor.
  */
 function aiOrchestrateChat(topic, userMessage) {
   const keys = getKeys();
-  const geminiPool = keys.geminiPool || [];
   const topicKey = String(topic || "planteamiento").toLowerCase();
   const ragInfo = RAG_KNOWLEDGE_BASE[topicKey] || RAG_KNOWLEDGE_BASE["planteamiento"];
 
@@ -86,11 +94,11 @@ function aiOrchestrateChat(topic, userMessage) {
     "3. ANDAMIAJE SOCRÁTICO: NUNCA des la respuesta hecha ni redactes el texto por el alumno. Haz 1 o 2 preguntas reflexivas para que él mismo detecte qué falta ajustar.\n" +
     "4. BASE DE CONOCIMIENTO PARA ESTE TEMA (" + ragInfo.name + "):\n" + ragInfo.rules;
 
-  // Intentar con el pool de todas las claves Gemini encontradas en Propiedades de Script
+  // 1. Cascada: Pool de Claves Gemini
+  const geminiPool = keys.geminiPool || [];
   for (let i = 0; i < geminiPool.length; i++) {
-    const key = geminiPool[i];
     try {
-      const response = callGemini(key, systemPrompt, userMessage);
+      const response = callGemini(geminiPool[i], systemPrompt, userMessage);
       if (response && response.trim().length > 0) {
         Logger.log("✅ Éxito con clave Gemini #" + (i + 1));
         return { text: response.trim(), provider: "gemini", model: "flash-pool" };
@@ -100,24 +108,54 @@ function aiOrchestrateChat(topic, userMessage) {
     }
   }
 
-  // Intentar con Groq si Gemini falla y existe la clave
-  if (keys.groq) {
+  // 2. Cascada: Pool de Claves Groq
+  const groqPool = keys.groqPool || [];
+  for (let i = 0; i < groqPool.length; i++) {
     try {
-      const response = callGroq(keys.groq, systemPrompt, userMessage);
+      const response = callGroq(groqPool[i], systemPrompt, userMessage);
       if (response && response.trim().length > 0) {
-        return { text: response.trim(), provider: "groq", model: "llama-3.3-70b-versatile" };
+        Logger.log("✅ Éxito con clave Groq #" + (i + 1));
+        return { text: response.trim(), provider: "groq", model: "llama-3.3-70b" };
       }
     } catch (e) {
-      Logger.log("Error Groq: " + e.toString());
+      Logger.log("⚠️ Error con clave Groq #" + (i + 1) + ": " + e.toString());
     }
   }
 
-  // 2. FALLBACK INTELIGENTE: Motor RAG Cerrado Local Autónomo de Buhotech
+  // 3. Cascada: Pool de Claves Mistral
+  const mistralPool = keys.mistralPool || [];
+  for (let i = 0; i < mistralPool.length; i++) {
+    try {
+      const response = callMistral(mistralPool[i], systemPrompt, userMessage);
+      if (response && response.trim().length > 0) {
+        Logger.log("✅ Éxito con clave Mistral #" + (i + 1));
+        return { text: response.trim(), provider: "mistral", model: "mistral-small" };
+      }
+    } catch (e) {
+      Logger.log("⚠️ Error con clave Mistral #" + (i + 1) + ": " + e.toString());
+    }
+  }
+
+  // 4. Cascada: Pool de Claves Meta
+  const metaPool = keys.metaPool || [];
+  for (let i = 0; i < metaPool.length; i++) {
+    try {
+      const response = callMeta(metaPool[i], systemPrompt, userMessage);
+      if (response && response.trim().length > 0) {
+        Logger.log("✅ Éxito con clave Meta #" + (i + 1));
+        return { text: response.trim(), provider: "meta", model: "llama-3.3" };
+      }
+    } catch (e) {
+      Logger.log("⚠️ Error con clave Meta #" + (i + 1) + ": " + e.toString());
+    }
+  }
+
+  // 5. FALLBACK INTELIGENTE: Motor RAG Cerrado Local Autónomo de Buhotech
   const localReply = evaluateWithLocalRAG(topicKey, userMessage, ragInfo);
   return { 
-    text: localReply,
+    text: localReply, 
     provider: "buhotech-local-rag", 
-    model: "closed-rag-v2"
+    model: "closed-rag-v2" 
   };
 }
 
@@ -339,4 +377,82 @@ function callGroq(apiKey, systemPrompt, userMessage) {
   }
   
   throw new Error("No se pudo obtener respuesta de los modelos Groq disponibles.");
+}
+
+/**
+ * Llamada a la API de Mistral AI.
+ */
+function callMistral(apiKey, systemPrompt, userMessage) {
+  if (!apiKey || apiKey.trim().length < 5) return null;
+  const cleanKey = apiKey.trim();
+  const url = "https://api.mistral.ai/v1/chat/completions";
+  const payload = {
+    "model": "mistral-small-latest",
+    "messages": [
+      {"role": "system", "content": systemPrompt},
+      {"role": "user", "content": userMessage}
+    ],
+    "temperature": 0.4,
+    "max_tokens": 250
+  };
+  const options = {
+    "method": "post",
+    "headers": { "Authorization": "Bearer " + cleanKey },
+    "contentType": "application/json",
+    "payload": JSON.stringify(payload),
+    "muteHttpExceptions": true
+  };
+  try {
+    const response = UrlFetchApp.fetch(url, options);
+    if (response.getResponseCode() === 200) {
+      const data = JSON.parse(response.getContentText());
+      if (data.choices && data.choices.length > 0 && data.choices[0].message) {
+        return data.choices[0].message.content;
+      }
+    } else {
+      Logger.log("Mistral devolvió HTTP " + response.getResponseCode());
+    }
+  } catch(e) {
+    Logger.log("Error Mistral: " + e.toString());
+  }
+  throw new Error("Mistral no disponible");
+}
+
+/**
+ * Llamada a la API de Meta / Together AI.
+ */
+function callMeta(apiKey, systemPrompt, userMessage) {
+  if (!apiKey || apiKey.trim().length < 5) return null;
+  const cleanKey = apiKey.trim();
+  const url = "https://api.together.xyz/v1/chat/completions";
+  const payload = {
+    "model": "meta-llama/Llama-3.3-70B-Instruct-Turbo",
+    "messages": [
+      {"role": "system", "content": systemPrompt},
+      {"role": "user", "content": userMessage}
+    ],
+    "temperature": 0.4,
+    "max_tokens": 250
+  };
+  const options = {
+    "method": "post",
+    "headers": { "Authorization": "Bearer " + cleanKey },
+    "contentType": "application/json",
+    "payload": JSON.stringify(payload),
+    "muteHttpExceptions": true
+  };
+  try {
+    const response = UrlFetchApp.fetch(url, options);
+    if (response.getResponseCode() === 200) {
+      const data = JSON.parse(response.getContentText());
+      if (data.choices && data.choices.length > 0 && data.choices[0].message) {
+        return data.choices[0].message.content;
+      }
+    } else {
+      Logger.log("Meta devolvió HTTP " + response.getResponseCode());
+    }
+  } catch(e) {
+    Logger.log("Error Meta: " + e.toString());
+  }
+  throw new Error("Meta no disponible");
 }
