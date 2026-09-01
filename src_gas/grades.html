@@ -210,7 +210,9 @@
                 <div class="grade-card">
                     <div class="grade-value text-success" id="ser-grade">--</div>
                     <div class="grade-label">Saber Ser (Actitudinal)</div>
-                    <div style="font-size:0.7rem; color:var(--slate-400); margin-top:0.25rem;">Integridad y Ética</div>
+                    <div style="font-size:0.7rem; color:var(--slate-400); margin-top:0.25rem;">
+                        Puntos en contra por marcar al azar y copiar
+                    </div>
                 </div>
             </div>
 
@@ -218,16 +220,13 @@
             <div style="margin-top:2rem; margin-bottom:1.5rem;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
                     <h3 style="font-size:1.05rem; color:var(--brand-300); margin:0; display:flex; align-items:center; gap:0.5rem;">
-                        📝 Reporte de Preguntas Abiertas y Redacción de Tesis
+                        📝 Dimensión Saber Hacer (Procedimental): Las 4 Preguntas y Respuestas de Tesis
                     </h3>
                     <span id="workshop-status-badge" class="badge-pending">Cargando...</span>
                 </div>
 
-                <!-- Cuadro de Aviso y Orientación para el Docente -->
-                <div style="background:rgba(99, 102, 241, 0.12); border-left:4px solid var(--brand-500); border-radius:var(--radius-md); padding:0.85rem 1rem; margin-bottom:1.25rem; font-size:0.85rem; color:var(--slate-300); line-height:1.5;">
-                    💡 <strong>Nota para el Docente / Revisor:</strong><br>
-                    A continuación se presenta la evidencia textual completa redactada por el estudiante en su Taller Metodológico (Fase 2).
-                    <strong>Si la IA presenta indisponibilidad o no pudo revisar en su momento</strong>, utilice estas respuestas abiertas para validar y asignar manualmente la calificación de la dimensión <em>Saber Hacer</em>.
+                <div style="background:rgba(99,102,241,0.1); border-left:3px solid var(--brand-400); padding:0.85rem 1.1rem; border-radius:var(--radius-sm); margin-bottom:1.25rem; font-size:0.85rem; color:var(--slate-200); line-height:1.5;">
+                    💡 <strong>Evaluación Docente:</strong> Si no fue calificado por la IA, a continuación se presentan las <strong>4 preguntas oficiales con las 4 respuestas escritas</strong> del estudiante para que el docente o asesor califique y asigne la nota de la dimensión <em>Saber Hacer</em> (0 a 20 puntos).
                 </div>
 
                 <!-- Contenedor de las 4 secciones de redacción -->
@@ -349,84 +348,108 @@
 
             let hasWorkshops = workshops && workshops.length > 0;
             let latestWorkshop = hasWorkshops ? workshops[workshops.length - 1] : null;
+            const data = (latestWorkshop && latestWorkshop.submission_data) ? latestWorkshop.submission_data : {};
 
-            if (latestWorkshop) {
-                statusBadge.className = latestWorkshop.grade ? "badge-success" : "badge-pending";
-                statusBadge.textContent = latestWorkshop.grade ? `Entregado (Nota IA: ${latestWorkshop.grade}/20)` : "Pendiente de validación docente";
-
-                const data = latestWorkshop.submission_data || {};
-                
-                const sections = [
-                    {
-                        key: 'planteamiento',
-                        title: '1. Planteamiento del Problema (Método del Embudo)',
-                        subtitle: 'Macro (Mundial), Meso (Nacional) y Micro (Institucional)',
-                        content: data.planteamiento || data['1. Planteamiento'] || data['Planteamiento'] || ''
-                    },
-                    {
-                        key: 'objetivos',
-                        title: '2. Objetivos e Hipótesis de Investigación',
-                        subtitle: 'Verbo medible en infinitivo, dos variables y respuesta afirmativa',
-                        content: data.objetivos || data['2. Objetivos e Hipótesis'] || data['Objetivos'] || ''
-                    },
-                    {
-                        key: 'variables',
-                        title: '3. Variables y Operacionalización Científica',
-                        subtitle: 'Variable Independiente / Dependiente, dimensiones e indicadores medibles',
-                        content: data.variables || data['3. Variables'] || data['Variables'] || ''
-                    },
-                    {
-                        key: 'metodologia',
-                        title: '4. Diseño y Enfoque Metodológico',
-                        subtitle: 'Enfoque (cuantitativo/cualitativo), alcance y diseño transversal o experimental',
-                        content: data.metodologia || data['4. Metodología'] || data['Metodología'] || ''
-                    }
-                ];
-
-                sections.forEach(sec => {
-                    const card = document.createElement('div');
-                    card.className = 'open-section-card';
-                    const hasText = sec.content && sec.content.trim().length > 0;
-
-                    card.innerHTML = `
-                        <div class="open-section-header">
-                            <div>
-                                <div class="open-section-title">${sec.title}</div>
-                                <div style="font-size:0.75rem; color:var(--slate-400);">${sec.subtitle}</div>
-                            </div>
-                            <span class="${hasText ? 'badge-success' : 'badge-pending'}">
-                                ${hasText ? 'Redactado' : 'Sin redacción'}
-                            </span>
-                        </div>
-                        <div class="open-section-body" style="${!hasText ? 'font-style:italic; color:#94a3b8;' : ''}">
-                            ${hasText ? escapeHtml(sec.content) : 'El estudiante no ha registrado texto para esta sección.'}
-                        </div>
-                    `;
-                    container.appendChild(card);
-                });
-
-                // Si hay feedback guardado
-                if (latestWorkshop.ai_feedback) {
-                    const fbCard = document.createElement('div');
-                    fbCard.style.cssText = "background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:var(--radius-md); padding:0.85rem 1rem; margin-top:0.75rem; font-size:0.85rem; color:var(--slate-300);";
-                    fbCard.innerHTML = `🦉 <strong>Observaciones registradas del tutor:</strong> ${escapeHtml(latestWorkshop.ai_feedback)}`;
-                    container.appendChild(fbCard);
-                }
-
+            if (latestWorkshop && latestWorkshop.grade) {
+                statusBadge.className = "badge-success";
+                statusBadge.textContent = `Entregado (Nota IA: ${latestWorkshop.grade}/20)`;
+            } else if (latestWorkshop) {
+                statusBadge.className = "badge-pending";
+                statusBadge.textContent = "⚠️ Pendiente de Calificación Docente";
             } else {
                 statusBadge.className = "badge-pending";
                 statusBadge.textContent = "Pendiente de realización";
+            }
 
-                container.innerHTML = `
-                    <div class="open-section-card" style="text-align:center; padding:2rem 1rem;">
-                        <p style="color:var(--slate-300); font-size:0.95rem; margin-bottom:0.75rem;">
-                            ⚠️ El estudiante aún no ha completado la entrega de redacción del <strong>Taller Metodológico (Fase 2)</strong>.
-                        </p>
-                        <p style="font-size:0.85rem; color:var(--slate-400); margin:0;">
-                            Una vez que ingrese al taller y redacte su propuesta guiado por el Búho, sus respuestas abiertas aparecerán aquí disponibles para revisión.
-                        </p>
+            const officialQuestions = [
+                {
+                    key: 'planteamiento',
+                    number: 1,
+                    title: 'Pregunta 1: Planteamiento del Problema (Método del Embudo)',
+                    subtitle: 'Macro (Mundial/Regional) ➔ Meso (Nacional) ➔ Micro (Institución/Empresa)',
+                    enunciado: 'Redacta el Planteamiento del Problema de tu investigación aplicando el Método del Embudo: describe la situación a nivel Macro (internacional), Meso (nacional en el Perú/país) y Micro (empresa o institución concreta), detallando síntomas observables, causas directas y consecuencias en caso de no resolverse.',
+                    studentAnswer: data.planteamiento || data['1. Planteamiento'] || data['Planteamiento'] || ''
+                },
+                {
+                    key: 'objetivos',
+                    number: 2,
+                    title: 'Pregunta 2: Objetivos e Hipótesis de Investigación',
+                    subtitle: 'Verbo medible en infinitivo, alineación de dos variables y respuesta afirmativa',
+                    enunciado: 'Formula el Objetivo General de tu investigación iniciando con un verbo en infinitivo medible (ej: Determinar, Establecer, Analizar) que vincule tus dos variables en tiempo y espacio. Luego formula la Hipótesis General correspondiente que responda de forma afirmativa y comprobable al objetivo.',
+                    studentAnswer: data.objetivos || data['2. Objetivos e Hipótesis'] || data['Objetivos'] || ''
+                },
+                {
+                    key: 'variables',
+                    number: 3,
+                    title: 'Pregunta 3: Variables y Operacionalización Científica',
+                    subtitle: 'Variable Independiente / Dependiente, dimensiones e indicadores empíricos',
+                    enunciado: 'Identifica la Variable 1 (Independiente) y la Variable 2 (Dependiente) de tu tesis. Desglosa cada variable en al menos dos dimensiones teóricas y propón los indicadores empíricos observables que permitirán recolectar los datos para medirlas.',
+                    studentAnswer: data.variables || data['3. Variables'] || data['Variables'] || ''
+                },
+                {
+                    key: 'metodologia',
+                    number: 4,
+                    title: 'Pregunta 4: Diseño y Enfoque Metodológico',
+                    subtitle: 'Enfoque (cuantitativo/cualitativo), alcance y diseño transversal o experimental',
+                    enunciado: 'Define y sustenta el Enfoque metodológico (cuantitativo o cualitativo), el Alcance (descriptivo, correlacional o explicativo) y el Diseño de investigación (no experimental transversal o experimental), especificando la población o muestra de estudio.',
+                    studentAnswer: data.metodologia || data['4. Metodología'] || data['Metodología'] || ''
+                }
+            ];
+
+            officialQuestions.forEach(q => {
+                const card = document.createElement('div');
+                card.className = 'open-section-card';
+                const hasText = q.studentAnswer && q.studentAnswer.trim().length > 0;
+
+                card.innerHTML = `
+                    <div class="open-section-header">
+                        <div>
+                            <div class="open-section-title">${q.title}</div>
+                            <div style="font-size:0.75rem; color:var(--slate-400);">${q.subtitle}</div>
+                        </div>
+                        <span class="${hasText ? 'badge-success' : 'badge-pending'}">
+                            ${hasText ? 'Respuesta Registrada' : 'Pendiente de Redacción'}
+                        </span>
+                    </div>
+                    <div style="font-size:0.82rem; color:var(--brand-200); background:rgba(99,102,241,0.08); border-left:3px solid var(--brand-400); padding:0.6rem 0.85rem; border-radius:6px; margin-bottom:0.75rem; line-height:1.45;">
+                        <strong>Consigna / Pregunta Oficial:</strong> ${q.enunciado}
+                    </div>
+                    <div class="open-section-body" style="${!hasText ? 'font-style:italic; color:#94a3b8; background:rgba(0,0,0,0.2);' : ''}">
+                        <strong style="color:var(--slate-300); font-size:0.8rem; display:block; margin-bottom:0.35rem;">Respuesta Escrita del Estudiante:</strong>
+                        ${hasText ? escapeHtml(q.studentAnswer) : '⚠️ El estudiante aún no ha redactado su respuesta para esta pregunta en el Taller Metodológico.'}
                     </div>
                 `;
+                container.appendChild(card);
+            });
+
+            // Cuadro oficial para la evaluación del docente si no hay nota de IA
+            const rubricBox = document.createElement('div');
+            rubricBox.style.cssText = "background:rgba(255,255,255,0.03); border:1px dashed rgba(255,255,255,0.2); border-radius:12px; padding:1.25rem; margin-top:1.5rem;";
+            rubricBox.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem; flex-wrap:wrap; gap:0.5rem;">
+                    <h4 style="margin:0; color:var(--gold-400); font-size:0.95rem;">📋 Calificación Docente - Dimensión Saber Hacer (Procedimental)</h4>
+                    <span class="badge-pending">⚠️ Validación Docente Requerida</span>
+                </div>
+                <p style="font-size:0.85rem; color:var(--slate-300); margin:0 0 1rem 0; line-height:1.5;">
+                    El docente o asesor evaluador utilizará las 4 respuestas escritas anteriores para asignar la nota procedimental de tesis en la escala vigesimal (0 a 20 puntos):
+                </p>
+                <div style="display:flex; flex-wrap:wrap; gap:1.5rem; font-size:0.9rem; align-items:center;">
+                    <div style="background:rgba(0,0,0,0.4); padding:0.6rem 1.2rem; border-radius:8px; border:1px solid var(--slate-700);">
+                        <strong>Calificación Saber Hacer Asignada:</strong> <span style="font-size:1.2rem; color:var(--gold-300); font-weight:bold;">[ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; / 20 ]</span>
+                    </div>
+                    <div style="flex:1; min-width:260px;">
+                        <strong>Firma y Sello del Docente Revisor:</strong> ___________________________________
+                    </div>
+                </div>
+            `;
+            container.appendChild(rubricBox);
+
+            // Si hay observaciones guardadas
+            if (latestWorkshop && latestWorkshop.ai_feedback) {
+                const fbCard = document.createElement('div');
+                fbCard.style.cssText = "background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:var(--radius-md); padding:0.85rem 1rem; margin-top:0.75rem; font-size:0.85rem; color:var(--slate-300);";
+                fbCard.innerHTML = `🦉 <strong>Observaciones metodológicas registradas:</strong> ${escapeHtml(latestWorkshop.ai_feedback)}`;
+                container.appendChild(fbCard);
             }
 
             // Si existen respuestas a preguntas tipo texto en cuestionarios
