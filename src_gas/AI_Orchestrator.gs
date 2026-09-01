@@ -60,7 +60,7 @@ function aiOrchestrateChat(topic, userMessage) {
     try {
       const response = callGemini(keys.gemini, systemPrompt, userMessage);
       if (response && response.trim().length > 0) {
-        return { text: response.trim(), provider: "gemini", model: "gemini-1.5-flash" };
+        return { text: response.trim(), provider: "gemini", model: "gemini-flash" };
       }
     } catch (e) {
       Logger.log("Error Gemini: " + e.toString());
@@ -84,137 +84,221 @@ function aiOrchestrateChat(topic, userMessage) {
   return { 
     text: localReply,
     provider: "buhotech-local-rag", 
-    model: "closed-rag-v1"
+    model: "closed-rag-v2"
   };
 }
 
 /**
- * Motor RAG Cerrado Local de Buhotech.
- * Evalúa semánticamente el texto según las reglas metodológicas oficiales
- * y genera retroalimentación socrática inmediata, breve y reflexiva.
+ * Motor RAG Cerrado Local Autónomo de Buhotech.
+ * Reconoce preguntas del estudiante y evalúa semánticamente borradores de tesis
+ * citando los propios términos del estudiante para guiarlo de forma socrática.
  */
 function evaluateWithLocalRAG(topicKey, userMessage, ragInfo) {
-  const text = (userMessage || "").toLowerCase();
+  const raw = (userMessage || "").trim();
+  const text = raw.toLowerCase();
   
-  if (text.length < 20) {
-    return "🦉 Tu redacción es muy breve para analizarla. Redacta tu propuesta con más detalle para evaluar su rigor metodológico.";
+  // 1. Detectar saludos habituales
+  if (text.match(/^(hola|buenos d[ií]as|buenas tardes|buenas noches|saludos|hey|b[uú]ho|que tal)/)) {
+    return "🦉 ¡Hola! Soy el Búho Metodólogo de Buhotech Labs. Estoy aquí para acompañar la redacción y rigor metodológico de tu tesis. ¿Qué parte de tu propuesta en " + ragInfo.name + " deseas estructurar o afinar hoy?";
   }
 
-  if (topicKey === "planteamiento") {
-    const hasMacro = text.includes("macro") || text.includes("mundial") || text.includes("global") || text.includes("internacional");
-    const hasMeso = text.includes("meso") || text.includes("perú") || text.includes("nacional") || text.includes("país");
-    const hasMicro = text.includes("micro") || text.includes("empresa") || text.includes("institución") || text.includes("colegio") || text.includes("hospital") || text.includes("local");
+  // 2. Detectar si el estudiante está haciendo una CONSULTA o pregunta pedagógica
+  const isQuestion = text.includes("?") || 
+                     text.includes("cómo") || text.includes("como") || 
+                     text.includes("qué es") || text.includes("que es") || 
+                     text.includes("cuál") || text.includes("cual") || 
+                     text.includes("ejemplo") || text.includes("explica") || 
+                     text.includes("ayuda") || text.includes("orienta") || 
+                     text.includes("diferencia");
 
-    if (!hasMacro && !hasMeso && !hasMicro) {
-      return "🦉 Buen inicio. Para aplicar el método del embudo, ¿has considerado estructurarlo desde lo general (mundial/nacional) hacia lo específico (tu empresa o institución)?";
+  if (isQuestion) {
+    if (topicKey === "planteamiento") {
+      return "🦉 Para el Planteamiento usamos el Método del Embudo: 1) Macro (tendencia mundial o regional), 2) Meso (realidad nacional/sectorial en el país), y 3) Micro (problema directo en tu empresa o institución con síntomas y causas). ¿Cuál de estos tres niveles te gustaría comenzar a redactar?";
     }
+    if (topicKey === "objetivos") {
+      return "🦉 Todo Objetivo General debe iniciar con un verbo medible en infinitivo (ej: Determinar, Establecer, Demostrar) que vincule tus dos variables con la población. La Hipótesis responde directamente afirmando dicha relación. ¿Cuáles son tus dos variables de estudio?";
+    }
+    if (topicKey === "variables") {
+      return "🦉 En la Operacionalización divides tu Variable Independiente y Dependiente en Dimensiones teóricas, y cada dimensión en Indicadores numéricos u observables. ¿Qué dimensiones has identificado preliminarmente?";
+    }
+    if (topicKey === "metodologia") {
+      return "🦉 En Metodología defines: Enfoque (cuantitativo o cualitativo), Alcance (descriptivo, correlacional o explicativo) y Diseño (no experimental transversal o experimental). ¿Tu investigación medirá datos estadísticos en un solo momento temporal?";
+    }
+  }
+
+  // 3. Detectar si el texto es excesivamente corto
+  if (text.length < 15) {
+    return "🦉 Tu propuesta es muy concisa para evaluarla a fondo. Escribe una redacción más completa de tu propuesta para analizar su rigor metodológico.";
+  }
+
+  // 4. Extraer términos significativos del estudiante para citarlos socráticamente
+  const words = raw.split(/\s+/).filter(w => w.length > 5 && !["investigacion", "metodologia", "estudio", "trabajo", "problema"].includes(w.toLowerCase()));
+  const sampleTerm = words.length > 0 ? `"${words[0]}"` : "los conceptos que mencionas";
+
+  // 5. Evaluación socrática según el eje temático
+  if (topicKey === "planteamiento") {
+    const hasMacro = text.includes("macro") || text.includes("mundial") || text.includes("global") || text.includes("internacional") || text.includes("mundo") || text.includes("países");
+    const hasMeso = text.includes("meso") || text.includes("perú") || text.includes("nacional") || text.includes("país") || text.includes("latinoamérica") || text.includes("sector");
+    const hasMicro = text.includes("micro") || text.includes("empresa") || text.includes("institución") || text.includes("colegio") || text.includes("hospital") || text.includes("local") || text.includes("organización") || text.includes("sede");
+    const hasCauses = text.includes("causa") || text.includes("síntoma") || text.includes("efecto") || text.includes("consecuencia") || text.includes("debido a") || text.includes("genera");
+
     if (!hasMicro) {
-      return "🦉 Muy buen contexto general. ¿Cuál es la entidad, empresa o población exacta (nivel micro) donde se observa este problema directamente?";
+      return `🦉 Buen avance contextualizando ${sampleTerm}. Sin embargo, para cerrar el embudo: ¿cuál es la empresa, institución o población exacta (nivel micro) donde se evidencia el problema de forma tangible?`;
     }
-    return "🦉 ¡Buen avance en el embudo! ¿Has precisado con claridad cuáles son las causas directas y las consecuencias de no solucionar este problema?";
+    if (!hasMacro && !hasMeso) {
+      return `🦉 Has delimitado bien el entorno micro de ${sampleTerm}. Para darle peso científico: ¿cómo se manifiesta este problema a nivel internacional (Macro) o en las estadísticas del país (Meso)?`;
+    }
+    if (!hasCauses) {
+      return `🦉 Se aprecia la estructura del embudo en tu texto. Para completarlo con rigor: ¿cuáles son las causas directas que originan esta situación y qué consecuencias ocurrirán si no se resuelve?`;
+    }
+    return `🦉 ¡Excelente formulación del embudo con ${sampleTerm}! Tu redacción articula el contexto y la delimitación. ¿La formulación de tu pregunta general de investigación sintetiza fielmente este problema?`;
   }
 
   if (topicKey === "objetivos") {
-    const verbs = ["determinar", "establecer", "analizar", "evaluar", "demostrar", "identificar", "describir", "relacionar", "comparar"];
+    const verbs = ["determinar", "establecer", "analizar", "evaluar", "demostrar", "identificar", "describir", "relacionar", "comparar", "explicar"];
     const hasVerb = verbs.some(v => text.includes(v));
-    const hasHip = text.includes("hipótesis") || text.includes("relación") || text.includes("significativa") || text.includes("influye");
+    const hasHip = text.includes("hipótesis") || text.includes("relación") || text.includes("significativa") || text.includes("influye") || text.includes("incide") || text.includes("existe");
+    const hasPoblacion = text.includes("en ") || text.includes("de ") || text.includes("202") || text.includes("trabajadores") || text.includes("estudiantes") || text.includes("empresa");
 
     if (!hasVerb) {
-      return "🦉 Recuerda que todo objetivo debe iniciar con un verbo en infinitivo medible (ej: Determinar, Analizar, Evaluar). ¿Qué verbo sintetiza mejor tu meta?";
+      return `🦉 Recuerda que el Objetivo General debe iniciar con un verbo medible en infinitivo (ej: Determinar, Analizar, Evaluar). Al estudiar ${sampleTerm}, ¿qué verbo refleja exactamente el alcance de tu tesis?`;
     }
     if (!hasHip) {
-      return "🦉 Tu objetivo tiene buena dirección. ¿Cómo formularías la hipótesis para responder de forma afirmativa y directa a este objetivo?";
+      return `🦉 Tu objetivo tiene una dirección adecuada con ${sampleTerm}. Ahora: ¿cómo formularías la hipótesis para responder de forma afirmativa y verificable a este objetivo?`;
     }
-    return "🦉 Muy buena alineación entre objetivo e hipótesis. ¿Ambos enunciados mencionan exactamente las dos mismas variables de estudio?";
+    if (!hasPoblacion) {
+      return `🦉 Buen planteamiento del objetivo e hipótesis. Para que sea completamente delimitado: ¿has especificado la población de estudio y el periodo temporal exacto donde se medirá?`;
+    }
+    return `🦉 Gran alineación metodológica entre tu objetivo e hipótesis para ${sampleTerm}. ¿Ambos enunciados guardan la misma relación de variables sin introducir elementos adicionales?`;
   }
 
   if (topicKey === "variables") {
-    const hasDim = text.includes("dimens") || text.includes("componente") || text.includes("aspecto");
-    const hasInd = text.includes("indicador") || text.includes("escala") || text.includes("ítem") || text.includes("medir");
+    const hasDim = text.includes("dimens") || text.includes("componente") || text.includes("factor") || text.includes("aspecto");
+    const hasInd = text.includes("indicador") || text.includes("escala") || text.includes("ítem") || text.includes("medir") || text.includes("preguntas") || text.includes("cuestionario");
 
     if (!hasDim) {
-      return "🦉 Has propuesto tus variables. ¿Cuáles son las dimensiones teóricas en las que descompondrás cada una de ellas para estudiarlas?";
+      return `🦉 Has propuesto las variables para ${sampleTerm}. ¿En qué dimensiones teóricas descompondrás cada una de ellas para hacerlas observables?`;
     }
     if (!hasInd) {
-      return "🦉 Buenas dimensiones. Ahora, ¿qué indicadores observables o preguntas exactas te permitirán medir numéricamente cada dimensión?";
+      return `🦉 Buenas dimensiones. Ahora: ¿qué indicadores específicos o métricas te permitirán recopilar datos cuantificables de cada dimensión?`;
     }
-    return "🦉 Gran rigor en la operacionalización. ¿Tus indicadores corresponden a una escala clara (como Likert o datos cuantitativos directos)?";
+    return `🦉 Sólido desglose de variables e indicadores en ${sampleTerm}. ¿Tienes definida la escala de medición (por ejemplo, Likert de 5 niveles o datos cuantitativos continuos)?`;
   }
 
   if (topicKey === "metodologia") {
     const hasEnfoque = text.includes("cuantitativ") || text.includes("cualitativ") || text.includes("mixto");
     const hasDiseno = text.includes("experimental") || text.includes("transversal") || text.includes("longitudinal") || text.includes("descriptiv") || text.includes("correlacional");
+    const hasMuestra = text.includes("muestra") || text.includes("población") || text.includes("encuesta") || text.includes("cuestionario") || text.includes("entrevista");
 
     if (!hasEnfoque) {
-      return "🦉 Para fundamentar tu metodología: ¿tu enfoque será cuantitativo (datos numéricos y estadística) o cualitativo (comprensión fenomenológica)?";
+      return `🦉 Para fundamentar la metodología de ${sampleTerm}: ¿tu enfoque será cuantitativo (medición estadística de hipótesis) o cualitativo (fenomenológico / narrativo)?`;
     }
     if (!hasDiseno) {
-      return "🦉 Bien definido el enfoque. ¿Tu diseño será no experimental transversal (medición en un solo corte de tiempo) o experimental con intervención?";
+      return `🦉 Enfoque clarificado. ¿Tu diseño será no experimental transversal (recolección en un solo momento temporal) o experimental con grupo de control?`;
     }
-    return "🦉 Excelente sustento metodológico. ¿Los instrumentos de recolección previstos son coherentes con este diseño y con tus objetivos?";
+    if (!hasMuestra) {
+      return `🦉 Diseño bien sustentado. ¿Qué técnicas e instrumentos específicos (cuestionario, guía de observación) utilizarás para recoger los datos de tu muestra?`;
+    }
+    return `🦉 Metodología rigurosa y coherentemente estructurada para ${sampleTerm}. ¿El tamaño de tu muestra te permitirá aplicar pruebas estadísticas como Pearson o Spearman con validez?`;
   }
 
-  return "🦉 Tu redacción metodológica va por buen camino. ¿De qué manera esta propuesta responde directamente a la pregunta principal de tu tesis?";
+  return `🦉 Tu propuesta sobre ${sampleTerm} demuestra buen enfoque científico. ¿De qué manera esta redacción responde directamente a la pregunta principal de tu tesis?`;
 }
 
+/**
+ * Llamada a la API de Google Gemini con cascada automática 2.0 Flash -> 1.5 Flash.
+ */
 function callGemini(apiKey, systemPrompt, userMessage) {
-  const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + apiKey;
+  const models = ["gemini-2.0-flash", "gemini-1.5-flash"];
   
-  const payload = {
-    "contents": [{"role": "user", "parts": [{"text": userMessage}]}],
-    "systemInstruction": {"parts": [{"text": systemPrompt}]},
-    "generationConfig": {
-      "temperature": 0.5,
-      "maxOutputTokens": 200
-    }
-  };
-  
-  const options = {
-    "method": "post",
-    "contentType": "application/json",
-    "payload": JSON.stringify(payload),
-    "muteHttpExceptions": true
-  };
-  
-  const response = UrlFetchApp.fetch(url, options);
-  if (response.getResponseCode() === 200) {
-    const data = JSON.parse(response.getContentText());
-    if (data.candidates && data.candidates.length > 0 && data.candidates[0].content && data.candidates[0].content.parts) {
-      return data.candidates[0].content.parts[0].text;
+  for (let i = 0; i < models.length; i++) {
+    const model = models[i];
+    const url = "https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent?key=" + apiKey;
+    
+    const payload = {
+      "contents": [
+        {
+          "role": "user", 
+          "parts": [{"text": userMessage}]
+        }
+      ],
+      "systemInstruction": {
+        "parts": [{"text": systemPrompt}]
+      },
+      "generationConfig": {
+        "temperature": 0.4,
+        "maxOutputTokens": 250
+      }
+    };
+    
+    const options = {
+      "method": "post",
+      "contentType": "application/json",
+      "payload": JSON.stringify(payload),
+      "muteHttpExceptions": true
+    };
+    
+    try {
+      const response = UrlFetchApp.fetch(url, options);
+      if (response.getResponseCode() === 200) {
+        const data = JSON.parse(response.getContentText());
+        if (data.candidates && data.candidates.length > 0 && data.candidates[0].content && data.candidates[0].content.parts) {
+          return data.candidates[0].content.parts[0].text;
+        }
+      } else {
+        Logger.log("Gemini model " + model + " devolvió HTTP " + response.getResponseCode() + ": " + response.getContentText().substring(0, 150));
+      }
+    } catch(err) {
+      Logger.log("Excepción llamando a Gemini " + model + ": " + err.toString());
     }
   }
-  throw new Error("HTTP " + response.getResponseCode() + ": " + response.getContentText());
+  
+  throw new Error("No se pudo obtener respuesta de los modelos Gemini disponibles.");
 }
 
+/**
+ * Llamada a la API de Groq Cloud (Llama 3.3 / Llama 3) con cascada.
+ */
 function callGroq(apiKey, systemPrompt, userMessage) {
+  const models = ["llama-3.3-70b-versatile", "llama-3.1-8b-instant"];
   const url = "https://api.groq.com/openai/v1/chat/completions";
-  
-  const payload = {
-    "model": "llama-3.3-70b-versatile",
-    "messages": [
-      {"role": "system", "content": systemPrompt},
-      {"role": "user", "content": userMessage}
-    ],
-    "temperature": 0.5,
-    "max_tokens": 200
-  };
-  
-  const options = {
-    "method": "post",
-    "headers": {
-      "Authorization": "Bearer " + apiKey
-    },
-    "contentType": "application/json",
-    "payload": JSON.stringify(payload),
-    "muteHttpExceptions": true
-  };
-  
-  const response = UrlFetchApp.fetch(url, options);
-  if (response.getResponseCode() === 200) {
-    const data = JSON.parse(response.getContentText());
-    if (data.choices && data.choices.length > 0 && data.choices[0].message) {
-      return data.choices[0].message.content;
+
+  for (let i = 0; i < models.length; i++) {
+    const model = models[i];
+    const payload = {
+      "model": model,
+      "messages": [
+        {"role": "system", "content": systemPrompt},
+        {"role": "user", "content": userMessage}
+      ],
+      "temperature": 0.4,
+      "max_tokens": 250
+    };
+    
+    const options = {
+      "method": "post",
+      "headers": {
+        "Authorization": "Bearer " + apiKey
+      },
+      "contentType": "application/json",
+      "payload": JSON.stringify(payload),
+      "muteHttpExceptions": true
+    };
+    
+    try {
+      const response = UrlFetchApp.fetch(url, options);
+      if (response.getResponseCode() === 200) {
+        const data = JSON.parse(response.getContentText());
+        if (data.choices && data.choices.length > 0 && data.choices[0].message) {
+          return data.choices[0].message.content;
+        }
+      } else {
+        Logger.log("Groq model " + model + " devolvió HTTP " + response.getResponseCode());
+      }
+    } catch(err) {
+      Logger.log("Excepción llamando a Groq " + model + ": " + err.toString());
     }
   }
-  throw new Error("HTTP " + response.getResponseCode() + ": " + response.getContentText());
+  
+  throw new Error("No se pudo obtener respuesta de los modelos Groq disponibles.");
 }

@@ -92,8 +92,55 @@ function rpcGetUserData(userId) {
 
 function rpcGetGrades(userId) {
   try {
+    const user = findRecordBy("users", "id", userId);
     const grades = calculateAndSaveGrades(userId);
-    return { success: true, grades: grades || {} };
+    const workshops = getUserWorkshopSubmissions(userId);
+    
+    // Obtener respuestas abiertas de user_responses
+    const allResponses = findRecordsBy("user_responses", "user_id", userId);
+    const textResponses = allResponses.filter(r => {
+      return r.selected_answer && String(r.selected_answer).length > 10;
+    });
+
+    return { 
+      success: true, 
+      user: user,
+      grades: grades || {},
+      workshops: workshops || [],
+      text_responses: textResponses || []
+    };
+  } catch(e) {
+    return { success: false, error: e.toString() };
+  }
+}
+
+function rpcSaveApiKey(provider, apiKey) {
+  try {
+    const props = PropertiesService.getScriptProperties();
+    const cleanKey = String(apiKey || '').trim();
+    if (provider === 'gemini') {
+      props.setProperty("GEMINI_API_KEY", cleanKey);
+    } else if (provider === 'groq') {
+      props.setProperty("GROQ_API_KEY", cleanKey);
+    } else {
+      props.setProperty("GEMINI_API_KEY", cleanKey);
+    }
+    return { success: true, message: "Clave guardada con éxito." };
+  } catch(e) {
+    return { success: false, error: e.toString() };
+  }
+}
+
+function rpcGetApiKeyStatus() {
+  try {
+    const keys = getKeys();
+    return {
+      success: true,
+      hasGemini: !!(keys.gemini && keys.gemini.length > 5),
+      hasGroq: !!(keys.groq && keys.groq.length > 5),
+      geminiMasked: keys.gemini ? (keys.gemini.substring(0, 7) + "..." + keys.gemini.substring(keys.gemini.length - 4)) : null,
+      groqMasked: keys.groq ? (keys.groq.substring(0, 6) + "..." + keys.groq.substring(keys.groq.length - 4)) : null
+    };
   } catch(e) {
     return { success: false, error: e.toString() };
   }

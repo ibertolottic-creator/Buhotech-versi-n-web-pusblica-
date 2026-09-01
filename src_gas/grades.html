@@ -3,25 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mis Calificaciones - Buhotech Labs</title>
+    <title>Reporte y Boleta Oficial de Tesis - Buhotech Labs</title>
     <?!= include('styles'); ?>
     <style>
         .grades-grid {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
-            gap: 0.75rem;
+            gap: 0.85rem;
             margin-bottom: 1.5rem;
         }
         .grade-card {
             background: rgba(30, 41, 59, 0.6);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: var(--radius-lg);
-            padding: 1rem 0.5rem;
+            padding: 1.1rem 0.6rem;
             text-align: center;
         }
         .grade-value {
             font-family: var(--font-display);
-            font-size: 1.6rem;
+            font-size: 1.7rem;
             font-weight: 800;
             margin-bottom: 0.25rem;
         }
@@ -35,53 +35,212 @@
         .metric-row {
             display: flex;
             justify-content: space-between;
-            padding: 0.6rem 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 0.65rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
             font-size: 0.9rem;
+        }
+        .open-section-card {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+        }
+        .open-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.6rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding-bottom: 0.4rem;
+        }
+        .open-section-title {
+            font-weight: 700;
+            color: var(--brand-300);
+            font-size: 0.95rem;
+        }
+        .open-section-body {
+            font-size: 0.92rem;
+            line-height: 1.6;
+            color: var(--slate-200);
+            background: rgba(0, 0, 0, 0.25);
+            padding: 0.85rem;
+            border-radius: var(--radius-md);
+            border-left: 3px solid var(--brand-500);
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .download-actions {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+        .badge-pending {
+            display: inline-block;
+            padding: 0.25rem 0.65rem;
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            border-radius: 9999px;
+            color: #fca5a5;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+        .badge-success {
+            display: inline-block;
+            padding: 0.25rem 0.65rem;
+            background: rgba(34, 197, 94, 0.2);
+            border: 1px solid rgba(34, 197, 94, 0.4);
+            border-radius: 9999px;
+            color: #86efac;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        /* Estilos formales de impresión oficial en PDF */
+        @media print {
+            body {
+                background: white !important;
+                color: #1e293b !important;
+                font-family: Arial, sans-serif !important;
+            }
+            .app-container {
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                background: white !important;
+            }
+            .no-print, .download-actions, header a, .header-nav {
+                display: none !important;
+            }
+            .glass-card, .open-section-card, .grade-card {
+                background: white !important;
+                border: 1px solid #cbd5e1 !important;
+                color: #0f172a !important;
+                box-shadow: none !important;
+            }
+            .grade-value {
+                color: #0f172a !important;
+                -webkit-text-fill-color: #0f172a !important;
+            }
+            .metric-row {
+                border-bottom: 1px solid #e2e8f0 !important;
+                color: #334155 !important;
+            }
+            .metric-row span, .metric-row strong {
+                color: #0f172a !important;
+            }
+            .open-section-body {
+                background: #f8fafc !important;
+                color: #1e293b !important;
+                border: 1px solid #e2e8f0 !important;
+                border-left: 4px solid #2563eb !important;
+            }
+            .print-signature {
+                display: block !important;
+                margin-top: 4rem;
+                padding-top: 1rem;
+            }
+        }
+        .print-signature {
+            display: none;
         }
     </style>
 </head>
 <body>
     <div class="app-container">
-        <header style="padding:1.5rem 1.5rem 0.5rem; display:flex; align-items:center; gap:1rem;">
-            <a href="<?= url ?>?page=dashboard" target="_top" style="color:var(--slate-400); text-decoration:none; font-size:1.4rem;">←</a>
-            <h1 style="font-size:1.3rem; margin:0; color:white;">📊 Reporte de Tesis</h1>
+        <!-- Header -->
+        <header style="padding:1.25rem 1.5rem 0.5rem; display:flex; align-items:center; justify-content:space-between;">
+            <div style="display:flex; align-items:center; gap:0.75rem;">
+                <a href="<?= url ?>?page=dashboard" target="_top" style="color:var(--slate-400); text-decoration:none; font-size:1.4rem;" class="no-print" title="Volver al Dashboard">←</a>
+                <div>
+                    <h1 style="font-size:1.25rem; margin:0; color:white;">📊 Boleta y Reporte de Tesis</h1>
+                    <span id="student-meta" style="font-size:0.8rem; color:var(--slate-400);">Cargando datos del estudiante...</span>
+                </div>
+            </div>
+            <div class="no-print">
+                <a href="<?= url ?>?page=dashboard" target="_top" class="btn btn-secondary" style="font-size:0.8rem; padding:0.4rem 0.8rem; text-decoration:none;">Dashboard</a>
+            </div>
         </header>
 
-        <main style="flex:1; padding:1.5rem; overflow-y:auto; padding-bottom:5rem;">
+        <main style="flex:1; padding:1.25rem 1.5rem; overflow-y:auto; padding-bottom:5rem;">
             
+            <!-- Botones de Acción de Descarga -->
+            <div class="download-actions no-print">
+                <button onclick="window.print()" class="btn btn-primary" style="flex:1; display:flex; align-items:center; justify-content:center; gap:0.5rem; padding:0.75rem; font-weight:700; font-size:0.95rem; cursor:pointer;">
+                    🖨️ Descargar Boleta en PDF / Imprimir
+                </button>
+                <button onclick="downloadCSVReport()" class="btn btn-secondary" style="flex:1; display:flex; align-items:center; justify-content:center; gap:0.5rem; padding:0.75rem; font-weight:700; font-size:0.95rem; cursor:pointer; background:rgba(255,255,255,0.06);">
+                    📥 Descargar Datos (CSV / Excel)
+                </button>
+            </div>
+
+            <!-- Membrete visible en impresión -->
+            <div style="display:none; text-align:center; border-bottom:2px solid #0f172a; padding-bottom:0.75rem; margin-bottom:1.5rem;" class="print-signature">
+                <h2 style="margin:0; font-size:1.3rem; text-transform:uppercase;">Buhotech Labs - Reporte Académico Oficial</h2>
+                <p style="margin:0.25rem 0 0; font-size:0.9rem; color:#475569;">Evaluación Adaptativa de Competencias en Metodología de la Investigación Científica</p>
+                <p id="print-student-info" style="margin:0.25rem 0 0; font-size:0.95rem; font-weight:bold; color:#0f172a;"></p>
+            </div>
+
             <!-- Nota Final -->
-            <div class="glass-card" style="text-align:center; margin-bottom:1.5rem;">
-                <div style="font-size:0.75rem; font-weight:700; color:var(--slate-400); text-transform:uppercase; letter-spacing:0.15em; margin-bottom:0.5rem;">Nota Final Vigesimal</div>
-                <div id="final-grade" style="font-family:var(--font-display); font-weight:900; font-size:3.8rem; background:linear-gradient(135deg, var(--brand-400), var(--success-400)); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">
+            <div class="glass-card" style="text-align:center; margin-bottom:1.25rem;">
+                <div style="font-size:0.75rem; font-weight:700; color:var(--slate-400); text-transform:uppercase; letter-spacing:0.15em; margin-bottom:0.4rem;">Nota Final Vigesimal Oficial</div>
+                <div id="final-grade" style="font-family:var(--font-display); font-weight:900; font-size:3.6rem; background:linear-gradient(135deg, var(--brand-400), var(--success-400)); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">
                     --
                 </div>
-                <div style="font-size:0.85rem; color:var(--slate-400); font-weight:600;">Escala de 0 a 20 puntos</div>
-                <div id="penalty-badge" style="display:none; margin-top:0.75rem; padding:0.4rem 0.85rem; background:rgba(239, 68, 68, 0.15); border:1px solid rgba(239, 68, 68, 0.35); border-radius:12px; font-size:0.8rem; color:#fca5a5; font-weight:700;">
-                    ⚠️ Puntos en contra (Sanción Actitudinal): -<span id="penalty-val">0</span> pts
+                <div style="font-size:0.85rem; color:var(--slate-400); font-weight:600;">Escala vigesimal oficial de 0 a 20 puntos</div>
+                <div id="penalty-badge" style="display:none; margin-top:0.6rem; padding:0.35rem 0.85rem; background:rgba(239, 68, 68, 0.15); border:1px solid rgba(239, 68, 68, 0.35); border-radius:12px; font-size:0.8rem; color:#fca5a5; font-weight:700;">
+                    ⚠️ Puntos en contra deducidos (Sanción Actitudinal): -<span id="penalty-val">0</span> pts
                 </div>
             </div>
 
             <!-- Notas por Dimensión -->
-            <h3 style="font-size:0.9rem; color:var(--slate-300); margin-bottom:0.75rem; text-transform:uppercase; letter-spacing:0.05em;">Dimensiones de Competencia</h3>
+            <h3 style="font-size:0.85rem; color:var(--slate-300); margin-bottom:0.65rem; text-transform:uppercase; letter-spacing:0.05em;">Desglose por Dimensiones de Competencia</h3>
             <div class="grades-grid">
                 <div class="grade-card">
                     <div class="grade-value text-brand" id="saber-grade">--</div>
                     <div class="grade-label">Saber (Cognitiva)</div>
+                    <div style="font-size:0.7rem; color:var(--slate-400); margin-top:0.25rem;">Peso: 50%</div>
                 </div>
                 <div class="grade-card">
                     <div class="grade-value text-gold" id="hacer-grade">--</div>
-                    <div class="grade-label">Saber Hacer</div>
+                    <div class="grade-label">Saber Hacer (Procedimental)</div>
+                    <div style="font-size:0.7rem; color:var(--slate-400); margin-top:0.25rem;">Peso: 50%</div>
                 </div>
                 <div class="grade-card">
                     <div class="grade-value text-success" id="ser-grade">--</div>
-                    <div class="grade-label">Saber Ser</div>
+                    <div class="grade-label">Saber Ser (Actitudinal)</div>
+                    <div style="font-size:0.7rem; color:var(--slate-400); margin-top:0.25rem;">Integridad y Ética</div>
+                </div>
+            </div>
+
+            <!-- SECCIÓN CRÍTICA: Reporte de Preguntas Abiertas y Respuestas Procedimentales -->
+            <div style="margin-top:2rem; margin-bottom:1.5rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+                    <h3 style="font-size:1.05rem; color:var(--brand-300); margin:0; display:flex; align-items:center; gap:0.5rem;">
+                        📝 Reporte de Preguntas Abiertas y Redacción de Tesis
+                    </h3>
+                    <span id="workshop-status-badge" class="badge-pending">Cargando...</span>
+                </div>
+
+                <!-- Cuadro de Aviso y Orientación para el Docente -->
+                <div style="background:rgba(99, 102, 241, 0.12); border-left:4px solid var(--brand-500); border-radius:var(--radius-md); padding:0.85rem 1rem; margin-bottom:1.25rem; font-size:0.85rem; color:var(--slate-300); line-height:1.5;">
+                    💡 <strong>Nota para el Docente / Revisor:</strong><br>
+                    A continuación se presenta la evidencia textual completa redactada por el estudiante en su Taller Metodológico (Fase 2).
+                    <strong>Si la IA presenta indisponibilidad o no pudo revisar en su momento</strong>, utilice estas respuestas abiertas para validar y asignar manualmente la calificación de la dimensión <em>Saber Hacer</em>.
+                </div>
+
+                <!-- Contenedor de las 4 secciones de redacción -->
+                <div id="open-questions-container">
+                    <div style="text-align:center; padding:1.5rem; color:var(--slate-400);">
+                        Cargando redacciones del estudiante...
+                    </div>
                 </div>
             </div>
 
             <!-- Métricas y Telemetría -->
             <div class="glass-card" style="margin-top:1.5rem;">
-                <h3 style="font-size:0.95rem; color:var(--brand-300); margin-bottom:1rem;">📡 Indicadores de Comportamiento y Rigor</h3>
+                <h3 style="font-size:0.95rem; color:var(--brand-300); margin-bottom:0.85rem;">📡 Indicadores de Comportamiento, Rigor y Telemetría</h3>
                 
                 <div class="metric-row">
                     <span style="color:var(--slate-300);">Preguntas Respondidas</span>
@@ -92,11 +251,11 @@
                     <strong id="correct-count" style="color:var(--success-400);">--</strong>
                 </div>
                 <div class="metric-row">
-                    <span style="color:var(--slate-300);">Respuestas Impulsivas (&lt;2s)</span>
+                    <span style="color:var(--slate-300);">Respuestas Impulsivas (&lt;2s sin leer)</span>
                     <strong id="fast-count" style="color:var(--warning-400);">--</strong>
                 </div>
                 <div class="metric-row">
-                    <span style="color:var(--slate-300);">Intentos de Copiar/Pegar</span>
+                    <span style="color:var(--slate-300);">Intentos de Copiar y Pegar Texto</span>
                     <strong id="paste-count" style="color:var(--accent-400);">--</strong>
                 </div>
                 <div class="metric-row">
@@ -104,51 +263,253 @@
                     <strong id="avg-time" style="color:var(--brand-300);">--</strong>
                 </div>
                 <div class="metric-row">
-                    <span style="color:var(--slate-300);">Persistencia (Intentos fallidos)</span>
+                    <span style="color:var(--slate-300);">Persistencia (Intentos fallidos previos)</span>
                     <strong id="failed-count" style="color:var(--slate-400);">--</strong>
                 </div>
             </div>
 
-            <p style="font-size:0.75rem; color:var(--slate-500); text-align:center; margin-top:1.5rem; line-height:1.5;">
-                Estos datos se consolidan en tiempo real en la pestaña <code>competency_grades</code> de Google Sheets.<br>
-                Cada alumno cuenta con una fila única lista para exportar a SPSS/Excel.
+            <!-- Firmas formales para impresión -->
+            <div class="print-signature" style="margin-top:3.5rem; display:flex; justify-content:space-around; text-align:center;">
+                <div style="width:40%;">
+                    <div style="border-top:1px solid #0f172a; margin-bottom:0.25rem;"></div>
+                    <strong style="font-size:0.85rem;">Firma del Estudiante</strong><br>
+                    <span id="print-student-name" style="font-size:0.8rem; color:#475569;"></span>
+                </div>
+                <div style="width:40%;">
+                    <div style="border-top:1px solid #0f172a; margin-bottom:0.25rem;"></div>
+                    <strong style="font-size:0.85rem;">Firma del Asesor / Docente Revisor</strong><br>
+                    <span style="font-size:0.8rem; color:#475569;">Metodología de la Investigación</span>
+                </div>
+            </div>
+
+            <p class="no-print" style="font-size:0.75rem; color:var(--slate-500); text-align:center; margin-top:1.5rem; line-height:1.5;">
+                Estos datos se consolidan de forma permanente en la pestaña <code>competency_grades</code> de Google Sheets.<br>
+                Cada estudiante cuenta con una fila única normalizada para exportación directa a SPSS y Excel.
             </p>
 
         </main>
     </div>
 
     <script>
+        let reportData = null;
+
         window.onload = function() {
             const userId = localStorage.getItem('user_id');
+            const username = localStorage.getItem('username') || "Estudiante";
+
             if (!userId) {
                 window.top.location.href = "<?= url ?>?page=login";
                 return;
             }
 
+            document.getElementById('student-meta').textContent = "Estudiante: " + username + " • " + new Date().toLocaleDateString('es-PE', { year: 'numeric', month: 'long', day: 'numeric' });
+            document.getElementById('print-student-info').textContent = "Estudiante: " + username + " | Fecha de emisión: " + new Date().toLocaleString('es-PE');
+            document.getElementById('print-student-name').textContent = username;
+
             google.script.run
                 .withSuccessHandler(function(res) {
-                    if (res.success && res.grades) {
-                        const g = res.grades;
-                        document.getElementById('final-grade').textContent = (g.final_grade_20 !== undefined) ? g.final_grade_20.toFixed(1) : "0.0";
-                        document.getElementById('saber-grade').textContent = (g.saber_grade !== undefined) ? g.saber_grade.toFixed(1) : "--";
-                        document.getElementById('hacer-grade').textContent = (g.saber_hacer_grade !== undefined) ? g.saber_hacer_grade.toFixed(1) : "--";
-                        document.getElementById('ser-grade').textContent = (g.saber_ser_grade !== undefined) ? g.saber_ser_grade.toFixed(1) : "--";
-
-                        if (g.actitudinal_penalty > 0) {
-                            document.getElementById('penalty-val').textContent = g.actitudinal_penalty.toFixed(1);
-                            document.getElementById('penalty-badge').style.display = "inline-block";
-                        }
-
-                        document.getElementById('answered-count').textContent = g.total_questions_answered || 0;
-                        document.getElementById('correct-count').textContent = g.total_correct || 0;
-                        document.getElementById('fast-count').textContent = g.fast_random_count || 0;
-                        document.getElementById('paste-count').textContent = g.pasted_count || 0;
-                        document.getElementById('avg-time').textContent = Math.round((g.avg_response_time_ms || 0) / 1000) + " s";
-                        document.getElementById('failed-count').textContent = g.total_failed_attempts || 0;
+                    if (res && res.success) {
+                        reportData = res;
+                        renderGrades(res.grades, res.user);
+                        renderOpenQuestions(res.workshops, res.text_responses);
+                    } else {
+                        alert("No se pudo cargar el reporte: " + (res ? res.error : "Error de conexión"));
                     }
+                })
+                .withFailureHandler(function(err) {
+                    alert("Error al obtener calificaciones: " + err);
                 })
                 .rpcGetGrades(userId);
         };
+
+        function renderGrades(g, user) {
+            if (!g) return;
+            document.getElementById('final-grade').textContent = (g.final_grade_20 !== undefined) ? g.final_grade_20.toFixed(1) : "0.0";
+            document.getElementById('saber-grade').textContent = (g.saber_grade !== undefined) ? g.saber_grade.toFixed(1) : "--";
+            document.getElementById('hacer-grade').textContent = (g.saber_hacer_grade !== undefined) ? g.saber_hacer_grade.toFixed(1) : "--";
+            document.getElementById('ser-grade').textContent = (g.saber_ser_grade !== undefined) ? g.saber_ser_grade.toFixed(1) : "--";
+
+            if (g.actitudinal_penalty > 0) {
+                document.getElementById('penalty-val').textContent = g.actitudinal_penalty.toFixed(1);
+                document.getElementById('penalty-badge').style.display = "inline-block";
+            }
+
+            document.getElementById('answered-count').textContent = g.total_questions_answered || 0;
+            document.getElementById('correct-count').textContent = g.total_correct || 0;
+            document.getElementById('fast-count').textContent = g.fast_random_count || 0;
+            document.getElementById('paste-count').textContent = (user && user.pasted_text_count !== undefined) ? user.pasted_text_count : (g.pasted_count || 0);
+            document.getElementById('avg-time').textContent = Math.round((g.avg_response_time_ms || 0) / 1000) + " s";
+            document.getElementById('failed-count').textContent = g.total_failed_attempts || 0;
+        }
+
+        function renderOpenQuestions(workshops, textResponses) {
+            const container = document.getElementById('open-questions-container');
+            const statusBadge = document.getElementById('workshop-status-badge');
+            container.innerHTML = '';
+
+            let hasWorkshops = workshops && workshops.length > 0;
+            let latestWorkshop = hasWorkshops ? workshops[workshops.length - 1] : null;
+
+            if (latestWorkshop) {
+                statusBadge.className = latestWorkshop.grade ? "badge-success" : "badge-pending";
+                statusBadge.textContent = latestWorkshop.grade ? `Entregado (Nota IA: ${latestWorkshop.grade}/20)` : "Pendiente de validación docente";
+
+                const data = latestWorkshop.submission_data || {};
+                
+                const sections = [
+                    {
+                        key: 'planteamiento',
+                        title: '1. Planteamiento del Problema (Método del Embudo)',
+                        subtitle: 'Macro (Mundial), Meso (Nacional) y Micro (Institucional)',
+                        content: data.planteamiento || data['1. Planteamiento'] || data['Planteamiento'] || ''
+                    },
+                    {
+                        key: 'objetivos',
+                        title: '2. Objetivos e Hipótesis de Investigación',
+                        subtitle: 'Verbo medible en infinitivo, dos variables y respuesta afirmativa',
+                        content: data.objetivos || data['2. Objetivos e Hipótesis'] || data['Objetivos'] || ''
+                    },
+                    {
+                        key: 'variables',
+                        title: '3. Variables y Operacionalización Científica',
+                        subtitle: 'Variable Independiente / Dependiente, dimensiones e indicadores medibles',
+                        content: data.variables || data['3. Variables'] || data['Variables'] || ''
+                    },
+                    {
+                        key: 'metodologia',
+                        title: '4. Diseño y Enfoque Metodológico',
+                        subtitle: 'Enfoque (cuantitativo/cualitativo), alcance y diseño transversal o experimental',
+                        content: data.metodologia || data['4. Metodología'] || data['Metodología'] || ''
+                    }
+                ];
+
+                sections.forEach(sec => {
+                    const card = document.createElement('div');
+                    card.className = 'open-section-card';
+                    const hasText = sec.content && sec.content.trim().length > 0;
+
+                    card.innerHTML = `
+                        <div class="open-section-header">
+                            <div>
+                                <div class="open-section-title">${sec.title}</div>
+                                <div style="font-size:0.75rem; color:var(--slate-400);">${sec.subtitle}</div>
+                            </div>
+                            <span class="${hasText ? 'badge-success' : 'badge-pending'}">
+                                ${hasText ? 'Redactado' : 'Sin redacción'}
+                            </span>
+                        </div>
+                        <div class="open-section-body" style="${!hasText ? 'font-style:italic; color:#94a3b8;' : ''}">
+                            ${hasText ? escapeHtml(sec.content) : 'El estudiante no ha registrado texto para esta sección.'}
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+
+                // Si hay feedback guardado
+                if (latestWorkshop.ai_feedback) {
+                    const fbCard = document.createElement('div');
+                    fbCard.style.cssText = "background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:var(--radius-md); padding:0.85rem 1rem; margin-top:0.75rem; font-size:0.85rem; color:var(--slate-300);";
+                    fbCard.innerHTML = `🦉 <strong>Observaciones registradas del tutor:</strong> ${escapeHtml(latestWorkshop.ai_feedback)}`;
+                    container.appendChild(fbCard);
+                }
+
+            } else {
+                statusBadge.className = "badge-pending";
+                statusBadge.textContent = "Pendiente de realización";
+
+                container.innerHTML = `
+                    <div class="open-section-card" style="text-align:center; padding:2rem 1rem;">
+                        <p style="color:var(--slate-300); font-size:0.95rem; margin-bottom:0.75rem;">
+                            ⚠️ El estudiante aún no ha completado la entrega de redacción del <strong>Taller Metodológico (Fase 2)</strong>.
+                        </p>
+                        <p style="font-size:0.85rem; color:var(--slate-400); margin:0;">
+                            Una vez que ingrese al taller y redacte su propuesta guiado por el Búho, sus respuestas abiertas aparecerán aquí disponibles para revisión.
+                        </p>
+                    </div>
+                `;
+            }
+
+            // Si existen respuestas a preguntas tipo texto en cuestionarios
+            if (textResponses && textResponses.length > 0) {
+                const textSection = document.createElement('div');
+                textSection.style.marginTop = '1.5rem';
+                textSection.innerHTML = `<h4 style="color:var(--brand-300); font-size:0.95rem; margin-bottom:0.75rem;">Otras Respuestas Abiertas del Cuestionario:</h4>`;
+                
+                textResponses.forEach((tr, i) => {
+                    const row = document.createElement('div');
+                    row.className = 'open-section-card';
+                    row.innerHTML = `
+                        <div class="open-section-header">
+                            <span class="open-section-title">Pregunta Abierta #${i+1}</span>
+                            <span style="font-size:0.75rem; color:var(--slate-400);">${tr.timestamp ? tr.timestamp.split('T')[0] : ''}</span>
+                        </div>
+                        <div class="open-section-body">${escapeHtml(tr.selected_answer || '')}</div>
+                    `;
+                    textSection.appendChild(row);
+                });
+                container.appendChild(textSection);
+            }
+        }
+
+        function escapeHtml(string) {
+            return String(string || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function downloadCSVReport() {
+            if (!reportData || !reportData.grades) {
+                alert("Los datos aún no se han cargado por completo. Espera un momento.");
+                return;
+            }
+
+            const g = reportData.grades;
+            const u = reportData.user || {};
+            const username = u.username || localStorage.getItem('username') || 'Estudiante';
+            const ws = (reportData.workshops && reportData.workshops.length > 0) ? reportData.workshops[reportData.workshops.length - 1] : {};
+            const wsData = ws.submission_data || {};
+
+            // Construir CSV con BOM para compatibilidad completa con Microsoft Excel
+            const rows = [
+                ["CAMPO", "VALOR"],
+                ["Estudiante", username],
+                ["Fecha de Emision", new Date().toLocaleString('es-PE')],
+                ["Nota Final Vigesimal (0-20)", (g.final_grade_20 !== undefined) ? g.final_grade_20.toFixed(2) : "0.00"],
+                ["Nota Saber - Cognitiva (0-20)", (g.saber_grade !== undefined) ? g.saber_grade.toFixed(2) : "0.00"],
+                ["Nota Saber Hacer - Procedimental (0-20)", (g.saber_hacer_grade !== undefined) ? g.saber_hacer_grade.toFixed(2) : "0.00"],
+                ["Nota Saber Ser - Actitudinal (0-20)", (g.saber_ser_grade !== undefined) ? g.saber_ser_grade.toFixed(2) : "0.00"],
+                ["Sancion Actitudinal (Puntos Deducidos)", (g.actitudinal_penalty !== undefined) ? g.actitudinal_penalty.toFixed(2) : "0.00"],
+                ["Total Preguntas Respondidas", g.total_questions_answered || 0],
+                ["Aciertos Totales", g.total_correct || 0],
+                ["Respuestas Impulsivas (<2s)", g.fast_random_count || 0],
+                ["Intentos de Copiar y Pegar", u.pasted_text_count || 0],
+                ["Tiempo Promedio de Respuesta (ms)", g.avg_response_time_ms || 0],
+                ["Intentos Fallidos Totales", g.total_failed_attempts || 0],
+                ["--- RESPUESTAS ABIERTAS DE TESIS ---", "---"],
+                ["Planteamiento del Problema", (wsData.planteamiento || wsData['Planteamiento'] || '').replace(/"/g, '""')],
+                ["Objetivos e Hipotesis", (wsData.objetivos || wsData['Objetivos'] || '').replace(/"/g, '""')],
+                ["Variables y Operacionalizacion", (wsData.variables || wsData['Variables'] || '').replace(/"/g, '""')],
+                ["Diseno Metodologico", (wsData.metodologia || wsData['Metodologia'] || '').replace(/"/g, '""')],
+                ["Estado Revision IA", ws.grade ? `Calificado (${ws.grade}/20)` : "Pendiente de Calificacion Docente"]
+            ];
+
+            let csvContent = "\uFEFF"; // Byte Order Mark para acentos en Excel
+            rows.forEach(row => {
+                const escaped = row.map(val => `"${String(val).replace(/"/g, '""')}"`);
+                csvContent += escaped.join(";") + "\r\n";
+            });
+
+            const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `Reporte_Tesis_${username}_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
     </script>
 </body>
 </html>

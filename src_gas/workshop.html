@@ -222,6 +222,9 @@
                 </div>
             </div>
             <div style="display:flex; align-items:center; gap:0.75rem;">
+                <button onclick="openApiKeyModal()" class="btn btn-secondary" style="font-size:0.8rem; padding:0.4rem 0.8rem; cursor:pointer; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); color:var(--slate-200);">
+                    ⚙️ Estado IA
+                </button>
                 <button onclick="openCurrentTopicInfographic()" class="btn btn-secondary" style="font-size:0.8rem; padding:0.4rem 0.8rem; cursor:pointer; background:rgba(99,102,241,0.2); border:1px solid rgba(99,102,241,0.4); color:var(--brand-300);">
                     📖 Infografía Guía
                 </button>
@@ -301,8 +304,35 @@
                 <img id="modal-infographic-img" src="" alt="Infografía de Repaso" style="max-width:100%; max-height:72vh; border-radius:var(--radius-lg); object-fit:contain;">
             </div>
             <div style="padding:0.75rem 1.5rem; background:rgba(0,0,0,0.4); border-top:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between; align-items:center; font-size:0.85rem; color:var(--slate-400);">
-                <span>💡 <i>Revisa los conceptos clave antes de redactar.</i></span>
-                <button onclick="closeInfographicModal()" class="btn btn-primary" style="padding:0.35rem 1.2rem; font-size:0.85rem;">Entendido</button>
+    <!-- Modal de Configuración de IA -->
+    <div id="api-key-modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.85); backdrop-filter:blur(8px); z-index:9999; justify-content:center; align-items:center; padding:1.5rem;" onclick="if(event.target===this) closeApiKeyModal()">
+        <div style="background:var(--slate-900); border:1px solid rgba(255,255,255,0.15); border-radius:var(--radius-xl); max-width:550px; width:100%; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 25px 50px -12px rgba(0,0,0,0.8);">
+            <div style="padding:1rem 1.5rem; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.03);">
+                <div style="display:flex; align-items:center; gap:0.5rem;">
+                    <span style="font-size:1.3rem;">🤖</span>
+                    <h3 style="color:white; margin:0; font-size:1.05rem;">Motor de IA de Buhotech Labs</h3>
+                </div>
+                <button onclick="closeApiKeyModal()" style="background:none; border:none; color:var(--slate-400); font-size:1.4rem; cursor:pointer;" onmouseover="this.style.color='white'" onmouseout="this.style.color='var(--slate-400)'">✕</button>
+            </div>
+            <div style="padding:1.5rem; background:#0f172a; color:var(--slate-300); font-size:0.9rem; line-height:1.5;">
+                <div id="ai-status-box" style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); border-radius:var(--radius-md); padding:0.85rem; margin-bottom:1rem;">
+                    <span style="color:var(--slate-400);">Modo de operación actual:</span><br>
+                    <strong id="ai-current-mode" style="color:var(--brand-300); font-size:0.95rem;">Cargando...</strong>
+                </div>
+
+                <p style="margin-bottom:0.75rem; font-size:0.85rem;">
+                    Buhotech Labs funciona <strong>100% autónomo</strong> con su motor <strong>RAG Socrático Local Cerrado</strong> (sin caídas ni errores). Opcionalmente, puedes vincular una clave gratuita de <strong>Google AI Studio (Gemini 2.0 Flash)</strong> para respuestas ampliadas:
+                </p>
+
+                <label style="display:block; font-size:0.8rem; font-weight:bold; color:var(--slate-200); margin-bottom:0.35rem;">
+                    Clave de API de Google Gemini (opcional):
+                </label>
+                <input type="password" id="gemini-key-input" placeholder="AIzaSy..." style="width:100%; box-sizing:border-box; background:rgba(0,0,0,0.4); border:1px solid var(--slate-600); border-radius:var(--radius-md); padding:0.65rem 0.85rem; color:white; font-family:monospace; margin-bottom:1rem; outline:none;">
+
+                <div style="display:flex; justify-content:flex-end; gap:0.5rem;">
+                    <button onclick="closeApiKeyModal()" class="btn btn-secondary" style="padding:0.4rem 1rem; font-size:0.85rem;">Cerrar</button>
+                    <button onclick="saveApiKeyAction()" class="btn btn-primary" id="save-key-btn" style="padding:0.4rem 1.2rem; font-size:0.85rem;">Guardar Clave</button>
+                </div>
             </div>
         </div>
     </div>
@@ -422,8 +452,6 @@
             addBubble('user', `Revisión de ${topicsData[currentTopicId].title}:\n"${draft}"`);
             showTyping();
 
-            const fullPrompt = topicsData[currentTopicId].promptPrefix + draft;
-
             google.script.run
                 .withSuccessHandler(function(res) {
                     hideTyping();
@@ -437,7 +465,7 @@
                     hideTyping();
                     addBubble('assistant', '🦉 Buen avance. Revisa que los conceptos clave coincidan con tu marco teórico.');
                 })
-                .rpcSocraticChat(USER_ID, currentTopicId, fullPrompt);
+                .rpcSocraticChat(USER_ID, currentTopicId, draft);
         }
 
         function sendMessageToBuho() {
@@ -505,6 +533,52 @@
 
         function closeInfographicModal() {
             document.getElementById('infographic-modal').style.display = 'none';
+        }
+
+        function openApiKeyModal() {
+            document.getElementById('api-key-modal').style.display = 'flex';
+            google.script.run
+                .withSuccessHandler(function(res) {
+                    if (res && res.success) {
+                        if (res.hasGemini) {
+                            document.getElementById('ai-current-mode').textContent = "🟢 Conectado a Google Gemini (" + res.geminiMasked + ")";
+                        } else if (res.hasGroq) {
+                            document.getElementById('ai-current-mode').textContent = "🟢 Conectado a Groq (" + res.groqMasked + ")";
+                        } else {
+                            document.getElementById('ai-current-mode').textContent = "🛡️ Motor RAG Socrático Local Autónomo (Activo)";
+                        }
+                    }
+                })
+                .rpcGetApiKeyStatus();
+        }
+
+        function closeApiKeyModal() {
+            document.getElementById('api-key-modal').style.display = 'none';
+        }
+
+        function saveApiKeyAction() {
+            const key = document.getElementById('gemini-key-input').value.trim();
+            if (!key) {
+                alert("Ingresa una clave de Gemini válida.");
+                return;
+            }
+            const btn = document.getElementById('save-key-btn');
+            btn.disabled = true;
+            btn.textContent = "Guardando...";
+
+            google.script.run
+                .withSuccessHandler(function(res) {
+                    btn.disabled = false;
+                    btn.textContent = "Guardar Clave";
+                    alert("¡Clave de Gemini guardada correctamente!");
+                    closeApiKeyModal();
+                })
+                .withFailureHandler(function(err) {
+                    btn.disabled = false;
+                    btn.textContent = "Guardar Clave";
+                    alert("Error al guardar clave: " + err);
+                })
+                .rpcSaveApiKey('gemini', key);
         }
     </script>
 </body>

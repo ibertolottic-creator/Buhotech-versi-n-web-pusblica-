@@ -8,6 +8,16 @@
 // En caso de ser independiente, deberemos cambiar esto a SpreadsheetApp.openById("ID_DEL_SHEET")
 const SPREADSHEET_ID = PropertiesService.getScriptProperties().getProperty("SPREADSHEET_ID");
 
+const SHEET_SCHEMAS = {
+  users: ["id", "username", "role", "xp", "hearts", "streak_days", "unlocked_module", "last_played", "created_at", "pasted_text_count", "infographic_views"],
+  questions: ["id", "dimension", "level", "phase", "phase_number", "question_type", "text", "options", "correct_answer", "image_filename", "min_reading_time_ms", "expected_time_ms", "verification_text", "rescue_text", "weight"],
+  user_responses: ["id", "user_id", "question_id", "selected_answer", "is_correct", "response_time_ms", "failed_attempts", "behavior_flag", "dimension", "level", "feedback_type", "timestamp"],
+  socratic_sessions: ["id", "user_id", "messages", "ai_provider", "ai_model", "total_latency_ms", "total_interactions", "topic", "created_at", "updated_at"],
+  workshop_submissions: ["id", "user_id", "workshop_type", "submission_data", "ai_feedback", "grade", "ai_provider", "latency_ms", "timestamp"],
+  dilemma_responses: ["id", "user_id", "question_id", "choice", "justification", "ai_feedback", "is_ethical", "timestamp"],
+  competency_grades: ["id", "user_id", "username", "saber_grade", "saber_hacer_grade", "saber_ser_grade", "final_grade_20", "actitudinal_penalty", "total_questions_answered", "total_correct", "total_socratic_interactions", "avg_response_time_ms", "fast_random_count", "total_failed_attempts", "calculated_at"]
+};
+
 function getSpreadsheet() {
   if (SPREADSHEET_ID) {
     return SpreadsheetApp.openById(SPREADSHEET_ID);
@@ -16,11 +26,26 @@ function getSpreadsheet() {
 }
 
 /**
+ * Obtiene o crea de forma automática una pestaña con sus encabezados oficiales si no existiera.
+ */
+function getOrCreateSheet(sheetName) {
+  const ss = getSpreadsheet();
+  let sheet = ss.getSheetByName(sheetName);
+  if (!sheet) {
+    sheet = ss.insertSheet(sheetName);
+    const headers = SHEET_SCHEMAS[sheetName] || ["id", "user_id", "timestamp"];
+    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
+/**
  * Obtiene todos los registros de una hoja como una lista de objetos.
  * Asume que la primera fila son los encabezados.
  */
 function getRecords(sheetName) {
-  const sheet = getSpreadsheet().getSheetByName(sheetName);
+  const sheet = getOrCreateSheet(sheetName);
   if (!sheet) return [];
   
   const data = sheet.getDataRange().getValues();
@@ -54,7 +79,7 @@ function insertRecord(sheetName, recordObj) {
   }
   
   try {
-    const sheet = getSpreadsheet().getSheetByName(sheetName);
+    const sheet = getOrCreateSheet(sheetName);
     if (!sheet) throw new Error("Hoja no encontrada: " + sheetName);
     
     // Optimización ultra-rápida (para soportar 70+ alumnos concurrentes):
@@ -94,7 +119,7 @@ function updateRecord(sheetName, keyColumn, keyValue, updatesObj) {
   }
   
   try {
-    const sheet = getSpreadsheet().getSheetByName(sheetName);
+    const sheet = getOrCreateSheet(sheetName);
     if (!sheet) throw new Error("Hoja no encontrada: " + sheetName);
     
     const data = sheet.getDataRange().getValues();
@@ -140,6 +165,33 @@ function findRecordBy(sheetName, keyColumn, keyValue) {
 function findRecordsBy(sheetName, keyColumn, keyValue) {
   const records = getRecords(sheetName);
   return records.filter(r => r[keyColumn] == keyValue);
+}
+
+/**
+ * Obtiene las entregas de taller del estudiante con los datos ya parseados.
+ */
+function getUserWorkshopSubmissions(userId) {
+  try {
+    const records = findRecordsBy("workshop_submissions", "user_id", userId);
+    return records.map(r => {
+      let data = r.submission_data;
+      if (typeof data === "string") {
+        try { data = JSON.parse(data); } catch(e) {}
+      }
+      return {
+        id: r.id,
+        workshop_type: r.workshop_type,
+        submission_data: data,
+        ai_feedback: r.ai_feedback,
+        grade: r.grade,
+        ai_provider: r.ai_provider,
+        timestamp: r.timestamp
+      };
+    });
+  } catch(e) {
+    Logger.log("Error en getUserWorkshopSubmissions: " + e.toString());
+    return [];
+  }
 }
 
 // -------------------------------------------------------------
