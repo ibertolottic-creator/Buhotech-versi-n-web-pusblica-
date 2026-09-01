@@ -132,123 +132,129 @@
     let failedAttempts = 0;
 
     function renderQuestion() {
-        if (currentIndex >= QUESTIONS.length) {
-            completeModule();
-            return;
-        }
-
-        const q = QUESTIONS[currentIndex];
-        const progress = (currentIndex / QUESTIONS.length) * 100;
-        document.getElementById('lesson-progress').style.width = progress + '%';
-
-        hasPasted = false;
-        failedAttempts = 0;
-        selectedOption = null;
-        isChecking = false;
-
-        if (q.question_type === 'WORKSHOP') {
-            window.location.href = '/lessons/workshop/' + PHASE_NUMBER;
-            return;
-        }
-        if (q.question_type === 'MATRIX') {
-            window.location.href = '/lessons/matrix/' + PHASE_NUMBER;
-            return;
-        }
-
-        let html = `<div class="question-phase">${q.phase}</div>`;
-        if (q.image_filename) {
-            html += `
-                <div class="question-image" onclick="this.classList.toggle('expanded')">
-                    <img src="/images/${encodeURIComponent(q.image_filename)}" 
-                         alt="${q.phase}"
-                         onerror="this.parentElement.style.display='none'">
-                </div>`;
-        }
-        let qText = q.text;
-        if (q.question_type === 'FILL_BLANK') {
-            qText = q.text.replace('_____', '<span class="blank-dropzone" id="blank-zone">...</span>');
-            html += `<div class="fill-blank-text">${qText}</div>`;
-        } else {
-            html += `<div class="question-text">${qText}</div>`;
-        }
-
-        if (q.question_type === 'MAIN' || q.question_type === 'RAPID' || q.question_type === 'DILEMMA' || q.question_type === 'SCENARIO' || q.question_type === 'FILL_BLANK' || q.question_type === 'HONESTY') {
-            html += '<div class="options-container">';
-            for (const opt of q.options) {
-                html += `
-                    <button class="option-btn" data-id="${opt.id}" data-qtype="${q.question_type}">
-                        <span class="option-marker">${opt.id}</span>
-                        <span class="option-text">${opt.text}</span>
-                    </button>`;
+        try {
+            if (currentIndex >= QUESTIONS.length) {
+                completeModule();
+                return;
             }
-            html += '</div>';
-        } else if (q.question_type === 'TEXT') {
-            html += `
-                <div style="margin-top: 1rem;">
-                    <div style="background: rgba(255,255,255,0.05); border-left: 3px solid var(--brand-400); padding: 0.75rem; border-radius: var(--radius-sm); margin-bottom: 1rem; font-size: 0.85rem; color: var(--slate-300);">
-                        <strong>Nota:</strong> Tu respuesta procedimental se guardará en tu reporte. Si la evaluación por IA falla, el docente revisará tu reporte para completar tu calificación.
-                    </div>
-                    <textarea id="text-answer" class="text-input" rows="4" maxlength="300" 
-                        placeholder="Escribe tu respuesta aquí..." 
-                        onpaste="handlePaste(event)" oninput="checkText()"></textarea>
-                    <div style="text-align: right; font-size: 0.8rem; color: #888;">
-                        <span id="char-count">0</span>/300
-                    </div>
-                </div>
-                <button class="btn btn-secondary btn-sm" onclick="askForHint()" style="margin-top: 10px;">
-                    💡 Pista del Búho (-5 XP)
-                </button>
-                <div id="hint-box" style="display:none; margin-top:10px; font-style:italic; color:var(--brand-300);"></div>
-            `;
-        } else if (q.question_type === 'SORT') {
-            html += `<div class="sort-container" id="sort-container">`;
-            for (const opt of q.options) {
+
+            const q = QUESTIONS[currentIndex];
+            const progress = (currentIndex / QUESTIONS.length) * 100;
+            document.getElementById('lesson-progress').style.width = progress + '%';
+
+            hasPasted = false;
+            failedAttempts = 0;
+            selectedOption = null;
+            isChecking = false;
+
+            if (q.question_type === 'WORKSHOP') {
+                window.location.href = '/lessons/workshop/' + PHASE_NUMBER;
+                return;
+            }
+            if (q.question_type === 'MATRIX') {
+                window.location.href = '/lessons/matrix/' + PHASE_NUMBER;
+                return;
+            }
+
+            let html = `<div class="question-phase">${q.phase}</div>`;
+            if (q.image_filename) {
                 html += `
-                    <div class="sort-item" data-id="${opt.id}" data-text="${opt.text}" onclick="selectSortItem(this)">
-                        ${opt.text}
+                    <div class="question-image" onclick="this.classList.toggle('expanded')">
+                        <img src="/images/${encodeURIComponent(q.image_filename)}" 
+                             alt="${q.phase}"
+                             onerror="this.parentElement.style.display='none'">
                     </div>`;
             }
-            html += `</div>`;
-            html += `<p style="font-size:0.8rem; color:#888; margin-top:15px;">Secuencia (toca los elementos arriba para agregarlos):</p>`;
-            html += `<div id="sort-result" class="sort-result-box"></div>`;
-            html += `<button class="btn btn-secondary btn-sm" onclick="resetSort()">Reiniciar Orden</button>`;
-            selectedOption = [];
-        } else if (q.question_type === 'MATCH') {
-            const rightOptions = [...new Set(q.options.map(o => o.right))].sort(() => Math.random() - 0.5);
-            html += `<div class="match-container">`;
-            for (const opt of q.options) {
-                html += `
-                    <div class="match-item" data-id="${opt.id}">
-                        <div style="flex:1;">${opt.left}</div>
-                        <div class="match-select-container">
-                            <select class="match-select" onchange="selectMatchDropdown('${opt.id}', this.value)">
-                                <option value="" disabled selected>Selecciona...</option>`;
-                for (const rightOpt of rightOptions) {
-                    html += `<option value="${rightOpt}">${rightOpt}</option>`;
+            let qText = q.text;
+            if (q.question_type === 'FILL_BLANK') {
+                qText = q.text.replace('_____', '<span class="blank-dropzone" id="blank-zone">...</span>');
+                html += `<div class="fill-blank-text">${qText}</div>`;
+            } else {
+                html += `<div class="question-text">${qText}</div>`;
+            }
+
+            if (q.question_type === 'MAIN' || q.question_type === 'RAPID' || q.question_type === 'DILEMMA' || q.question_type === 'SCENARIO' || q.question_type === 'FILL_BLANK' || q.question_type === 'HONESTY') {
+                html += '<div class="options-container">';
+                for (const opt of (q.options || [])) {
+                    html += `
+                        <button class="option-btn" data-id="${opt.id}" data-qtype="${q.question_type}">
+                            <span class="option-marker">${opt.id}</span>
+                            <span class="option-text">${opt.text}</span>
+                        </button>`;
                 }
-                html += `   </select>
+                html += '</div>';
+            } else if (q.question_type === 'TEXT') {
+                html += `
+                    <div style="margin-top: 1rem;">
+                        <div style="background: rgba(255,255,255,0.05); border-left: 3px solid var(--brand-400); padding: 0.75rem; border-radius: var(--radius-sm); margin-bottom: 1rem; font-size: 0.85rem; color: var(--slate-300);">
+                            <strong>Nota:</strong> Tu respuesta procedimental se guardará en tu reporte. Si la evaluación por IA falla, el docente revisará tu reporte para completar tu calificación.
                         </div>
-                    </div>`;
+                        <textarea id="text-answer" class="text-input" rows="4" maxlength="300" 
+                            placeholder="Escribe tu respuesta aquí..." 
+                            onpaste="handlePaste(event)" oninput="checkText()"></textarea>
+                        <div style="text-align: right; font-size: 0.8rem; color: #888;">
+                            <span id="char-count">0</span>/300
+                        </div>
+                    </div>
+                    <button class="btn btn-secondary btn-sm" onclick="askForHint()" style="margin-top: 10px;">
+                        💡 Pista del Búho (-5 XP)
+                    </button>
+                    <div id="hint-box" style="display:none; margin-top:10px; font-style:italic; color:var(--brand-300);"></div>
+                `;
+            } else if (q.question_type === 'SORT') {
+                html += `<div class="sort-container" id="sort-container">`;
+                for (const opt of (q.options || [])) {
+                    html += `
+                        <div class="sort-item" data-id="${opt.id}" data-text="${opt.text}" onclick="selectSortItem(this)">
+                            ${opt.text}
+                        </div>`;
+                }
+                html += `</div>`;
+                html += `<p style="font-size:0.8rem; color:#888; margin-top:15px;">Secuencia (toca los elementos arriba para agregarlos):</p>`;
+                html += `<div id="sort-result" class="sort-result-box"></div>`;
+                html += `<button class="btn btn-secondary btn-sm" onclick="resetSort()">Reiniciar Orden</button>`;
+                selectedOption = [];
+            } else if (q.question_type === 'MATCH') {
+                const qOpts = q.options || [];
+                const rightOptions = [...new Set(qOpts.map(o => o.right))].sort(() => Math.random() - 0.5);
+                html += `<div class="match-container">`;
+                for (const opt of qOpts) {
+                    html += `
+                        <div class="match-item" data-id="${opt.id}">
+                            <div style="flex:1;">${opt.left}</div>
+                            <div class="match-select-container">
+                                <select class="match-select" onchange="selectMatchDropdown('${opt.id}', this.value)">
+                                    <option value="" disabled selected>Selecciona...</option>`;
+                    for (const rightOpt of rightOptions) {
+                        html += `<option value="${rightOpt}">${rightOpt}</option>`;
+                    }
+                    html += `   </select>
+                            </div>
+                        </div>`;
+                }
+                html += `</div>`;
+                selectedOption = {};
             }
-            html += `</div>`;
-            selectedOption = {};
-        }
 
-        document.getElementById('lesson-content').innerHTML = html;
-        document.getElementById('check-bar').style.display = 'none';
-        document.getElementById('feedback-drawer').style.display = 'none';
+            document.getElementById('lesson-content').innerHTML = html;
+            document.getElementById('check-bar').style.display = 'none';
+            document.getElementById('feedback-drawer').style.display = 'none';
 
-        // Attach click listeners via event delegation (avoids inline onclick issues)
-        document.querySelectorAll('.option-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const optId = this.dataset.id;
-                const qType = this.dataset.qtype;
-                const optText = this.querySelector('.option-text')?.textContent || '';
-                selectOption(this, optId, qType, optText);
+            // Attach click listeners via event delegation (avoids inline onclick issues)
+            document.querySelectorAll('.option-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const optId = this.dataset.id;
+                    const qType = this.dataset.qtype;
+                    const optText = this.querySelector('.option-text')?.textContent || '';
+                    selectOption(this, optId, qType, optText);
+                });
             });
-        });
 
-        startTime = Date.now();
+            startTime = Date.now();
+        } catch (e) {
+            alert('Error al renderizar pregunta: ' + e);
+            console.error(e);
+        }
     }
 
     // Handlers
@@ -462,7 +468,7 @@
                     <div class="feedback-text">${data.feedback_text || ''}</div>
                 </div>
             </div>
-            <button class="btn ${data.is_correct ? 'btn-success' : 'btn-danger'} btn-lg btn-block" onclick="nextQuestion('${data.is_correct}')">
+            <button class="btn ${data.is_correct ? 'btn-success' : 'btn-danger'} btn-lg btn-block" onclick="nextQuestion(${data.is_correct})">
                 CONTINUAR
             </button>
         `;
@@ -471,18 +477,21 @@
     }
 
     function nextQuestion(wasCorrect) {
-        if (currentHearts <= 0) {
-            alert('💔 ¡Te has quedado sin vidas! Repasa la teoría.');
-            window.location.href = '/dashboard';
-            return;
-        }
-        if (wasCorrect === 'true') {
-            currentIndex++;
-            renderQuestion();
-        } else {
-            // Reintentar si fue incorrecto (limpiar UI)
-            // But we don't increment currentIndex
-            renderQuestion();
+        try {
+            if (currentHearts <= 0) {
+                alert('💔 ¡Te has quedado sin vidas! Repasa la teoría.');
+                window.location.href = '/dashboard';
+                return;
+            }
+            if (wasCorrect === true || wasCorrect === 'true') {
+                currentIndex++;
+                renderQuestion();
+            } else {
+                renderQuestion();
+            }
+        } catch (e) {
+            alert('Error al continuar: ' + e);
+            console.error(e);
         }
     }
 
@@ -493,6 +502,12 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ module_number: PHASE_NUMBER })
             });
+            
+            if (!res.ok) {
+                alert('Error al completar el módulo. El servidor respondió con: ' + res.status);
+                return;
+            }
+            
             const data = await res.json();
             
             playSound('success');
@@ -596,6 +611,7 @@
             document.getElementById('feedback-drawer').style.display = 'none';
         } catch (e) {
             console.error(e);
+            alert('Error crítico al finalizar la fase: ' + e);
         }
     }
 
