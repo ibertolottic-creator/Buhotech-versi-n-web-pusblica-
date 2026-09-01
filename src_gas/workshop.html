@@ -265,8 +265,8 @@
                 </div>
 
                 <div class="editor-actions">
-                    <button class="btn btn-secondary" onclick="openCurrentTopicInfographic()" style="flex:1; background:rgba(99,102,241,0.2); border:1px solid rgba(99,102,241,0.4); color:var(--brand-300);">
-                        📖 Ampliar Infografía 🔍
+                    <button class="btn btn-secondary" onclick="askBuhoForReview()" id="review-btn" style="flex:1; background:rgba(99,102,241,0.2); border:1px solid rgba(99,102,241,0.4); color:var(--brand-300);">
+                        🦉 Pedir revisión al Búho IA
                     </button>
                     <button class="btn btn-primary" onclick="completeWorkshop()" id="complete-btn" style="flex:1;">
                         Finalizar Taller ✅
@@ -274,29 +274,41 @@
                 </div>
             </div>
 
-            <!-- Panel Derecho: Infografía Metodológica Guía (Reemplazo directo del cuadro de chat de la IA) -->
+            <!-- Panel Derecho: Pestañas de Infografía Guía y Diálogo con el Búho IA -->
             <div class="chat-panel" style="background: rgba(10, 15, 30, 0.75); display: flex; flex-direction: column; overflow: hidden; border-left: 1px solid rgba(255,255,255,0.1);">
-                <div style="padding: 0.75rem 1.25rem; background: rgba(0,0,0,0.4); border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center;">
-                    <div style="display:flex; align-items:center; gap:0.5rem;">
-                        <span style="font-size: 1.2rem;">📖</span>
-                        <strong id="side-infographic-title" style="color: white; font-size: 0.95rem;">Infografía: Planteamiento del Problema</strong>
+                <!-- Barra de pestañas del panel derecho -->
+                <div style="padding: 0.6rem 1rem; background: rgba(0,0,0,0.5); border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; gap: 0.5rem;">
+                    <div style="display:flex; gap:0.4rem;">
+                        <button id="tab-btn-infographic" onclick="showRightTab('infographic')" style="font-size:0.75rem; padding:0.35rem 0.8rem; background:var(--brand-600); color:white; border-radius:6px; border:none; cursor:pointer; font-weight:700;">
+                            📖 Infografía Guía
+                        </button>
+                        <button id="tab-btn-chat" onclick="showRightTab('chat')" style="font-size:0.75rem; padding:0.35rem 0.8rem; background:rgba(255,255,255,0.06); color:var(--slate-300); border-radius:6px; border:1px solid rgba(255,255,255,0.1); cursor:pointer; font-weight:600;">
+                            🦉 Diálogo con el Búho IA
+                        </button>
                     </div>
-                    <span style="font-size:0.75rem; color: var(--brand-300); background: rgba(99,102,241,0.2); border: 1px solid rgba(99,102,241,0.4); padding: 0.2rem 0.65rem; border-radius: 9999px; font-weight: 700;">
-                        Guía Visual Oficial
-                    </span>
+                    <button onclick="openCurrentTopicInfographic()" class="btn btn-secondary" style="font-size: 0.72rem; padding: 0.2rem 0.55rem;">Ampliar 🔍</button>
                 </div>
 
-                <div style="flex: 1; overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; text-align: center; gap: 0.85rem;">
-                    <div style="width: 100%; max-height: 66vh; overflow: auto; border-radius: var(--radius-lg); background: #050811; border: 1px solid rgba(255,255,255,0.1); padding: 0.5rem; display: flex; justify-content: center; align-items: center; cursor: pointer;" onclick="openCurrentTopicInfographic()" title="Haz clic para ver en pantalla completa">
-                        <img id="side-infographic-img" src="" alt="Infografía Guía" style="max-width: 100%; max-height: 62vh; object-fit: contain; border-radius: 8px;">
+                <!-- Vista 1: Infografía Oficial Fija -->
+                <div id="side-view-infographic" style="flex: 1; overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; text-align: center; gap: 0.85rem;">
+                    <div style="width: 100%; max-height: 64vh; overflow: auto; border-radius: var(--radius-lg); background: #050811; border: 1px solid rgba(255,255,255,0.1); padding: 0.5rem; display: flex; justify-content: center; align-items: center; cursor: pointer;" onclick="openCurrentTopicInfographic()" title="Haz clic para ver en pantalla completa">
+                        <img id="side-infographic-img" src="" alt="Infografía Guía" style="max-width: 100%; max-height: 60vh; object-fit: contain; border-radius: 8px;">
                     </div>
                     <div id="side-infographic-caption" style="font-size: 0.85rem; color: var(--slate-200); line-height: 1.5; background: rgba(255,255,255,0.05); padding: 0.85rem 1rem; border-radius: var(--radius-md); border-left: 3px solid var(--brand-400); width: 100%; box-sizing: border-box; text-align: left;">
                     </div>
                 </div>
 
-                <div style="padding: 0.65rem 1.25rem; background: rgba(0,0,0,0.5); border-top: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: var(--slate-400);">
-                    <span>🔍 <i>Toca la imagen o presiona Ampliar para verla completa.</i></span>
-                    <button onclick="openCurrentTopicInfographic()" class="btn btn-secondary" style="font-size: 0.75rem; padding: 0.25rem 0.65rem;">Ampliar 🔍</button>
+                <!-- Vista 2: Diálogo con el Búho IA (Conectado a Propiedades de Script) -->
+                <div id="side-view-chat" style="display:none; flex:1; flex-direction:column; overflow:hidden;">
+                    <div class="chat-messages" id="chat-messages" style="flex:1; overflow-y:auto; padding:1rem; display:flex; flex-direction:column; gap:0.75rem;">
+                        <div class="chat-bubble assistant">
+                            🦉 ¡Hola! Soy el <strong>Búho Metodólogo de Buhotech Labs</strong>. Redacta tu texto a la izquierda y presiona <em>"Pedir revisión al Búho IA"</em>. Estoy conectado a tus claves Gemini en Propiedades de Script para darte retroalimentación socrática inmediata.
+                        </div>
+                    </div>
+                    <div class="chat-input-area" style="padding:0.75rem 1rem; background:rgba(0,0,0,0.3); border-top:1px solid rgba(255,255,255,0.1); display:flex; gap:0.5rem;">
+                        <input type="text" id="chat-input" class="chat-input" placeholder="Pregúntale al Búho sobre tu tesis..." onkeypress="if(event.key==='Enter') sendMessageToBuho()" style="flex:1; background:rgba(0,0,0,0.4); border:1px solid var(--slate-600); border-radius:8px; padding:0.55rem 0.85rem; color:white; outline:none;">
+                        <button class="chat-send-btn" onclick="sendMessageToBuho()" style="padding:0.55rem 1.1rem; background:var(--brand-600); border:none; border-radius:8px; color:white; cursor:pointer; font-weight:bold;">➤</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -463,12 +475,38 @@
             if (el) el.remove();
         }
 
+        function showRightTab(tabName) {
+            const viewInfographic = document.getElementById('side-view-infographic');
+            const viewChat = document.getElementById('side-view-chat');
+            const btnInfographic = document.getElementById('tab-btn-infographic');
+            const btnChat = document.getElementById('tab-btn-chat');
+
+            if (tabName === 'chat') {
+                viewInfographic.style.display = 'none';
+                viewChat.style.display = 'flex';
+                btnChat.style.background = 'var(--brand-600)';
+                btnChat.style.color = 'white';
+                btnInfographic.style.background = 'rgba(255,255,255,0.06)';
+                btnInfographic.style.color = 'var(--slate-300)';
+            } else {
+                viewInfographic.style.display = 'flex';
+                viewChat.style.display = 'none';
+                btnInfographic.style.background = 'var(--brand-600)';
+                btnInfographic.style.color = 'white';
+                btnChat.style.background = 'rgba(255,255,255,0.06)';
+                btnChat.style.color = 'var(--slate-300)';
+            }
+        }
+
         function askBuhoForReview() {
             const draft = document.getElementById('workshop-draft').value.trim();
             if (draft.length < 15) {
                 alert("Escribe al menos un borrador preliminar antes de pedir revisión.");
                 return;
             }
+
+            // Cambiar a la vista del chat para ver la respuesta
+            showRightTab('chat');
 
             addBubble('user', `Revisión de ${topicsData[currentTopicId].title}:\n"${draft}"`);
             showTyping();

@@ -134,11 +134,13 @@ function rpcSaveApiKey(provider, apiKey) {
 function rpcGetApiKeyStatus() {
   try {
     const keys = getKeys();
+    const count = (keys.geminiPool && keys.geminiPool.length) || (keys.gemini ? 1 : 0);
     return {
       success: true,
-      hasGemini: !!(keys.gemini && keys.gemini.length > 5),
+      hasGemini: count > 0,
+      geminiCount: count,
       hasGroq: !!(keys.groq && keys.groq.length > 5),
-      geminiMasked: keys.gemini ? (keys.gemini.substring(0, 7) + "..." + keys.gemini.substring(keys.gemini.length - 4)) : null,
+      geminiMasked: keys.gemini ? (keys.gemini.substring(0, 8) + "..." + keys.gemini.substring(keys.gemini.length - 4) + ` (${count} clave${count > 1 ? 's' : ''} activa${count > 1 ? 's' : ''})`) : null,
       groqMasked: keys.groq ? (keys.groq.substring(0, 6) + "..." + keys.groq.substring(keys.groq.length - 4)) : null
     };
   } catch(e) {

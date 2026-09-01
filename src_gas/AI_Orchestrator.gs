@@ -5,10 +5,40 @@
  * Incluye motor de RAG Local Autónomo que garantiza funcionamiento sin errores.
  */
 
+function getAllGeminiKeys() {
+  try {
+    const props = PropertiesService.getScriptProperties().getProperties();
+    const keys = [];
+
+    // 1. Clave exacta por defecto
+    if (props["GEMINI_API_KEY"]) {
+      const k = props["GEMINI_API_KEY"].trim();
+      if (k) keys.push(k);
+    }
+
+    // 2. Detectar todas las claves con sufijos (ej: GEMINI_API_KEY_coorduva, GEMINI_API_KEY_permanencia_posgrado, etc.)
+    for (const keyName in props) {
+      if (keyName.toUpperCase().includes("GEMINI") && keyName !== "GEMINI_API_KEY") {
+        const val = (props[keyName] || "").trim();
+        if (val && val.length > 5 && !keys.includes(val)) {
+          keys.push(val);
+        }
+      }
+    }
+
+    return keys;
+  } catch(e) {
+    Logger.log("Error leyendo propiedades: " + e.toString());
+    return [];
+  }
+}
+
 function getKeys() {
   const props = PropertiesService.getScriptProperties();
+  const allGemini = getAllGeminiKeys();
   return {
-    gemini: props.getProperty("GEMINI_API_KEY"),
+    gemini: allGemini.length > 0 ? allGemini[0] : null,
+    geminiPool: allGemini,
     groq: props.getProperty("GROQ_API_KEY")
   };
 }
@@ -43,6 +73,7 @@ const RAG_KNOWLEDGE_BASE = {
  */
 function aiOrchestrateChat(topic, userMessage) {
   const keys = getKeys();
+  const geminiPool = keys.geminiPool || [];
   const topicKey = String(topic || "planteamiento").toLowerCase();
   const ragInfo = RAG_KNOWLEDGE_BASE[topicKey] || RAG_KNOWLEDGE_BASE["planteamiento"];
 
@@ -55,19 +86,21 @@ function aiOrchestrateChat(topic, userMessage) {
     "3. ANDAMIAJE SOCRÁTICO: NUNCA des la respuesta hecha ni redactes el texto por el alumno. Haz 1 o 2 preguntas reflexivas para que él mismo detecte qué falta ajustar.\n" +
     "4. BASE DE CONOCIMIENTO PARA ESTE TEMA (" + ragInfo.name + "):\n" + ragInfo.rules;
 
-  // Intentar con Gemini si existe la clave
-  if (keys.gemini) {
+  // Intentar con el pool de todas las claves Gemini encontradas en Propiedades de Script
+  for (let i = 0; i < geminiPool.length; i++) {
+    const key = geminiPool[i];
     try {
-      const response = callGemini(keys.gemini, systemPrompt, userMessage);
+      const response = callGemini(key, systemPrompt, userMessage);
       if (response && response.trim().length > 0) {
-        return { text: response.trim(), provider: "gemini", model: "gemini-flash" };
+        Logger.log("✅ Éxito con clave Gemini #" + (i + 1));
+        return { text: response.trim(), provider: "gemini", model: "flash-pool" };
       }
     } catch (e) {
-      Logger.log("Error Gemini: " + e.toString());
+      Logger.log("⚠️ Error con clave Gemini #" + (i + 1) + ": " + e.toString());
     }
   }
 
-  // Intentar con Groq si existe la clave
+  // Intentar con Groq si Gemini falla y existe la clave
   if (keys.groq) {
     try {
       const response = callGroq(keys.groq, systemPrompt, userMessage);
@@ -209,11 +242,13 @@ function evaluateWithLocalRAG(topicKey, userMessage, ragInfo) {
  * Llamada a la API de Google Gemini con cascada automática 2.0 Flash -> 1.5 Flash.
  */
 function callGemini(apiKey, systemPrompt, userMessage) {
+  if (!apiKey || apiKey.trim().length < 5) return null;
+  const cleanKey = apiKey.trim();
   const models = ["gemini-2.0-flash", "gemini-1.5-flash"];
   
   for (let i = 0; i < models.length; i++) {
     const model = models[i];
-    const url = "https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent?key=" + apiKey;
+    const url = "https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent?key=" + cleanKey;
     
     const payload = {
       "contents": [
@@ -234,6 +269,9 @@ function callGemini(apiKey, systemPrompt, userMessage) {
     const options = {
       "method": "post",
       "contentType": "application/json",
+      "headers": {
+        "x-goog-api-key": cleanKey
+      },
       "payload": JSON.stringify(payload),
       "muteHttpExceptions": true
     };
