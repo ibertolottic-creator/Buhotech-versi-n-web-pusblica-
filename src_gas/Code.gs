@@ -328,23 +328,33 @@ function rpcGetAdminStats() {
 
 function rpcSubmitWorkshop(userId, workshopType, submissionData) {
   try {
+    if (!userId) {
+      return { success: false, error: "ID de usuario requerido" };
+    }
     const user = findRecordBy("users", "id", userId);
-    if (!user) return { success: false, error: "Usuario no encontrado" };
+    if (!user) {
+      return { success: false, error: "Usuario no registrado con ID: " + userId };
+    }
 
-    // Guardar en 'workshop_submissions' con nota inicial (18.0 por entrega completa)
+    // 1. Guardar en 'workshop_submissions' con nota inicial (18.0 por entrega completa)
     saveWorkshopSubmission(userId, workshopType, submissionData, "Entregado con andamiaje socrático", 18.0, "Búho Socrático");
 
-    // Desbloquear Fase 3 (Laboratorio Ético)
+    // 2. Desbloquear Fase 3 (Laboratorio Ético)
     const nextModule = Math.max(parseInt(user.unlocked_module || 1), 3);
     updateRecord("users", "id", user.id, {
       unlocked_module: nextModule
     });
 
-    // Recalcular y actualizar la fila única del estudiante en 'competency_grades'
-    calculateAndSaveGrades(userId);
+    // 3. Recalcular y actualizar la fila del estudiante en 'competency_grades' y 'Evaluacion_Consolidada'
+    try {
+      calculateAndSaveGrades(userId);
+    } catch(errGrading) {
+      Logger.log("Advertencia calculando notas en workshop: " + errGrading.toString());
+    }
 
     return { success: true };
   } catch(e) {
+    Logger.log("Error crítico en rpcSubmitWorkshop: " + e.toString());
     return { success: false, error: e.toString() };
   }
 }

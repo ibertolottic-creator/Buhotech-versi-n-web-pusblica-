@@ -609,21 +609,45 @@
                 return;
             }
 
+            const currentUserId = USER_ID || localStorage.getItem('user_id');
+            if (!currentUserId) {
+                alert("⚠️ Sesión expirada o no iniciada. Por favor ingresa tu nombre en la pantalla de inicio.");
+                window.top.location.href = APP_URL + "?page=login";
+                return;
+            }
+
             const btn = document.getElementById('complete-btn');
             btn.disabled = true;
             btn.textContent = "Guardando...";
 
+            // Timeout de seguridad en el cliente (20 segundos)
+            const timeoutTimer = setTimeout(function() {
+                if (btn.disabled) {
+                    btn.disabled = false;
+                    btn.textContent = "Finalizar Taller ✅";
+                    alert("⚠️ La sincronización demoró. Si tus datos no se actualizaron, vuelve a presionar 'Finalizar Taller ✅'.");
+                }
+            }, 20000);
+
             google.script.run
                 .withSuccessHandler(function(res) {
+                    clearTimeout(timeoutTimer);
+                    if (res && res.success === false) {
+                        btn.disabled = false;
+                        btn.textContent = "Finalizar Taller ✅";
+                        alert("⚠️ No se pudo guardar: " + (res.error || "Intenta nuevamente"));
+                        return;
+                    }
                     alert("¡Felicitaciones! Has completado el Taller Metodológico (Fase 2). Tu reporte ha sido actualizado.");
                     window.top.location.href = APP_URL + "?page=dashboard";
                 })
                 .withFailureHandler(function(err) {
+                    clearTimeout(timeoutTimer);
                     btn.disabled = false;
                     btn.textContent = "Finalizar Taller ✅";
-                    alert("Error al guardar: " + err);
+                    alert("Error de conexión al guardar: " + err);
                 })
-                .rpcSubmitWorkshop(USER_ID, "Fase 2 - Redaccion", topicDrafts);
+                .rpcSubmitWorkshop(currentUserId, "Fase 2 - Redaccion", topicDrafts);
         }
 
         function openCurrentTopicInfographic() {

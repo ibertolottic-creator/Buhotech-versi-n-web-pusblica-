@@ -53,11 +53,18 @@ function getSpreadsheet() {
 function getOrCreateSheet(sheetName) {
   const ss = getSpreadsheet();
   let sheet = ss.getSheetByName(sheetName);
+  const defaultHeaders = SHEET_SCHEMAS[sheetName] || ["id", "user_id", "timestamp"];
+  
   if (!sheet) {
     sheet = ss.insertSheet(sheetName);
-    const headers = SHEET_SCHEMAS[sheetName] || ["id", "user_id", "timestamp"];
-    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    sheet.getRange(1, 1, 1, defaultHeaders.length).setValues([defaultHeaders]);
     sheet.setFrozenRows(1);
+  } else {
+    // Si la hoja ya existía pero está completamente vacía (0 filas o 0 columnas)
+    if (sheet.getLastRow() === 0 || sheet.getLastColumn() === 0) {
+      sheet.getRange(1, 1, 1, defaultHeaders.length).setValues([defaultHeaders]);
+      sheet.setFrozenRows(1);
+    }
   }
   return sheet;
 }
@@ -71,9 +78,11 @@ function getRecords(sheetName) {
   if (!sheet) return [];
   
   const data = sheet.getDataRange().getValues();
-  if (data.length <= 1) return [];
+  if (!data || data.length <= 1) return [];
   
   const headers = data[0];
+  if (!headers || !headers.length) return [];
+  
   const records = [];
   
   for (let i = 1; i < data.length; i++) {
@@ -95,37 +104,36 @@ function getRecords(sheetName) {
  */
 function insertRecord(sheetName, recordObj) {
   const lock = LockService.getScriptLock();
-  // Esperar hasta 10 segundos por el lock
-  if (!lock.tryLock(10000)) {
-    throw new Error("Sistema ocupado, por favor intenta de nuevo.");
+  if (!lock.tryLock(15000)) {
+    Logger.log("insertRecord: No se obtuvo lock para " + sheetName);
+    return false;
   }
   
   try {
     const sheet = getOrCreateSheet(sheetName);
-    if (!sheet) throw new Error("Hoja no encontrada: " + sheetName);
+    if (!sheet) return false;
     
-    // Optimización ultra-rápida (para soportar 70+ alumnos concurrentes):
-    // Solo leemos la Fila 1 (encabezados) en vez de toda la hoja
     const lastCol = sheet.getLastColumn() || 1;
-    const headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+    const headersRange = sheet.getRange(1, 1, 1, lastCol).getValues();
+    if (!headersRange || !headersRange[0]) return false;
+    const headers = headersRange[0];
     
-    // Construir la nueva fila basándose en los encabezados
     const newRow = [];
     for (let i = 0; i < headers.length; i++) {
       const colName = headers[i];
       let value = recordObj[colName];
       if (value === undefined || value === null) value = "";
-      
-      // Si el valor es un objeto o array (como options de JSON), convertirlo a string
       if (typeof value === 'object') {
-         value = JSON.stringify(value);
+        value = JSON.stringify(value);
       }
-      
       newRow.push(value);
     }
     
     sheet.appendRow(newRow);
     return true;
+  } catch(err) {
+    Logger.log("Error en insertRecord(" + sheetName + "): " + err.toString());
+    return false;
   } finally {
     lock.releaseLock();
   }
@@ -133,22 +141,29 @@ function insertRecord(sheetName, recordObj) {
 
 /**
  * Actualiza un registro existente buscando por ID u otra llave.
+ * Optimizado para escribir en 1 sola llamada batch sin congelar el script.
  */
 function updateRecord(sheetName, keyColumn, keyValue, updatesObj) {
   const lock = LockService.getScriptLock();
-  if (!lock.tryLock(10000)) {
-    throw new Error("Sistema ocupado, por favor intenta de nuevo.");
+  if (!lock.tryLock(15000)) {
+    Logger.log("updateRecord: No se obtuvo lock para " + sheetName);
+    return false;
   }
   
   try {
     const sheet = getOrCreateSheet(sheetName);
-    if (!sheet) throw new Error("Hoja no encontrada: " + sheetName);
+    if (!sheet) return false;
     
     const data = sheet.getDataRange().getValues();
+    if (!data || data.length <= 1) return false;
     const headers = data[0];
-    const keyIndex = headers.indexOf(keyColumn);
+    if (!headers || !headers.length) return false;
     
-    if (keyIndex === -1) throw new Error("Columna de llave no encontrada: " + keyColumn);
+    const keyIndex = headers.indexOf(keyColumn);
+    if (keyIndex === -1) {
+      Logger.log("Columna de llave " + keyColumn + " no encontrada en " + sheetName);
+      return false;
+    }
     
     let rowIndex = -1;
     for (let i = 1; i < data.length; i++) {
@@ -160,17 +175,22 @@ function updateRecord(sheetName, keyColumn, keyValue, updatesObj) {
     
     if (rowIndex === -1) return false; // No se encontró
     
-    // Actualizar celdas
+    // Actualización ultra-rápida en memoria y 1 solo setValues batch:
+    const rowValues = data[rowIndex].slice();
     for (const key in updatesObj) {
       const colIndex = headers.indexOf(key);
       if (colIndex !== -1) {
         let value = updatesObj[key];
         if (typeof value === 'object') value = JSON.stringify(value);
-        sheet.getRange(rowIndex + 1, colIndex + 1).setValue(value);
+        rowValues[colIndex] = value;
       }
     }
     
+    sheet.getRange(rowIndex + 1, 1, 1, rowValues.length).setValues([rowValues]);
     return true;
+  } catch(err) {
+    Logger.log("Error en updateRecord(" + sheetName + "): " + err.toString());
+    return false;
   } finally {
     lock.releaseLock();
   }
