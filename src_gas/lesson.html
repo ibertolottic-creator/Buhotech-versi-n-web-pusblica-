@@ -761,8 +761,29 @@
             setTimeout(() => popup.remove(), 1200);
         }
 
+        function safeRedirect(targetUrl) {
+            try {
+                let link = document.getElementById('safe-redirect-anchor');
+                if (!link) {
+                    link = document.createElement('a');
+                    link.id = 'safe-redirect-anchor';
+                    link.target = '_top';
+                    link.style.display = 'none';
+                    document.body.appendChild(link);
+                }
+                link.href = targetUrl;
+                link.click();
+            } catch(e) {
+                try {
+                    window.top.location.href = targetUrl;
+                } catch(e2) {
+                    window.location.href = targetUrl;
+                }
+            }
+        }
+
         function exitLesson() {
-            window.top.location.href = APP_URL + "?page=dashboard";
+            safeRedirect(APP_URL + "?page=dashboard");
         }
     </script>
 </body>
