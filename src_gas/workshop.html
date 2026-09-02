@@ -237,7 +237,7 @@
             <div class="editor-panel">
                 <div class="topic-tabs" id="topic-tabs">
                     <div class="topic-tab active" onclick="selectTopic('planteamiento')">1. Planteamiento</div>
-                    <div class="topic-tab" onclick="selectTopic('objetivos')">2. Objetivos e Hipótesis</div>
+                    <div class="topic-tab" onclick="selectTopic('objetivos')">2. Pregunta, Objetivo e Hipótesis</div>
                     <div class="topic-tab" onclick="selectTopic('variables')">3. Variables</div>
                     <div class="topic-tab" onclick="selectTopic('metodologia')">4. Metodología</div>
                 </div>
@@ -250,21 +250,22 @@
                 </div>
 
                 <div id="current-topic-instructions" class="editor-instructions">
-                    Redacta un ejemplo de problema usando el método del embudo (Macro, Meso, Micro). Presiona "Pedir revisión al Búho" para recibir retroalimentación socrática.
+                    Redacta un ejemplo de problema usando el método del embudo (Macro, Meso, Micro). Presiona "Pedir revisión al BúhoTech IA" para recibir retroalimentación socrática y evaluación según rúbrica.
                 </div>
 
-                <div style="background: rgba(255,255,255,0.04); border-left: 3px solid var(--brand-400); padding: 0.6rem 0.8rem; border-radius: var(--radius-sm); margin-bottom: 0.65rem; font-size: 0.8rem; color: var(--slate-300);">
-                    💡 <strong>Orientación:</strong> Redacta con tus propias palabras. Si requieres andamiaje de apoyo, utiliza las ayudas guiadas:
-                </div>
-
-                <!-- Botones de Andamiaje Pedagógico (Respaldo en caso de duda o falla de IA) -->
-                <div style="display:flex; gap:0.5rem; margin-bottom:0.75rem;">
-                    <button type="button" onclick="requestScaffolding(1)" class="btn btn-secondary" style="flex:1; font-size:0.78rem; padding:0.4rem 0.6rem; background:rgba(99,102,241,0.18); border:1px solid rgba(99,102,241,0.35); color:var(--brand-300); font-weight:600; cursor:pointer;" title="1ª Ayuda: Recibe una explicación metodológica paso a paso">
-                        💡 1ª Ayuda: Explicación
-                    </button>
-                    <button type="button" onclick="requestScaffolding(2)" class="btn btn-secondary" style="flex:1; font-size:0.78rem; padding:0.4rem 0.6rem; background:rgba(234,179,8,0.18); border:1px solid rgba(234,179,8,0.35); color:var(--gold-300); font-weight:600; cursor:pointer;" title="2ª Ayuda: Revisa un ejemplo real modelado de tesis">
-                        📝 2ª Ayuda: Ejemplo de Tesis
-                    </button>
+                <!-- Barra de Herramientas de Andamiaje Pedagógico (Nivel 1 y Nivel 2) -->
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:0.6rem; background:rgba(255,255,255,0.04); padding:0.45rem 0.75rem; border-radius:var(--radius-md); border:1px solid rgba(255,255,255,0.08);">
+                    <div style="display:flex; align-items:center; gap:0.4rem; font-size:0.8rem; color:var(--slate-300);">
+                        <span>💡 <strong>Andamiaje Metodológico:</strong></span>
+                    </div>
+                    <div style="display:flex; gap:0.4rem;">
+                        <button type="button" onclick="requestScaffolding(1)" class="btn btn-secondary" style="font-size:0.75rem; padding:0.25rem 0.65rem; background:rgba(99,102,241,0.15); border:1px solid rgba(99,102,241,0.3); color:var(--brand-300);" title="Explicación conceptual de cómo redactar esta sección">
+                            🦉 1ª Ayuda (Explicación)
+                        </button>
+                        <button type="button" onclick="requestScaffolding(2)" class="btn btn-secondary" style="font-size:0.75rem; padding:0.25rem 0.65rem; background:rgba(234,179,8,0.15); border:1px solid rgba(234,179,8,0.3); color:var(--gold-400);" title="Ejemplo modelado paso a paso para inspirarte">
+                            🦉 2ª Ayuda (Ejemplo de Tesis)
+                        </button>
+                    </div>
                 </div>
 
                 <textarea id="workshop-draft" class="workshop-textarea" placeholder="Escribe aquí tu avance..." maxlength="700" oninput="updateWordCount(this)"></textarea>
@@ -276,7 +277,7 @@
 
                 <div class="editor-actions">
                     <button class="btn btn-secondary" onclick="askBuhoForReview()" id="review-btn" style="flex:1; background:rgba(99,102,241,0.2); border:1px solid rgba(99,102,241,0.4); color:var(--brand-300);">
-                        🦉 Pedir revisión al Búho IA
+                        🦉 Pedir revisión al BúhoTech IA
                     </button>
                     <button class="btn btn-primary" onclick="completeWorkshop()" id="complete-btn" style="flex:1;">
                         Finalizar Taller ✅
@@ -284,7 +285,7 @@
                 </div>
             </div>
 
-            <!-- Panel Derecho: Pestañas de Infografía Guía y Diálogo con el Búho IA -->
+            <!-- Panel Derecho: Pestañas de Infografía Guía y Diálogo con el BúhoTech IA -->
             <div class="chat-panel" style="background: rgba(10, 15, 30, 0.75); display: flex; flex-direction: column; overflow: hidden; border-left: 1px solid rgba(255,255,255,0.1);">
                 <!-- Barra de pestañas del panel derecho -->
                 <div style="padding: 0.6rem 1rem; background: rgba(0,0,0,0.5); border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; gap: 0.5rem;">
@@ -293,7 +294,7 @@
                             📖 Infografía Guía
                         </button>
                         <button id="tab-btn-chat" onclick="showRightTab('chat')" style="font-size:0.75rem; padding:0.35rem 0.8rem; background:rgba(255,255,255,0.06); color:var(--slate-300); border-radius:6px; border:1px solid rgba(255,255,255,0.1); cursor:pointer; font-weight:600;">
-                            🦉 Diálogo con el Búho IA
+                            🦉 Diálogo con el BúhoTech IA
                         </button>
                     </div>
                     <button onclick="openCurrentTopicInfographic()" class="btn btn-secondary" style="font-size: 0.72rem; padding: 0.2rem 0.55rem;">Ampliar 🔍</button>
@@ -308,11 +309,11 @@
                     </div>
                 </div>
 
-                <!-- Vista 2: Diálogo con el Búho IA (Conectado a Propiedades de Script) -->
+                <!-- Vista 2: Diálogo con el BúhoTech IA -->
                 <div id="side-view-chat" style="display:none; flex:1; flex-direction:column; overflow:hidden;">
                     <div class="chat-messages" id="chat-messages" style="flex:1; overflow-y:auto; padding:1rem; display:flex; flex-direction:column; gap:0.75rem;">
                         <div class="chat-bubble assistant">
-                            🦉 ¡Hola! Soy el <strong>Búho Metodólogo de Buhotech Labs</strong>. Redacta tu texto a la izquierda y presiona <em>"Pedir revisión al Búho IA"</em>. Estoy conectado a tus claves Gemini en Propiedades de Script para darte retroalimentación socrática inmediata.
+                            🦉 ¡Hola! Soy el <strong>BúhoTech IA de Buhotech Labs</strong>. Redacta tu avance metodológico a la izquierda y presiona <em>"🦉 Pedir revisión al BúhoTech IA"</em> para analizar tu redacción en función de lo que pide la actividad, evaluar tu porcentaje de logro e indicarte qué elementos tienes y cuáles faltan para mejorar.
                         </div>
                     </div>
                     <div class="chat-input-area" style="padding:0.75rem 1rem; background:rgba(0,0,0,0.3); border-top:1px solid rgba(255,255,255,0.1); display:flex; gap:0.5rem;">
@@ -408,13 +409,13 @@
                 help2: '🦉 <strong>2ª Ayuda - Ejemplo Modelado de Tesis:</strong><br><em>«A nivel mundial, la OIT (2023) reporta que el 60% de trabajadores experimentan sobrecarga laboral que merma la productividad (Macro). En el Perú, datos del INEI señalan que 4 de cada 10 organizaciones presentan alta rotación atribuida a climas laborales deficientes (Meso). Específicamente en la empresa Inversiones ABC S.A.C., sede Lima 2024, los colaboradores manifiestan desmotivación, demoras de 48 horas en entrega de pedidos y conflictos internos, lo que genera pérdidas económicas y deserción del talento si no se implementa un plan de mejora organizacional (Micro).»</em>'
             },
             'objetivos': {
-                title: 'Objetivos e Hipótesis',
-                instructions: 'Formula el Objetivo General (verbo en infinitivo + dos variables + delimitación) y la Hipótesis afirmativa correspondiente.',
-                placeholder: 'Objetivo General: Determinar la relación entre el clima organizacional y la productividad laboral en los trabajadores de la empresa ABC, 2024.\nHipótesis: Existe una relación significativa entre el clima organizacional y la productividad laboral...',
+                title: 'Pregunta, Objetivo e Hipótesis',
+                instructions: 'Formula la Pregunta General de Investigación (interrogante), el Objetivo General (iniciando con verbo en infinitivo) y la Hipótesis General afirmativa, articulando las mismas dos variables.',
+                placeholder: '• Pregunta General: ¿De qué manera el clima organizacional se relaciona con el desempeño laboral en los colaboradores de la empresa ABC, Lima, 2024?\n\n• Objetivo General: Determinar la relación entre el clima organizacional y el desempeño laboral en los colaboradores de la empresa ABC, Lima, 2024.\n\n• Hipótesis General: Existe una relación directa y significativa entre el clima organizacional y el desempeño laboral en los colaboradores de la empresa ABC, Lima, 2024.',
                 image: 'pregunta_objetivos_hipotesis_infografia.jpg',
-                caption: '💡 <strong>Objetivos e Hipótesis:</strong> Inicia el Objetivo General con un verbo medible en infinitivo (Determinar, Establecer, Demostrar). La Hipótesis responde de forma afirmativa y comprobable al objetivo. Ambos deben mencionar <strong>exactamente las dos mismas variables</strong>.',
-                help1: '🦉 <strong>1ª Ayuda - Explicación (Objetivos e Hipótesis):</strong><br>• <strong>Objetivo General:</strong> Inicia siempre con un verbo en infinitivo medible (Determinar, Establecer, Demostrar, Evaluar). Debe articular tu Variable Independiente (V1) y tu Variable Dependiente (V2), la población de estudio, el lugar y el año.<br>• <strong>Hipótesis General:</strong> Es la respuesta tentativa y afirmativa al objetivo general. No lleva verbo en infinitivo; afirma la existencia de relación directa, inversa o de incidencia entre ambas variables.',
-                help2: '🦉 <strong>2ª Ayuda - Ejemplo Modelado de Tesis:</strong><br>• <strong>Objetivo General:</strong> Determinar la relación entre el clima organizacional y el desempeño laboral en los colaboradores de la empresa Inversiones ABC S.A.C., Lima, 2024.<br>• <strong>Hipótesis General:</strong> Existe una relación directa y significativa entre el clima organizacional y el desempeño laboral en los colaboradores de la empresa Inversiones ABC S.A.C., Lima, 2024.'
+                caption: '💡 <strong>Pregunta, Objetivo e Hipótesis:</strong> 1) La Pregunta abre la investigación (¿Cómo...? ¿De qué manera...?). 2) El Objetivo General inicia con un verbo medible en infinitivo (Determinar, Establecer). 3) La Hipótesis responde de forma afirmativa y comprobable. Los tres enunciados deben mantener <strong>exactamente las dos mismas variables</strong>.',
+                help1: '🦉 <strong>1ª Ayuda - Explicación (Pregunta, Objetivo e Hipótesis):</strong><br>• <strong>1. Pregunta General:</strong> Formulación interrogativa delimitada (¿Cómo se relaciona...? ¿De qué manera incide...?). Articula tus dos variables (V1 y V2), la población de estudio, el lugar y el año.<br>• <strong>2. Objetivo General:</strong> Inicia obligatoriamente con un verbo en infinitivo medible (Determinar, Establecer, Demostrar, Evaluar). Guarda la misma estructura que la pregunta pero en forma de propósito de acción.<br>• <strong>3. Hipótesis General:</strong> Es la respuesta tentativa y afirmativa a la pregunta y al objetivo. No lleva verbo en infinitivo; afirma la existencia de relación o impacto entre ambas variables.',
+                help2: '🦉 <strong>2ª Ayuda - Ejemplo Modelado de Tesis:</strong><br>• <strong>Pregunta General:</strong> ¿Cómo se relaciona el clima organizacional con el desempeño laboral en los colaboradores de la empresa Inversiones ABC S.A.C., Lima, 2024?<br>• <strong>Objetivo General:</strong> Determinar la relación entre el clima organizacional y el desempeño laboral en los colaboradores de la empresa Inversiones ABC S.A.C., Lima, 2024.<br>• <strong>Hipótesis General:</strong> Existe una relación directa y significativa entre el clima organizacional y el desempeño laboral en los colaboradores de la empresa Inversiones ABC S.A.C., Lima, 2024.'
             },
             'variables': {
                 title: 'Variables y Operacionalización',
@@ -656,11 +657,16 @@
                 return;
             }
 
+            // Guardado instantáneo en almacenamiento local (0 ms de espera)
+            try {
+                localStorage.setItem('workshop_drafts_' + currentUserId, JSON.stringify(topicDrafts));
+            } catch(e) {}
+
             const btn = document.getElementById('complete-btn');
             btn.disabled = true;
             btn.textContent = "Guardando...";
 
-            // Activar modal con barra de progreso visual
+            // Activar modal con barra de progreso visual fluida
             const modal = document.getElementById('save-progress-modal');
             const bar = document.getElementById('save-progress-bar');
             const step = document.getElementById('save-progress-step');
@@ -669,23 +675,23 @@
             const subtitle = document.getElementById('save-progress-subtitle');
 
             modal.style.display = 'flex';
-            bar.style.width = '20%';
-            pct.textContent = '20%';
-            step.textContent = 'Paso 1 de 3: Procesando planteamiento, objetivos, variables y metodología...';
+            bar.style.width = '30%';
+            pct.textContent = '30%';
+            step.textContent = 'Paso 1 de 3: Procesando tus redacciones...';
 
             const timer1 = setTimeout(function() {
-                bar.style.width = '55%';
-                pct.textContent = '55%';
-                step.textContent = 'Paso 2 de 3: Conectando y escribiendo en Evaluación_Consolidada...';
-            }, 800);
+                bar.style.width = '65%';
+                pct.textContent = '65%';
+                step.textContent = 'Paso 2 de 3: Escribiendo en Evaluación_Consolidada de Google Sheets...';
+            }, 300);
 
             const timer2 = setTimeout(function() {
-                bar.style.width = '85%';
-                pct.textContent = '85%';
-                step.textContent = 'Paso 3 de 3: Consolidando calificaciones y telemetría...';
-            }, 2200);
+                bar.style.width = '88%';
+                pct.textContent = '88%';
+                step.textContent = 'Paso 3 de 3: Consolidando calificaciones...';
+            }, 700);
 
-            // Timeout de seguridad en el cliente (25 segundos)
+            // Timeout de seguridad en el cliente
             const timeoutTimer = setTimeout(function() {
                 if (btn.disabled) {
                     btn.disabled = false;
@@ -693,7 +699,7 @@
                     modal.style.display = 'none';
                     alert("⚠️ La sincronización demoró. Si tus datos no se actualizaron, vuelve a presionar 'Finalizar Taller ✅'.");
                 }
-            }, 25000);
+            }, 20000);
 
             google.script.run
                 .withSuccessHandler(function(res) {
@@ -712,12 +718,12 @@
                     bar.style.width = '100%';
                     pct.textContent = '100%';
                     title.textContent = '✅ ¡Taller Metodológico Guardado!';
-                    subtitle.textContent = 'Tus redacciones y calificaciones fueron consolidadas.';
+                    subtitle.textContent = 'Tus redacciones y calificaciones fueron consolidadas con éxito.';
                     step.textContent = 'Redirigiendo a tu Dashboard...';
 
                     setTimeout(function() {
                         safeRedirect(APP_URL + "?page=dashboard");
-                    }, 1200);
+                    }, 400);
                 })
                 .withFailureHandler(function(err) {
                     clearTimeout(timeoutTimer);

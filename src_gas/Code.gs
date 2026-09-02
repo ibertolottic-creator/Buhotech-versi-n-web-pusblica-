@@ -356,18 +356,17 @@ function rpcSubmitWorkshop(userId, workshopType, submissionData) {
       return { success: false, error: "Usuario no registrado con ID: " + userId };
     }
 
-    // 1. Desbloquear Fase 3 (Laboratorio Ético)
-    const nextModule = Math.max(parseInt(user.unlocked_module || 1), 3);
-    updateRecord("users", "id", user.id, {
-      unlocked_module: nextModule
-    });
-
-    // 2. Guardar las 4 redacciones y notas consolidadas en 'Evaluacion_Consolidada' en 1 sola operación
-    try {
-      calculateAndSaveGrades(userId, submissionData);
-    } catch(errGrading) {
-      Logger.log("Advertencia calculando notas en workshop: " + errGrading.toString());
+    // 1. Desbloquear Fase 3 (Laboratorio Ético) solo si aún no estaba en módulo 3 o superior
+    const currentUnlocked = parseInt(user.unlocked_module || 1);
+    if (currentUnlocked < 3) {
+      user.unlocked_module = 3;
+      updateRecord("users", "id", user.id, {
+        unlocked_module: 3
+      });
     }
+
+    // 2. Guardar las 4 redacciones y consolidar notas en 'Evaluacion_Consolidada' pasando el usuario ya en memoria
+    calculateAndSaveGrades(userId, submissionData, user);
 
     return { success: true };
   } catch(e) {

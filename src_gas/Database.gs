@@ -835,8 +835,8 @@ function getQuestionsForPhase(phaseNumber) {
  * Calcula la calificación vigesimal completa (0-20) y actualiza la fila única del usuario
  * en la hoja 'Evaluacion_Consolidada'. Garantiza exactamente 1 fila por usuario con todas sus métricas.
  */
-function calculateAndSaveGrades(userId, submissionData) {
-  const user = findRecordBy("users", "id", userId);
+function calculateAndSaveGrades(userId, submissionData, cachedUser) {
+  const user = cachedUser || findRecordBy("users", "id", userId);
   if (!user) return null;
 
   const userResponses = findRecordsBy("user_responses", "user_id", userId);
@@ -992,11 +992,29 @@ function calculateAndSaveGrades(userId, submissionData) {
   };
 
   try {
-    if (existingMaster) {
-      updateRecord("Evaluacion_Consolidada", "id_usuario", userId, masterRecord);
-    } else {
-      insertRecord("Evaluacion_Consolidada", masterRecord);
+    const sheet = getOrCreateSheet("Evaluacion_Consolidada");
+    const lastCol = sheet.getLastColumn() || 1;
+    const headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(h => String(h || '').trim());
+
+    const rowValues = [];
+    for (let i = 0; i < headers.length; i++) {
+      const colName = headers[i];
+      let val = masterRecord[colName];
+      if (val === undefined) {
+        const lower = colName.toLowerCase();
+        for (const k in masterRecord) {
+          if (k.toLowerCase().trim() === lower) { val = masterRecord[k]; break; }
+        }
+      }
+      rowValues.push((val !== undefined && val !== null) ? val : "");
     }
+
+    if (existingMaster && existingMaster._rowNumber) {
+      sheet.getRange(existingMaster._rowNumber, 1, 1, rowValues.length).setValues([rowValues]);
+    } else {
+      sheet.appendRow(rowValues);
+    }
+    delete _REQUEST_CACHE["Evaluacion_Consolidada"];
   } catch(e) {
     Logger.log("Error guardando en Evaluacion_Consolidada: " + e.toString());
   }

@@ -55,30 +55,30 @@ function getKeys() {
 // BASE DE CONOCIMIENTO (RAG CERRADO DE METODOLOGÍA CON ANDAMIAJE PEDAGÓGICO)
 const RAG_KNOWLEDGE_BASE = {
   planteamiento: {
-    name: "Planteamiento del Problema",
-    rules: "Método del embudo estricto: Macro (contexto mundial o internacional), Meso (contexto nacional/país) y Micro (contexto local/institución/empresa). Debe formular claramente síntomas, causas y pronóstico con delimitación espacial y temporal.",
-    checklist: ["macro", "meso", "micro", "mundial", "perú", "empresa", "institución", "problema", "síntoma", "causa", "efecto", "delimitación"],
+    name: "Planteamiento del Problema (Método del Embudo)",
+    rules: "Debe aplicar el método del embudo con 3 niveles: 1) Macro (contexto mundial o internacional con organismos o tendencias globales), 2) Meso (contexto nacional o del país con datos sectoriales), y 3) Micro (contexto local, empresa o institución concreta delimitando síntomas observables, causas directas y consecuencias o pronóstico).",
+    checklist: ["macro", "meso", "micro", "mundial", "perú", "empresa", "institución", "problema", "síntoma", "causa", "efecto", "pronóstico", "delimitación"],
     help1_explicacion: "🦉 1ª Ayuda - Explicación (Método del Embudo):\nEl planteamiento se redacta desde lo general hasta lo específico en 3 niveles:\n1. Macro (Internacional): ¿Cómo se manifiesta el problema en el mundo o Latinoamérica? Cita organismos de referencia (ej: OMS, OIT, UNESCO).\n2. Meso (Nacional): Aterriza la realidad en el Perú (o tu país) con estadísticas oficiales (INEI, ministerios o gremios sectoriales).\n3. Micro (Local/Institucional): Describe la situación en la empresa o institución donde harás tu tesis: síntomas observables (lo que pasa), causas directas (por qué pasa) y pronóstico (qué ocurrirá si no se interviene).",
     help2_ejemplo: "🦉 2ª Ayuda - Ejemplo Modelado de Tesis:\n«A nivel mundial, la OIT (2023) reporta que el 60% de trabajadores experimentan sobrecarga laboral que merma la productividad (Macro). En el Perú, datos del INEI señalan que 4 de cada 10 organizaciones presentan alta rotación atribuida a climas laborales deficientes (Meso). Específicamente en la empresa Inversiones ABC S.A.C., sede Lima 2024, los colaboradores manifiestan desmotivación, demoras de 48 horas en entrega de pedidos y conflictos internos, lo que genera pérdidas económicas y deserción del talento si no se implementa un plan de mejora organizacional (Micro).»"
   },
   objetivos: {
-    name: "Objetivos e Hipótesis",
-    rules: "El Objetivo General debe iniciar obligatoriamente con un verbo en infinitivo medible (Determinar, Establecer, Analizar, Evaluar, Demostrar). Debe contener ambas variables delimitadas. La Hipótesis debe ser una respuesta afirmativa y coherente que responda directamente al objetivo general.",
+    name: "Pregunta, Objetivo e Hipótesis",
+    rules: "Estructura tripartita articulada con las mismas dos variables (V1 y V2) delimitadas en tiempo y espacio: 1) Pregunta General (formulación interrogativa: ¿Cómo...? ¿De qué manera...?). 2) Objetivo General (inicia obligatoriamente con verbo en infinitivo medible: Determinar, Establecer, Demostrar, Evaluar, etc.). 3) Hipótesis General (respuesta afirmativa y comprobable que no lleva verbo en infinitivo).",
     verbs: ["determinar", "establecer", "analizar", "evaluar", "demostrar", "identificar", "describir", "relacionar", "comparar"],
-    checklist: ["objetivo", "hipótesis", "relación", "significativa", "variable"],
-    help1_explicacion: "🦉 1ª Ayuda - Explicación (Objetivos e Hipótesis):\n1. Objetivo General: Inicia siempre con un verbo en infinitivo medible (Determinar, Establecer, Demostrar, Evaluar). Debe articular tu Variable Independiente (V1) y tu Variable Dependiente (V2), la población de estudio, el lugar y el año.\n2. Hipótesis General: Es la respuesta tentativa y afirmativa al objetivo general. No lleva verbo en infinitivo; afirma la existencia de relación directa, inversa o de incidencia entre ambas variables.",
-    help2_ejemplo: "🦉 2ª Ayuda - Ejemplo Modelado de Tesis:\n• Objetivo General: Determinar la relación entre el clima organizacional y el desempeño laboral en los colaboradores de la empresa Inversiones ABC S.A.C., Lima, 2024.\n• Hipótesis General: Existe una relación directa y significativa entre el clima organizacional y el desempeño laboral en los colaboradores de la empresa Inversiones ABC S.A.C., Lima, 2024."
+    checklist: ["pregunta", "cómo", "de qué manera", "objetivo", "determinar", "establecer", "hipótesis", "existe", "relación", "variable"],
+    help1_explicacion: "🦉 1ª Ayuda - Explicación (Pregunta, Objetivo e Hipótesis):\n• 1. Pregunta General: Formulación interrogativa (ej: ¿Cómo se relaciona...? ¿De qué manera incide...?). Debe articular tus dos variables (V1 y V2), la población, el lugar y el año.\n• 2. Objetivo General: Inicia siempre con un verbo en infinitivo medible (Determinar, Establecer, Demostrar). Guarda la misma formulación de la pregunta pero en forma de propósito de acción.\n• 3. Hipótesis General: Es la respuesta tentativa y afirmativa a la pregunta y objetivo. No lleva verbo en infinitivo; afirma la existencia de relación o efecto entre ambas variables.",
+    help2_ejemplo: "🦉 2ª Ayuda - Ejemplo Modelado de Tesis:\n• Pregunta General: ¿Cómo se relaciona el clima organizacional con el desempeño laboral en los colaboradores de la empresa Inversiones ABC S.A.C., Lima, 2024?\n• Objetivo General: Determinar la relación entre el clima organizacional y el desempeño laboral en los colaboradores de la empresa Inversiones ABC S.A.C., Lima, 2024.\n• Hipótesis General: Existe una relación directa y significativa entre el clima organizacional y el desempeño laboral en los colaboradores de la empresa Inversiones ABC S.A.C., Lima, 2024."
   },
   variables: {
     name: "Variables y Operacionalización",
-    rules: "Operacionalización científica de variables. Variable 1 (Independiente/predictora) y Variable 2 (Dependiente/criterio). Cada variable debe desglosarse en dimensiones teóricas claras y cada dimensión en indicadores observables y medibles cuantitativa o cualitativamente.",
+    rules: "Operacionalización científica de variables. Variable 1 (Independiente/predictora) y Variable 2 (Dependiente/criterio). Cada variable debe desglosarse en al menos dos dimensiones teóricas y cada dimensión en indicadores medibles u observables.",
     checklist: ["variable", "dimensión", "indicador", "escala", "medición", "operacional"],
     help1_explicacion: "🦉 1ª Ayuda - Explicación (Operacionalización de Variables):\nOperacionalizar es convertir conceptos teóricos abstractos en elementos empíricamente observables:\n1. Identificación: Define con exactitud la Variable 1 (Independiente / Causa) y la Variable 2 (Dependiente / Efecto).\n2. Dimensiones: Son los subtemas o componentes teóricos que integran cada variable (mínimo 2 por variable).\n3. Indicadores: Son las métricas, preguntas o parámetros observables con los que recopilarás datos (ej: escala Likert de 5 niveles).",
     help2_ejemplo: "🦉 2ª Ayuda - Ejemplo Modelado de Tesis:\nVariable 1: Clima Organizacional\n• Dimensión 1: Liderazgo directivo (Indicadores: Comunicación horizontal, apoyo del jefe, retroalimentación).\n• Dimensión 2: Condiciones de trabajo (Indicadores: Ergonomía, herramientas laborales, seguridad física).\n\nVariable 2: Desempeño Laboral\n• Dimensión 1: Eficiencia operativa (Indicadores: Precisión de tareas, cumplimiento de plazos, calidad del entregable).\n• Dimensión 2: Compromiso institucional (Indicadores: Puntualidad, proactividad, trabajo cooperativo)."
   },
   metodologia: {
     name: "Diseño Metodológico",
-    rules: "Enfoque (Cuantitativo, Cualitativo o Mixto). Alcance o Nivel (Exploratorio, Descriptivo, Correlacional o Explicativo). Diseño (No experimental transversal, No experimental longitudinal, o Experimental puro/cuasiexperimental). Debe justificarse según los objetivos de la tesis.",
+    rules: "Las 3 decisiones científicas del método: 1) Enfoque (Cuantitativo, Cualitativo o Mixto), 2) Alcance o Nivel (Descriptivo, Correlacional o Explicativo), y 3) Diseño (No experimental transversal, longitudinal, o Experimental con pretest), delimitando población y muestra.",
     checklist: ["cuantitativo", "cualitativo", "correlacional", "descriptivo", "explicativo", "experimental", "no experimental", "transversal", "longitudinal", "diseño", "enfoque"],
     help1_explicacion: "🦉 1ª Ayuda - Explicación (Marco Metodológico):\nDebes fundamentar las 3 decisiones científicas de tu método:\n1. Enfoque: Cuantitativo (si recolectarás datos numéricos y probarás hipótesis con estadística) o Cualitativo (análisis de vivencias o significados).\n2. Alcance o Nivel: Descriptivo (caracteriza variables), Correlacional (mide asociación entre variables) o Explicativo (causa y efecto).\n3. Diseño: No experimental de corte transversal (si aplicas tus encuestas en un solo momento temporal sin alterar la realidad) o Experimental (con pretest y grupo de control).",
     help2_ejemplo: "🦉 2ª Ayuda - Ejemplo Modelado de Tesis:\n«La investigación presenta un enfoque cuantitativo, dado que se recolectarán datos numéricos mediante cuestionarios para someter a prueba la hipótesis con el coeficiente Rho de Spearman. El alcance es correlacional porque analiza el grado de relación entre ambas variables. El diseño es no experimental, de corte transversal, debido a que las variables no serán manipuladas y los datos se medirán en un solo momento temporal en una muestra censal de 45 colaboradores de la empresa Inversiones ABC S.A.C.»"
@@ -93,14 +93,18 @@ function aiOrchestrateChat(topic, userMessage) {
   const topicKey = String(topic || "planteamiento").toLowerCase();
   const ragInfo = RAG_KNOWLEDGE_BASE[topicKey] || RAG_KNOWLEDGE_BASE["planteamiento"];
 
-  // 1. Prompt de Sistema RAG Cerrado (Confinamiento estricto y brevedad)
+  // 1. Prompt de Sistema RAG Cerrado (Confinamiento estricto y estructura pedagógica)
   const systemPrompt = 
-    "Eres Buhotech Labs, un tutor socrático con RAG CERRADO de Metodología de la Investigación Científica para Tesis.\n" +
-    "REGLAS ESTRICTAS DE CONFINAMIENTO:\n" +
-    "1. CONFINAMIENTO TEMÁTICO: Solo respondes sobre Metodología de la Investigación (Planteamiento, Objetivos, Hipótesis, Variables y Diseños metodológicos). Si el usuario escribe sobre otro tema, responde: '🦉 En Buhotech solo revisamos la metodología de tu tesis. Por favor redacta tu propuesta académica.'\n" +
-    "2. MÁXIMA BREVEDAD: Responde en MÁXIMO 2 o 3 oraciones. Sé sumamente directo, conciso y reflexivo.\n" +
-    "3. ANDAMIAJE SOCRÁTICO: NUNCA des la respuesta hecha ni redactes el texto por el alumno. Haz 1 o 2 preguntas reflexivas para que él mismo detecte qué falta ajustar.\n" +
-    "4. BASE DE CONOCIMIENTO PARA ESTE TEMA (" + ragInfo.name + "):\n" + ragInfo.rules;
+    "Eres BúhoTech IA, tutor metodológico socrático de Buhotech Labs para Tesis Universitarias.\n" +
+    "Tu misión es revisar la redacción del estudiante EVALUANDO ESTRICTAMENTE LO SOLICITADO EN ESTA ACTIVIDAD:\n" +
+    "ACTIVIDAD ACTUAL: " + ragInfo.name + "\n" +
+    "CONSIGNA Y REQUISITOS METODOLÓGICOS:\n" + ragInfo.rules + "\n\n" +
+    "ESTRUCTURA DE RESPUESTA OBLIGATORIA (Sé directo, claro y constructivo en máximo 4-5 líneas):\n" +
+    "📊 Nivel de avance: [Calcula un porcentaje de 0% a 100% según los componentes requeridos que el alumno incluyó]\n" +
+    "✅ Logrado: [Nombra en una frase corta lo que el estudiante ya incluyó correctamente según la consigna]\n" +
+    "⚠️ Te falta para mejorar: [Indica con precisión el componente específico que omitió o debe pulir según lo solicitado]\n" +
+    "🦉 Andamiaje socrático: [Formula UNA sola pregunta reflexiva que active sus saberes previos para que el alumno complete lo que falta sin redactarle la respuesta hecha]\n\n" +
+    "REGLA: No des nunca el párrafo redactado. Guíalo para que él mismo lo formule.";
 
   // 1. Cascada: Pool de Claves Gemini (Rotación inteligente con memoria de clave activa)
   const geminiPool = keys.geminiPool || [];
@@ -230,71 +234,157 @@ function evaluateWithLocalRAG(topicKey, userMessage, ragInfo) {
   const words = raw.split(/\s+/).filter(w => w.length > 5 && !["investigacion", "metodologia", "estudio", "trabajo", "problema"].includes(w.toLowerCase()));
   const sampleTerm = words.length > 0 ? `"${words[0]}"` : "los conceptos que mencionas";
 
-  // 5. Evaluación socrática según el eje temático
+  // 5. Evaluación socrática según el eje temático y rúbrica solicitada
   if (topicKey === "planteamiento") {
-    const hasMacro = text.includes("macro") || text.includes("mundial") || text.includes("global") || text.includes("internacional") || text.includes("mundo") || text.includes("países");
-    const hasMeso = text.includes("meso") || text.includes("perú") || text.includes("nacional") || text.includes("país") || text.includes("latinoamérica") || text.includes("sector");
+    const hasMacro = text.includes("macro") || text.includes("mundial") || text.includes("global") || text.includes("internacional") || text.includes("mundo") || text.includes("oit") || text.includes("oms") || text.includes("países");
+    const hasMeso = text.includes("meso") || text.includes("perú") || text.includes("nacional") || text.includes("país") || text.includes("inei") || text.includes("latinoamérica") || text.includes("sector");
     const hasMicro = text.includes("micro") || text.includes("empresa") || text.includes("institución") || text.includes("colegio") || text.includes("hospital") || text.includes("local") || text.includes("organización") || text.includes("sede");
-    const hasCauses = text.includes("causa") || text.includes("síntoma") || text.includes("efecto") || text.includes("consecuencia") || text.includes("debido a") || text.includes("genera");
+    const hasCauses = text.includes("causa") || text.includes("síntoma") || text.includes("efecto") || text.includes("consecuencia") || text.includes("debido a") || text.includes("genera") || text.includes("pronóstico");
 
+    let count = (hasMacro ? 1 : 0) + (hasMeso ? 1 : 0) + (hasMicro ? 1 : 0) + (hasCauses ? 1 : 0);
+    let pct = Math.min(100, Math.max(25, count * 25));
+
+    let logrado = [];
+    if (hasMacro) logrado.push("Contexto internacional (Macro)");
+    if (hasMeso) logrado.push("Realidad nacional (Meso)");
+    if (hasMicro) logrado.push("Delimitación institucional (Micro)");
+    if (hasCauses) logrado.push("Síntomas y causas directas");
+
+    let falta = [];
+    if (!hasMicro) falta.push("Delimitar la empresa o institución concreta (Nivel Micro)");
+    if (!hasMacro) falta.push("Contextualizar la tendencia internacional (Nivel Macro)");
+    if (!hasMeso) falta.push("Respaldar con datos de la realidad nacional (Nivel Meso)");
+    if (!hasCauses) falta.push("Detallar los síntomas observables y el pronóstico");
+
+    let pregunta = "";
     if (!hasMicro) {
-      return `🦉 Buen avance contextualizando ${sampleTerm}. Sin embargo, para cerrar el embudo: ¿cuál es la empresa, institución o población exacta (nivel micro) donde se evidencia el problema de forma tangible?`;
+      pregunta = `Al estudiar ${sampleTerm}, ¿cuál es la institución, empresa o sede exacta donde se evidencian las consecuencias del problema?`;
+    } else if (!hasCauses) {
+      pregunta = `Has ubicado bien el entorno de ${sampleTerm}. ¿Cuáles son las causas directas identificadas y qué ocurrirá si no se interviene?`;
+    } else if (!hasMacro || !hasMeso) {
+      pregunta = `Para sustentar el problema: ¿qué organismos de referencia (OMS, OIT) o estadísticas de tu país respaldan esta situación?`;
+    } else {
+      pct = 95;
+      pregunta = `¡Tu embudo articula muy bien los 3 niveles! ¿Tu pregunta general de investigación sintetiza fielmente este problema delimitado?`;
     }
-    if (!hasMacro && !hasMeso) {
-      return `🦉 Has delimitado bien el entorno micro de ${sampleTerm}. Para darle peso científico: ¿cómo se manifiesta este problema a nivel internacional (Macro) o en las estadísticas del país (Meso)?`;
-    }
-    if (!hasCauses) {
-      return `🦉 Se aprecia la estructura del embudo en tu texto. Para completarlo con rigor: ¿cuáles son las causas directas que originan esta situación y qué consecuencias ocurrirán si no se resuelve?`;
-    }
-    return `🦉 ¡Excelente formulación del embudo con ${sampleTerm}! Tu redacción articula el contexto y la delimitación. ¿La formulación de tu pregunta general de investigación sintetiza fielmente este problema?`;
+
+    return `📊 Nivel de avance: ${pct}%\n` +
+           `✅ Logrado: ${logrado.length > 0 ? logrado.join(", ") : "Identificación inicial de variables"}\n` +
+           `⚠️ Te falta para mejorar: ${falta.length > 0 ? falta.join("; ") : "Pulir redacción científica"}\n` +
+           `🦉 Andamiaje socrático: ${pregunta}`;
   }
 
   if (topicKey === "objetivos") {
+    const hasPregunta = text.includes("?") || text.includes("¿") || text.includes("pregunta") || text.includes("cómo") || text.includes("de qué manera") || text.includes("en qué medida");
     const verbs = ["determinar", "establecer", "analizar", "evaluar", "demostrar", "identificar", "describir", "relacionar", "comparar", "explicar"];
     const hasVerb = verbs.some(v => text.includes(v));
     const hasHip = text.includes("hipótesis") || text.includes("relación") || text.includes("significativa") || text.includes("influye") || text.includes("incide") || text.includes("existe");
-    const hasPoblacion = text.includes("en ") || text.includes("de ") || text.includes("202") || text.includes("trabajadores") || text.includes("estudiantes") || text.includes("empresa");
+    const hasPoblacion = text.includes("en ") || text.includes("de ") || text.includes("202") || text.includes("trabajadores") || text.includes("estudiantes") || text.includes("empresa") || text.includes("colaboradores");
 
-    if (!hasVerb) {
-      return `🦉 Recuerda que el Objetivo General debe iniciar con un verbo medible en infinitivo (ej: Determinar, Analizar, Evaluar). Al estudiar ${sampleTerm}, ¿qué verbo refleja exactamente el alcance de tu tesis?`;
+    let count = (hasPregunta ? 1 : 0) + (hasVerb ? 1 : 0) + (hasHip ? 1 : 0) + (hasPoblacion ? 1 : 0);
+    let pct = Math.min(100, Math.max(25, count * 25));
+
+    let logrado = [];
+    if (hasPregunta) logrado.push("Pregunta General de investigación");
+    if (hasVerb) logrado.push("Objetivo General con verbo en infinitivo");
+    if (hasHip) logrado.push("Hipótesis General afirmativa");
+    if (hasPoblacion) logrado.push("Delimitación espacial y temporal");
+
+    let falta = [];
+    if (!hasPregunta) falta.push("Incluir la Pregunta General interrogativa (¿Cómo...? ¿De qué manera...?)");
+    if (!hasVerb) falta.push("Iniciar el Objetivo General con verbo en infinitivo medible (Determinar, Establecer)");
+    if (!hasHip) falta.push("Formular la Hipótesis General respondiendo afirmativamente al objetivo");
+    if (!hasPoblacion) falta.push("Delimitar la población de estudio, lugar y periodo anual");
+
+    let pregunta = "";
+    if (!hasPregunta) {
+      pregunta = `Para tener la triada completa: ¿cómo formularías la Pregunta General que da origen a este objetivo e hipótesis?`;
+    } else if (!hasVerb) {
+      pregunta = `Al estudiar ${sampleTerm}, ¿qué verbo en infinitivo medible refleja con mayor precisión el propósito de tu tesis?`;
+    } else if (!hasHip) {
+      pregunta = `Tienes la pregunta y el objetivo. ¿Cómo redactarías la Hipótesis como una respuesta tentativa y afirmativa?`;
+    } else {
+      pct = 95;
+      pregunta = `¡Excelente alineación entre Pregunta, Objetivo e Hipótesis para ${sampleTerm}! ¿Ambos enunciados guardan exactamente las dos mismas variables?`;
     }
-    if (!hasHip) {
-      return `🦉 Tu objetivo tiene una dirección adecuada con ${sampleTerm}. Ahora: ¿cómo formularías la hipótesis para responder de forma afirmativa y verificable a este objetivo?`;
-    }
-    if (!hasPoblacion) {
-      return `🦉 Buen planteamiento del objetivo e hipótesis. Para que sea completamente delimitado: ¿has especificado la población de estudio y el periodo temporal exacto donde se medirá?`;
-    }
-    return `🦉 Gran alineación metodológica entre tu objetivo e hipótesis para ${sampleTerm}. ¿Ambos enunciados guardan la misma relación de variables sin introducir elementos adicionales?`;
+
+    return `📊 Nivel de avance: ${pct}%\n` +
+           `✅ Logrado: ${logrado.length > 0 ? logrado.join(", ") : "Enunciados preliminares"}\n` +
+           `⚠️ Te falta para mejorar: ${falta.length > 0 ? falta.join("; ") : "Consolidar concordancia de variables"}\n` +
+           `🦉 Andamiaje socrático: ${pregunta}`;
   }
 
   if (topicKey === "variables") {
+    const hasV1V2 = text.includes("variable") || text.includes("independiente") || text.includes("dependiente") || text.includes("v1") || text.includes("v2");
     const hasDim = text.includes("dimens") || text.includes("componente") || text.includes("factor") || text.includes("aspecto");
     const hasInd = text.includes("indicador") || text.includes("escala") || text.includes("ítem") || text.includes("medir") || text.includes("preguntas") || text.includes("cuestionario");
 
+    let count = (hasV1V2 ? 1 : 0) + (hasDim ? 1 : 0) + (hasInd ? 1 : 0);
+    let pct = count === 3 ? 90 : (count === 2 ? 65 : 35);
+
+    let logrado = [];
+    if (hasV1V2) logrado.push("Identificación de Variables V1 y V2");
+    if (hasDim) logrado.push("Dimensiones teóricas");
+    if (hasInd) logrado.push("Indicadores empíricos de medición");
+
+    let falta = [];
+    if (!hasV1V2) falta.push("Diferenciar con claridad la Variable Independiente (V1) y Dependiente (V2)");
+    if (!hasDim) falta.push("Proponer al menos 2 dimensiones teóricas por cada variable");
+    if (!hasInd) falta.push("Formular los indicadores observables o preguntas medibles");
+
+    let pregunta = "";
     if (!hasDim) {
-      return `🦉 Has propuesto las variables para ${sampleTerm}. ¿En qué dimensiones teóricas descompondrás cada una de ellas para hacerlas observables?`;
+      pregunta = `Has definido tus variables sobre ${sampleTerm}. ¿En qué dimensiones teóricas descompondrás cada una de ellas?`;
+    } else if (!hasInd) {
+      pregunta = `Buenas dimensiones. ¿Qué indicadores empíricos o métricas te permitirán recopilar datos en el instrumento?`;
+    } else {
+      pct = 95;
+      pregunta = `¡Operacionalización bien estructurada en ${sampleTerm}! ¿Qué escala de medición (ej. Likert de 5 niveles) emplearás para evaluar los indicadores?`;
     }
-    if (!hasInd) {
-      return `🦉 Buenas dimensiones. Ahora: ¿qué indicadores específicos o métricas te permitirán recopilar datos cuantificables de cada dimensión?`;
-    }
-    return `🦉 Sólido desglose de variables e indicadores en ${sampleTerm}. ¿Tienes definida la escala de medición (por ejemplo, Likert de 5 niveles o datos cuantitativos continuos)?`;
+
+    return `📊 Nivel de avance: ${pct}%\n` +
+           `✅ Logrado: ${logrado.length > 0 ? logrado.join(", ") : "Variables iniciales"}\n` +
+           `⚠️ Te falta para mejorar: ${falta.length > 0 ? falta.join("; ") : "Definir escalas de medición"}\n` +
+           `🦉 Andamiaje socrático: ${pregunta}`;
   }
 
   if (topicKey === "metodologia") {
     const hasEnfoque = text.includes("cuantitativ") || text.includes("cualitativ") || text.includes("mixto");
-    const hasDiseno = text.includes("experimental") || text.includes("transversal") || text.includes("longitudinal") || text.includes("descriptiv") || text.includes("correlacional");
-    const hasMuestra = text.includes("muestra") || text.includes("población") || text.includes("encuesta") || text.includes("cuestionario") || text.includes("entrevista");
+    const hasAlcance = text.includes("descriptiv") || text.includes("correlacional") || text.includes("explicativ") || text.includes("exploratori");
+    const hasDiseno = text.includes("experimental") || text.includes("transversal") || text.includes("longitudinal") || text.includes("no experimental");
+    const hasMuestra = text.includes("muestra") || text.includes("población") || text.includes("censal") || text.includes("muestreo") || text.includes("cuestionario");
 
+    let count = (hasEnfoque ? 1 : 0) + (hasAlcance ? 1 : 0) + (hasDiseno ? 1 : 0) + (hasMuestra ? 1 : 0);
+    let pct = Math.min(100, Math.max(25, count * 25));
+
+    let logrado = [];
+    if (hasEnfoque) logrado.push("Enfoque metodológico definido");
+    if (hasAlcance) logrado.push("Alcance de investigación sustentado");
+    if (hasDiseno) logrado.push("Diseño temporal metodológico");
+    if (hasMuestra) logrado.push("Población o muestra delimitada");
+
+    let falta = [];
+    if (!hasEnfoque) falta.push("Declarar y sustentar el Enfoque (Cuantitativo o Cualitativo)");
+    if (!hasAlcance) falta.push("Definir el Alcance o Nivel (Descriptivo, Correlacional o Explicativo)");
+    if (!hasDiseno) falta.push("Especificar el Diseño (No experimental transversal o Experimental)");
+    if (!hasMuestra) falta.push("Mencionar la población de estudio y la muestra");
+
+    let pregunta = "";
     if (!hasEnfoque) {
-      return `🦉 Para fundamentar la metodología de ${sampleTerm}: ¿tu enfoque será cuantitativo (medición estadística de hipótesis) o cualitativo (fenomenológico / narrativo)?`;
+      pregunta = `Para fundamentar la metodología de ${sampleTerm}: ¿tu enfoque será cuantitativo (medición estadística) o cualitativo?`;
+    } else if (!hasDiseno) {
+      pregunta = `Enfoque clarificado. ¿Tu diseño será no experimental transversal (en un solo momento temporal) o experimental?`;
+    } else if (!hasMuestra) {
+      pregunta = `Buen diseño metodológico. ¿En qué población o muestra de sujetos aplicarás tus instrumentos de recolección?`;
+    } else {
+      pct = 95;
+      pregunta = `¡Excelente rigor metodológico para ${sampleTerm}! ¿El tamaño de tu muestra te permitirá aplicar pruebas estadísticas como Pearson o Spearman con confiabilidad?`;
     }
-    if (!hasDiseno) {
-      return `🦉 Enfoque clarificado. ¿Tu diseño será no experimental transversal (recolección en un solo momento temporal) o experimental con grupo de control?`;
-    }
-    if (!hasMuestra) {
-      return `🦉 Diseño bien sustentado. ¿Qué técnicas e instrumentos específicos (cuestionario, guía de observación) utilizarás para recoger los datos de tu muestra?`;
-    }
-    return `🦉 Metodología rigurosa y coherentemente estructurada para ${sampleTerm}. ¿El tamaño de tu muestra te permitirá aplicar pruebas estadísticas como Pearson o Spearman con validez?`;
+
+    return `📊 Nivel de avance: ${pct}%\n` +
+           `✅ Logrado: ${logrado.length > 0 ? logrado.join(", ") : "Bases metodológicas"}\n` +
+           `⚠️ Te falta para mejorar: ${falta.length > 0 ? falta.join("; ") : "Detallar técnicas e instrumentos"}\n` +
+           `🦉 Andamiaje socrático: ${pregunta}`;
   }
 
   return `🦉 Tu propuesta sobre ${sampleTerm} demuestra buen enfoque científico. ¿De qué manera esta redacción responde directamente a la pregunta principal de tu tesis?`;
