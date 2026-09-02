@@ -399,7 +399,7 @@
                 serEl.textContent = "-" + penalty.toFixed(1) + " pts";
                 serEl.style.color = "#f87171"; // Rojo para reflejar puntos en contra
                 serSub.innerHTML = `<span style="color:#fca5a5; font-weight:700;">⚠️ Puntos en contra:</span><br>` +
-                    `<span style="color:var(--slate-300);">${fastCount > 0 ? ('-' + (fastCount * 1.0).toFixed(1) + ' pts azar (' + fastCount + ')') : ''} ${pasteCount > 0 ? ('• -' + (pasteCount * 2.0).toFixed(1) + ' pts copiar (' + pasteCount + ')') : ''}</span>`;
+                    `<span style="color:var(--slate-300);">${fastCount > 0 ? ('-' + (fastCount * 0.5).toFixed(1) + ' pts azar (' + fastCount + ')') : ''} ${pasteCount > 0 ? ('• -' + (pasteCount * 1.0).toFixed(1) + ' pts copiar (' + pasteCount + ')') : ''}</span>`;
             } else {
                 serEl.textContent = "0.0 pts";
                 serEl.style.color = "var(--success-400)"; // Verde para conducta íntegra
@@ -415,8 +415,8 @@
 
             document.getElementById('answered-count').textContent = g.total_questions_answered || 0;
             document.getElementById('correct-count').textContent = g.total_correct || 0;
-            document.getElementById('fast-count').innerHTML = `${fastCount} veces ${fastCount > 0 ? '<span style="color:#f87171; font-weight:normal;">(-' + (fastCount * 1.0).toFixed(1) + ' pts)</span>' : ''}`;
-            document.getElementById('paste-count').innerHTML = `${pasteCount} veces ${pasteCount > 0 ? '<span style="color:#f87171; font-weight:normal;">(-' + (pasteCount * 2.0).toFixed(1) + ' pts)</span>' : ''}`;
+            document.getElementById('fast-count').innerHTML = `${fastCount} veces ${fastCount > 0 ? '<span style="color:#f87171; font-weight:normal;">(-' + (fastCount * 0.5).toFixed(1) + ' pts)</span>' : ''}`;
+            document.getElementById('paste-count').innerHTML = `${pasteCount} veces ${pasteCount > 0 ? '<span style="color:#f87171; font-weight:normal;">(-' + (pasteCount * 1.0).toFixed(1) + ' pts)</span>' : ''}`;
             document.getElementById('avg-time').textContent = Math.round((g.avg_response_time_ms || 0) / 1000) + " s";
             document.getElementById('failed-count').textContent = g.total_failed_attempts || 0;
         }

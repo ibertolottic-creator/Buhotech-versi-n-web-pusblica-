@@ -897,8 +897,8 @@ function calculateAndSaveGrades(userId, submissionData, cachedUser) {
   const unethicalCount = Math.max(0, ss_total - ss_correct);
   const excessFastRandom = Math.max(0, fastRandomCount - 1);
   
-  // Fórmula tesis: 3pts por decisión no ética + 2pts por pegar texto + 1pt por adivinar al azar
-  const rawPenalty = (unethicalCount * 3.0) + (pastedCount * 2.0) + (excessFastRandom * 1.0);
+  // Nueva fórmula tesis solicitada: 3pts por decisión no ética + 1pt por pegar texto + 0.5pt por adivinar al azar (<2s)
+  const rawPenalty = (unethicalCount * 3.0) + (pastedCount * 1.0) + (excessFastRandom * 0.5);
   const bonus = Math.min(infographicViews * 0.5, 4.0); // Bonificación por estudiar infografía
   const actitudinal_penalty = Math.round(Math.min(10.0, Math.max(0.0, rawPenalty - bonus)) * 100) / 100;
 
@@ -918,8 +918,8 @@ function calculateAndSaveGrades(userId, submissionData, cachedUser) {
     saber_ser_grade: Math.max(0, Math.round((20.0 - actitudinal_penalty) * 100) / 100),
     final_grade_20: final_grade_20,
     actitudinal_penalty: actitudinal_penalty,
-    descuento_marcado_rapido_pts: (fastRandomCount * 1.0),
-    descuento_copiar_pegar_pts: (pastedCount * 2.0),
+    descuento_marcado_rapido_pts: Math.round((fastRandomCount * 0.5) * 10) / 10,
+    descuento_copiar_pegar_pts: Math.round((pastedCount * 1.0) * 10) / 10,
     total_questions_answered: userResponses.length,
     total_correct: totalCorrect,
     total_socratic_interactions: 0,
@@ -963,8 +963,8 @@ function calculateAndSaveGrades(userId, submissionData, cachedUser) {
   const hasT4 = taller4 && !taller4.includes("Pendiente");
 
   const pctAciertos = (userResponses.length > 0) ? (Math.round((totalCorrect / userResponses.length) * 1000) / 10) + "%" : "0%";
-  const descuentoMarcado = fastRandomCount * 1.0;
-  const descuentoCopiar = pastedCount * 2.0;
+  const descuentoMarcado = Math.round((fastRandomCount * 0.5) * 10) / 10;
+  const descuentoCopiar = Math.round((pastedCount * 1.0) * 10) / 10;
   const estadoFinal = (hasT1 && hasT2 && hasT3 && hasT4) ? "Completado" : "En Proceso";
 
   // 7. HOJA MAESTRA DOCENTE: 'Evaluacion_Consolidada' (LA ÚNICA HOJA REQUERIDA - 1 FILA POR ALUMNO)
