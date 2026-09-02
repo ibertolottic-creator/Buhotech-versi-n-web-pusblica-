@@ -148,6 +148,25 @@
     </style>
 </head>
 <body>
+    <!-- Loading Overlay con barra de carga visual para la boleta -->
+    <div id="report-loading-overlay" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(10, 15, 30, 0.96); backdrop-filter:blur(10px); z-index:99999; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:1.5rem; transition:opacity 0.4s ease;">
+        <div style="background:var(--slate-900); border:1px solid rgba(99,102,241,0.4); border-radius:var(--radius-xl); max-width:460px; width:100%; padding:2.2rem 2rem; text-align:center; box-shadow:0 25px 50px -12px rgba(0,0,0,0.8);">
+            <div style="font-size:3.2rem; animation: float 2s infinite ease-in-out; margin-bottom:1rem;">🦉</div>
+            <h3 id="report-load-title" style="color:white; font-size:1.25rem; font-weight:800; margin-bottom:0.35rem;">Cargando Boleta de Tesis</h3>
+            <p id="report-load-subtitle" style="color:var(--slate-400); font-size:0.85rem; margin-bottom:1.5rem;">Sincronizando notas y redacciones de Evaluación Consolidada...</p>
+            
+            <!-- Barra de Progreso Visual -->
+            <div style="background:rgba(255,255,255,0.08); border-radius:9999px; height:12px; width:100%; overflow:hidden; border:1px solid rgba(255,255,255,0.12); margin-bottom:0.85rem;">
+                <div id="report-load-bar" style="background:linear-gradient(90deg, var(--brand-500), var(--gold-400)); height:100%; width:30%; border-radius:9999px; transition:width 0.4s ease;"></div>
+            </div>
+            
+            <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; color:var(--slate-400);">
+                <span id="report-load-step">Consultando Google Sheets...</span>
+                <span id="report-load-percent" style="font-weight:700; color:var(--brand-300);">30%</span>
+            </div>
+        </div>
+    </div>
+
     <div class="app-container">
         <!-- Header -->
         <header style="padding:1.25rem 1.5rem 0.5rem; display:flex; align-items:center; justify-content:space-between;">
@@ -207,11 +226,11 @@
                     <div class="grade-label">Saber Hacer (Procedimental)</div>
                     <div style="font-size:0.7rem; color:var(--slate-400); margin-top:0.25rem;">Peso: 50%</div>
                 </div>
-                <div class="grade-card">
-                    <div class="grade-value text-success" id="ser-grade">--</div>
+                <div class="grade-card" id="ser-card">
+                    <div class="grade-value" id="ser-grade">--</div>
                     <div class="grade-label">Saber Ser (Actitudinal)</div>
-                    <div style="font-size:0.7rem; color:var(--slate-400); margin-top:0.25rem;">
-                        Puntos en contra por marcar al azar y copiar
+                    <div style="font-size:0.7rem; color:var(--slate-400); margin-top:0.25rem;" id="ser-subtitle">
+                        Puntos en contra por azar y copiar
                     </div>
                 </div>
             </div>
@@ -321,9 +340,20 @@
             document.getElementById('print-student-info').textContent = "Estudiante: " + username + " | Fecha de emisión: " + new Date().toLocaleString('es-PE');
             document.getElementById('print-student-name').textContent = username;
 
+            const overlay = document.getElementById('report-loading-overlay');
+            const loadBar = document.getElementById('report-load-bar');
+            const loadPct = document.getElementById('report-load-percent');
+            const loadStep = document.getElementById('report-load-step');
+
+            const t1 = setTimeout(() => {
+                if (loadBar) { loadBar.style.width = '65%'; loadPct.textContent = '65%'; loadStep.textContent = 'Recuperando redacciones y telemetría...'; }
+            }, 600);
+
             google.script.run
                 .withSuccessHandler(function(res) {
+                    clearTimeout(t1);
                     if (res && res.success) {
+                        if (loadBar) { loadBar.style.width = '100%'; loadPct.textContent = '100%'; loadStep.textContent = '¡Reporte listo!'; }
                         reportData = res;
                         if (res.user && res.user.username) {
                             document.getElementById('student-meta').textContent = "Estudiante: " + res.user.username + " • " + new Date().toLocaleDateString('es-PE', { year: 'numeric', month: 'long', day: 'numeric' });
@@ -332,11 +362,21 @@
                         }
                         renderGrades(res.grades, res.user);
                         renderOpenQuestions(res.workshops, res.text_responses);
+
+                        setTimeout(() => {
+                            if (overlay) {
+                                overlay.style.opacity = '0';
+                                setTimeout(() => overlay.style.display = 'none', 400);
+                            }
+                        }, 350);
                     } else {
+                        if (overlay) overlay.style.display = 'none';
                         alert("No se pudo cargar el reporte: " + (res && res.error ? res.error : "Error de comunicación con Google Sheets. Intenta recargar la página."));
                     }
                 })
                 .withFailureHandler(function(err) {
+                    clearTimeout(t1);
+                    if (overlay) overlay.style.display = 'none';
                     alert("Error al obtener calificaciones: " + err);
                 })
                 .rpcGetGrades(userId);
@@ -347,17 +387,36 @@
             document.getElementById('final-grade').textContent = (g.final_grade_20 !== undefined) ? g.final_grade_20.toFixed(1) : "0.0";
             document.getElementById('saber-grade').textContent = (g.saber_grade !== undefined) ? g.saber_grade.toFixed(1) : "--";
             document.getElementById('hacer-grade').textContent = (g.saber_hacer_grade !== undefined) ? g.saber_hacer_grade.toFixed(1) : "--";
-            document.getElementById('ser-grade').textContent = (g.saber_ser_grade !== undefined) ? g.saber_ser_grade.toFixed(1) : "--";
+            
+            // Calificación Saber Ser (Actitudinal): Mostrar puntajes en contra por copiar o respuesta al azar
+            const penalty = (g.actitudinal_penalty !== undefined) ? g.actitudinal_penalty : 0;
+            const fastCount = g.fast_random_count || 0;
+            const pasteCount = (user && user.pasted_text_count !== undefined) ? user.pasted_text_count : (g.pasted_count || 0);
+            const serEl = document.getElementById('ser-grade');
+            const serSub = document.getElementById('ser-subtitle');
 
-            if (g.actitudinal_penalty > 0) {
-                document.getElementById('penalty-val').textContent = g.actitudinal_penalty.toFixed(1);
+            if (penalty > 0) {
+                serEl.textContent = "-" + penalty.toFixed(1) + " pts";
+                serEl.style.color = "#f87171"; // Rojo para reflejar puntos en contra
+                serSub.innerHTML = `<span style="color:#fca5a5; font-weight:700;">⚠️ Puntos en contra:</span><br>` +
+                    `<span style="color:var(--slate-300);">${fastCount > 0 ? ('-' + (fastCount * 1.0).toFixed(1) + ' pts azar (' + fastCount + ')') : ''} ${pasteCount > 0 ? ('• -' + (pasteCount * 2.0).toFixed(1) + ' pts copiar (' + pasteCount + ')') : ''}</span>`;
+            } else {
+                serEl.textContent = "0.0 pts";
+                serEl.style.color = "var(--success-400)"; // Verde para conducta íntegra
+                serSub.innerHTML = `<span style="color:var(--success-400); font-weight:700;">✅ Conducta Íntegra</span><br><span style="color:var(--slate-400);">Sin sanciones por azar ni copia</span>`;
+            }
+
+            if (penalty > 0) {
+                document.getElementById('penalty-val').textContent = penalty.toFixed(1);
                 document.getElementById('penalty-badge').style.display = "inline-block";
+            } else {
+                document.getElementById('penalty-badge').style.display = "none";
             }
 
             document.getElementById('answered-count').textContent = g.total_questions_answered || 0;
             document.getElementById('correct-count').textContent = g.total_correct || 0;
-            document.getElementById('fast-count').textContent = g.fast_random_count || 0;
-            document.getElementById('paste-count').textContent = (user && user.pasted_text_count !== undefined) ? user.pasted_text_count : (g.pasted_count || 0);
+            document.getElementById('fast-count').innerHTML = `${fastCount} veces ${fastCount > 0 ? '<span style="color:#f87171; font-weight:normal;">(-' + (fastCount * 1.0).toFixed(1) + ' pts)</span>' : ''}`;
+            document.getElementById('paste-count').innerHTML = `${pasteCount} veces ${pasteCount > 0 ? '<span style="color:#f87171; font-weight:normal;">(-' + (pasteCount * 2.0).toFixed(1) + ' pts)</span>' : ''}`;
             document.getElementById('avg-time').textContent = Math.round((g.avg_response_time_ms || 0) / 1000) + " s";
             document.getElementById('failed-count').textContent = g.total_failed_attempts || 0;
         }

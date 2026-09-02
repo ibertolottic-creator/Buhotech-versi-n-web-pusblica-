@@ -371,6 +371,25 @@
         </div>
     </div>
 
+    <!-- Modal con Barra de Progreso y Guardado en Google Sheets -->
+    <div id="save-progress-modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.85); backdrop-filter:blur(8px); z-index:99999; justify-content:center; align-items:center; flex-direction:column; padding:1.5rem;">
+        <div style="background:var(--slate-900); border:1px solid rgba(99,102,241,0.4); border-radius:var(--radius-xl); max-width:480px; width:100%; padding:2.2rem 2rem; text-align:center; box-shadow:0 25px 50px -12px rgba(0,0,0,0.8);">
+            <div style="font-size:3.2rem; animation: float 2s infinite ease-in-out; margin-bottom:1rem;">🦉</div>
+            <h3 id="save-progress-title" style="color:white; font-size:1.25rem; font-weight:800; margin-bottom:0.35rem;">Guardando Taller Metodológico</h3>
+            <p id="save-progress-subtitle" style="color:var(--slate-400); font-size:0.85rem; margin-bottom:1.5rem;">Consolidando tus 4 redacciones científicas en Google Sheets...</p>
+            
+            <!-- Barra de Progreso Visual -->
+            <div style="background:rgba(255,255,255,0.08); border-radius:9999px; height:12px; width:100%; overflow:hidden; border:1px solid rgba(255,255,255,0.12); margin-bottom:0.85rem; position:relative;">
+                <div id="save-progress-bar" style="background:linear-gradient(90deg, var(--brand-500), var(--success-400)); height:100%; width:15%; border-radius:9999px; transition:width 0.45s ease;"></div>
+            </div>
+            
+            <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; color:var(--slate-400);">
+                <span id="save-progress-step">Paso 1 de 3: Procesando redacciones...</span>
+                <span id="save-progress-percent" style="font-weight:700; color:var(--brand-300);">15%</span>
+            </div>
+        </div>
+    </div>
+
     <script>
         const APP_URL = "<?= url ?>";
         const USER_ID = localStorage.getItem('user_id');
@@ -641,32 +660,72 @@
             btn.disabled = true;
             btn.textContent = "Guardando...";
 
-            // Timeout de seguridad en el cliente (20 segundos)
+            // Activar modal con barra de progreso visual
+            const modal = document.getElementById('save-progress-modal');
+            const bar = document.getElementById('save-progress-bar');
+            const step = document.getElementById('save-progress-step');
+            const pct = document.getElementById('save-progress-percent');
+            const title = document.getElementById('save-progress-title');
+            const subtitle = document.getElementById('save-progress-subtitle');
+
+            modal.style.display = 'flex';
+            bar.style.width = '20%';
+            pct.textContent = '20%';
+            step.textContent = 'Paso 1 de 3: Procesando planteamiento, objetivos, variables y metodología...';
+
+            const timer1 = setTimeout(function() {
+                bar.style.width = '55%';
+                pct.textContent = '55%';
+                step.textContent = 'Paso 2 de 3: Conectando y escribiendo en Evaluación_Consolidada...';
+            }, 800);
+
+            const timer2 = setTimeout(function() {
+                bar.style.width = '85%';
+                pct.textContent = '85%';
+                step.textContent = 'Paso 3 de 3: Consolidando calificaciones y telemetría...';
+            }, 2200);
+
+            // Timeout de seguridad en el cliente (25 segundos)
             const timeoutTimer = setTimeout(function() {
                 if (btn.disabled) {
                     btn.disabled = false;
                     btn.textContent = "Finalizar Taller ✅";
+                    modal.style.display = 'none';
                     alert("⚠️ La sincronización demoró. Si tus datos no se actualizaron, vuelve a presionar 'Finalizar Taller ✅'.");
                 }
-            }, 20000);
+            }, 25000);
 
             google.script.run
                 .withSuccessHandler(function(res) {
                     clearTimeout(timeoutTimer);
+                    clearTimeout(timer1);
+                    clearTimeout(timer2);
+
                     if (res && res.success === false) {
                         btn.disabled = false;
                         btn.textContent = "Finalizar Taller ✅";
+                        modal.style.display = 'none';
                         alert("⚠️ No se pudo guardar: " + (res.error || "Intenta nuevamente"));
                         return;
                     }
-                    btn.textContent = "✅ ¡Guardado! Redirigiendo...";
-                    alert("¡Felicitaciones! Has completado el Taller Metodológico (Fase 2). Tu reporte ha sido actualizado.");
-                    safeRedirect(APP_URL + "?page=dashboard");
+
+                    bar.style.width = '100%';
+                    pct.textContent = '100%';
+                    title.textContent = '✅ ¡Taller Metodológico Guardado!';
+                    subtitle.textContent = 'Tus redacciones y calificaciones fueron consolidadas.';
+                    step.textContent = 'Redirigiendo a tu Dashboard...';
+
+                    setTimeout(function() {
+                        safeRedirect(APP_URL + "?page=dashboard");
+                    }, 1200);
                 })
                 .withFailureHandler(function(err) {
                     clearTimeout(timeoutTimer);
+                    clearTimeout(timer1);
+                    clearTimeout(timer2);
                     btn.disabled = false;
                     btn.textContent = "Finalizar Taller ✅";
+                    modal.style.display = 'none';
                     alert("Error de conexión al guardar: " + err);
                 })
                 .rpcSubmitWorkshop(currentUserId, "Fase 2 - Redaccion", topicDrafts);
