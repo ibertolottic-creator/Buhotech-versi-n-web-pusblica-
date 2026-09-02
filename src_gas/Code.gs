@@ -244,7 +244,7 @@ function rpcRespondQuiz(data) {
     } else if (!isCorrect || behaviorFlag === "FAST_RANDOM") {
       if (data.failedAttempts === 0) {
         heartsLost = 1;
-        user.hearts = Math.max(0, parseInt(user.hearts || 10) - heartsLost);
+        user.hearts = Math.max(0, parseInt(user.hearts !== undefined ? user.hearts : 20) - heartsLost);
       }
     }
 

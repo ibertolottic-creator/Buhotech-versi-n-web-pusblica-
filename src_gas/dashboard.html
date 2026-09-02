@@ -48,7 +48,7 @@
                 <span class="stat-label">XP</span>
             </div>
             <div class="stat-item">
-                <span class="stat-value text-accent">❤️ <span id="hearts">10</span></span>
+                <span class="stat-value text-accent">❤️ <span id="hearts">20</span></span>
                 <span class="stat-label">Vidas</span>
             </div>
         </div>
@@ -132,7 +132,7 @@
                     if (res.success && res.user) {
                         const u = res.user;
                         document.getElementById('xp').textContent = u.xp || 0;
-                        document.getElementById('hearts').textContent = (u.hearts !== undefined) ? u.hearts : 10;
+                        document.getElementById('hearts').textContent = (u.hearts !== undefined) ? u.hearts : 20;
                         document.getElementById('streak').textContent = u.streak_days || 0;
 
                         const unlocked = parseInt(u.unlocked_module || 1);

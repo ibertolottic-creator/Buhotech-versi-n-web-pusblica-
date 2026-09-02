@@ -302,7 +302,7 @@
             </div>
             <div class="lesson-hearts">
                 <span id="heart-icon">❤️</span>
-                <span id="lesson-hearts">10</span>
+                <span id="lesson-hearts">20</span>
             </div>
         </div>
 
@@ -338,7 +338,7 @@
         let selectedOption = null;
         let startTime = Date.now();
         let isChecking = false;
-        let currentHearts = 10;
+        let currentHearts = 20;
         let hasPasted = false;
         let failedAttempts = 0;
 
@@ -558,20 +558,114 @@
             }
         }
 
+        function evaluateAnswerLocally(q, sel) {
+            let isCorrect = false;
+            let feedbackText = "";
+
+            if (q.question_type === "HONESTY") {
+                isCorrect = (sel === "A") ? hasPasted : !hasPasted;
+                feedbackText = isCorrect ? "Gracias por tu honestidad. Asumir el error es el primer paso ético." : "La integridad académica es fundamental.";
+            } else if (q.question_type === "SCENARIO" || q.question_type === "DILEMMA") {
+                if (Array.isArray(q.options)) {
+                    const opt = q.options.find(o => o.id === sel);
+                    if (opt && opt.is_ethical !== undefined) {
+                        isCorrect = opt.is_ethical;
+                        feedbackText = opt.feedback || (isCorrect ? q.verification_text : q.rescue_text);
+                    } else {
+                        isCorrect = (sel === q.correct_answer);
+                        feedbackText = isCorrect ? q.verification_text : q.rescue_text;
+                    }
+                } else {
+                    isCorrect = (sel === q.correct_answer);
+                    feedbackText = isCorrect ? q.verification_text : q.rescue_text;
+                }
+            } else if (q.question_type === "MATCH") {
+                try {
+                    let selections = (typeof sel === 'string') ? JSON.parse(sel) : sel;
+                    isCorrect = true;
+                    const options = Array.isArray(q.options) ? q.options : [];
+                    for (let i = 0; i < options.length; i++) {
+                        const opt = options[i];
+                        const chosen = String(selections[opt.id] || '').trim();
+                        const expected = String(opt.right || '').trim();
+                        if (chosen !== expected) {
+                            isCorrect = false;
+                            break;
+                        }
+                    }
+                } catch(e) { isCorrect = false; }
+                feedbackText = isCorrect ? (q.verification_text || "¡Excelente! Has comprendido la alineación lógica.") : (q.rescue_text || "El problema es pregunta, el objetivo es verbo, la hipótesis es afirmación.");
+            } else if (q.question_type === "SORT") {
+                const expected = Array.isArray(q.correct_answer) ? q.correct_answer.join(',') : String(q.correct_answer);
+                const actual = Array.isArray(sel) ? sel.join(',') : String(sel);
+                isCorrect = (actual.trim() === expected.trim());
+                feedbackText = isCorrect ? (q.verification_text || "¡Secuencia correcta!") : (q.rescue_text || "Revisa el orden secuencial.");
+            } else {
+                isCorrect = (String(sel).trim().toUpperCase() === String(q.correct_answer).trim().toUpperCase());
+                feedbackText = isCorrect ? (q.verification_text || "¡Correcto!") : (q.rescue_text || "Revisa los conceptos clave.");
+            }
+
+            return { isCorrect, feedbackText };
+        }
+
         function checkAnswer() {
             if (!selectedOption || isChecking) return;
             isChecking = true;
 
             const q = QUESTIONS[currentIndex];
             const responseTimeMs = Date.now() - startTime;
-            const checkBtn = document.getElementById('check-btn');
-            checkBtn.textContent = 'Comprobando...';
-            checkBtn.disabled = true;
 
             let payloadAnswer = selectedOption;
             if (q.question_type === 'SORT') payloadAnswer = selectedOption.join(',');
             else if (q.question_type === 'MATCH') payloadAnswer = JSON.stringify(selectedOption);
 
+            // 1. EVALUACIÓN INSTANTÁNEA LOCAL (0 ms - Cero espera de servidor o IA)
+            const localEval = evaluateAnswerLocally(q, payloadAnswer);
+            const isCorrect = localEval.isCorrect;
+            const feedbackText = localEval.feedbackText;
+
+            let behaviorFlag = "NORMAL";
+            const minTime = q.min_reading_time_ms || 3000;
+            const expTime = q.expected_time_ms || 10000;
+            if (responseTimeMs < minTime) behaviorFlag = "FAST_RANDOM";
+            else if (responseTimeMs > expTime) behaviorFlag = "SEARCHING_THINKING";
+            if (hasPasted) behaviorFlag = "PASTED";
+
+            if (!isCorrect) {
+                failedAttempts++;
+                if (failedAttempts === 1) {
+                    currentHearts = Math.max(0, currentHearts - 1);
+                    document.getElementById('lesson-hearts').textContent = currentHearts;
+                }
+            }
+
+            // Marcar opciones en verde / rojo inmediatamente
+            if (q.question_type === 'MAIN' || q.question_type === 'RAPID' || q.question_type === 'DILEMMA' || q.question_type === 'SCENARIO' || q.question_type === 'FILL_BLANK' || q.question_type === 'HONESTY') {
+                document.querySelectorAll('.option-btn').forEach(btn => {
+                    const id = btn.dataset.id;
+                    btn.disabled = true;
+                    if (id === q.correct_answer) {
+                        btn.classList.add('correct');
+                    } else if (id === selectedOption && !isCorrect) {
+                        btn.classList.add('wrong');
+                    } else {
+                        btn.classList.add('dimmed');
+                    }
+                });
+            }
+
+            playSound(isCorrect ? 'success' : 'error');
+            const xpGained = (isCorrect && behaviorFlag !== "FAST_RANDOM") ? ((failedAttempts === 0) ? 10 : 5) : 0;
+            if (xpGained > 0) showXpPopup('+' + xpGained + ' XP');
+
+            // Mostrar el drawer de retroalimentación de inmediato (cero milisegundos)
+            showFeedback({
+                is_correct: isCorrect,
+                feedback_text: feedbackText,
+                behavior: behaviorFlag
+            });
+
+            // 2. SINCRONIZACIÓN ASÍNCRONA EN SEGUNDO PLANO (No bloquea la pantalla)
             const payload = {
                 userId: USER_ID,
                 questionId: q.id,
@@ -585,47 +679,14 @@
 
             google.script.run
                 .withSuccessHandler(function(data) {
-                    checkBtn.textContent = 'COMPROBAR';
-                    checkBtn.disabled = false;
                     isChecking = false;
-
-                    if (!data.success) {
-                        alert(data.error || 'Error procesando respuesta');
-                        return;
-                    }
-
-                    if (data.user) {
+                    if (data && data.user && data.user.hearts !== undefined) {
                         currentHearts = data.user.hearts;
                         document.getElementById('lesson-hearts').textContent = currentHearts;
                     }
-
-                    if (!data.is_correct) failedAttempts++;
-
-                    // Marcar opciones
-                    if (q.question_type === 'MAIN' || q.question_type === 'RAPID' || q.question_type === 'DILEMMA' || q.question_type === 'SCENARIO' || q.question_type === 'FILL_BLANK' || q.question_type === 'HONESTY') {
-                        document.querySelectorAll('.option-btn').forEach(btn => {
-                            const id = btn.dataset.id;
-                            btn.disabled = true;
-                            if (id === q.correct_answer) {
-                                btn.classList.add('correct');
-                            } else if (id === selectedOption && !data.is_correct) {
-                                btn.classList.add('wrong');
-                            } else {
-                                btn.classList.add('dimmed');
-                            }
-                        });
-                    }
-
-                    playSound(data.is_correct ? 'success' : 'error');
-                    if (data.xp_gained > 0) showXpPopup('+' + data.xp_gained + ' XP');
-
-                    showFeedback(data);
                 })
                 .withFailureHandler(function(err) {
-                    checkBtn.textContent = 'COMPROBAR';
-                    checkBtn.disabled = false;
                     isChecking = false;
-                    alert('Error de conexión: ' + err);
                 })
                 .rpcRespondQuiz(payload);
         }

@@ -276,7 +276,7 @@ function createUser(username) {
     username: username,
     role: "student",
     xp: 0,
-    hearts: 10,
+    hearts: 20,
     streak_days: 0,
     unlocked_module: 1,
     last_played: new Date().toISOString(),
