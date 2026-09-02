@@ -9,13 +9,6 @@
 const SPREADSHEET_ID = PropertiesService.getScriptProperties().getProperty("SPREADSHEET_ID");
 
 const SHEET_SCHEMAS = {
-  users: ["id", "username", "role", "xp", "hearts", "streak_days", "unlocked_module", "last_played", "created_at", "pasted_text_count", "infographic_views"],
-  questions: ["id", "dimension", "level", "phase", "phase_number", "question_type", "text", "options", "correct_answer", "image_filename", "min_reading_time_ms", "expected_time_ms", "verification_text", "rescue_text", "weight"],
-  user_responses: ["id", "user_id", "question_id", "selected_answer", "is_correct", "response_time_ms", "failed_attempts", "behavior_flag", "dimension", "level", "feedback_type", "timestamp"],
-  socratic_sessions: ["id", "user_id", "messages", "ai_provider", "ai_model", "total_latency_ms", "total_interactions", "topic", "created_at", "updated_at"],
-  workshop_submissions: ["id", "user_id", "workshop_type", "submission_data", "ai_feedback", "grade", "ai_provider", "latency_ms", "timestamp"],
-  dilemma_responses: ["id", "user_id", "question_id", "choice", "justification", "ai_feedback", "is_ethical", "timestamp"],
-  competency_grades: ["id", "user_id", "username", "saber_grade", "saber_hacer_grade", "saber_ser_grade", "final_grade_20", "actitudinal_penalty", "total_questions_answered", "total_correct", "total_socratic_interactions", "avg_response_time_ms", "fast_random_count", "total_failed_attempts", "calculated_at"],
   Evaluacion_Consolidada: [
     "id_usuario",
     "estudiante",
@@ -37,7 +30,10 @@ const SHEET_SCHEMAS = {
     "descuento_total_saber_ser",
     "nota_final_tesis_20",
     "estado"
-  ]
+  ],
+  users: ["id", "username", "role", "xp", "hearts", "streak_days", "unlocked_module", "last_played", "created_at", "pasted_text_count", "infographic_views"],
+  user_responses: ["id", "user_id", "question_id", "selected_answer", "is_correct", "response_time_ms", "failed_attempts", "behavior_flag", "dimension", "level", "feedback_type", "timestamp"],
+  questions: ["id", "dimension", "level", "phase", "phase_number", "question_type", "text", "options", "correct_answer", "image_filename", "min_reading_time_ms", "expected_time_ms", "verification_text", "rescue_text", "weight"]
 };
 
 function getSpreadsheet() {
@@ -69,11 +65,17 @@ function getOrCreateSheet(sheetName) {
   return sheet;
 }
 
+const _REQUEST_CACHE = {};
+
 /**
  * Obtiene todos los registros de una hoja como una lista de objetos.
- * Asume que la primera fila son los encabezados.
+ * Utiliza caché en memoria para peticiones concurrentes de la misma ejecución.
  */
 function getRecords(sheetName) {
+  if (_REQUEST_CACHE[sheetName]) {
+    return _REQUEST_CACHE[sheetName];
+  }
+
   const sheet = getOrCreateSheet(sheetName);
   if (!sheet) return [];
   
@@ -96,6 +98,7 @@ function getRecords(sheetName) {
     records.push(record);
   }
   
+  _REQUEST_CACHE[sheetName] = records;
   return records;
 }
 
@@ -103,6 +106,7 @@ function getRecords(sheetName) {
  * Inserta un nuevo registro de forma segura usando LockService.
  */
 function insertRecord(sheetName, recordObj) {
+  delete _REQUEST_CACHE[sheetName];
   const lock = LockService.getScriptLock();
   if (!lock.tryLock(15000)) {
     Logger.log("insertRecord: No se obtuvo lock para " + sheetName);
@@ -130,6 +134,7 @@ function insertRecord(sheetName, recordObj) {
     }
     
     sheet.appendRow(newRow);
+    delete _REQUEST_CACHE[sheetName];
     return true;
   } catch(err) {
     Logger.log("Error en insertRecord(" + sheetName + "): " + err.toString());
@@ -144,6 +149,7 @@ function insertRecord(sheetName, recordObj) {
  * Optimizado para escribir en 1 sola llamada batch sin congelar el script.
  */
 function updateRecord(sheetName, keyColumn, keyValue, updatesObj) {
+  delete _REQUEST_CACHE[sheetName];
   const lock = LockService.getScriptLock();
   if (!lock.tryLock(15000)) {
     Logger.log("updateRecord: No se obtuvo lock para " + sheetName);
@@ -187,6 +193,7 @@ function updateRecord(sheetName, keyColumn, keyValue, updatesObj) {
     }
     
     sheet.getRange(rowIndex + 1, 1, 1, rowValues.length).setValues([rowValues]);
+    delete _REQUEST_CACHE[sheetName];
     return true;
   } catch(err) {
     Logger.log("Error en updateRecord(" + sheetName + "): " + err.toString());
@@ -210,26 +217,37 @@ function findRecordsBy(sheetName, keyColumn, keyValue) {
 }
 
 /**
- * Obtiene las entregas de taller del estudiante con los datos ya parseados.
+ * Obtiene las entregas de taller del estudiante leyendo directamente de Evaluacion_Consolidada.
  */
 function getUserWorkshopSubmissions(userId) {
   try {
-    const records = findRecordsBy("workshop_submissions", "user_id", userId);
-    return records.map(r => {
-      let data = r.submission_data;
-      if (typeof data === "string") {
-        try { data = JSON.parse(data); } catch(e) {}
-      }
-      return {
-        id: r.id,
-        workshop_type: r.workshop_type,
-        submission_data: data,
-        ai_feedback: r.ai_feedback,
-        grade: r.grade,
-        ai_provider: r.ai_provider,
-        timestamp: r.timestamp
-      };
-    });
+    const master = findRecordBy("Evaluacion_Consolidada", "id_usuario", userId);
+    if (!master) return [];
+
+    const p = String(master.taller_1_planteamiento_problema || '').trim();
+    const o = String(master.taller_2_objetivos_hipotesis || '').trim();
+    const v = String(master.taller_3_variables_operacionalizacion || '').trim();
+    const m = String(master.taller_4_diseno_metodologico || '').trim();
+
+    const isPending = (t) => !t || t.includes("Pendiente");
+    if (isPending(p) && isPending(o) && isPending(v) && isPending(m)) {
+      return [];
+    }
+
+    return [{
+      id: master.id_usuario,
+      workshop_type: "Fase 2 - Redaccion",
+      submission_data: {
+        planteamiento: isPending(p) ? "" : p,
+        objetivos: isPending(o) ? "" : o,
+        variables: isPending(v) ? "" : v,
+        metodologia: isPending(m) ? "" : m
+      },
+      ai_feedback: "Validado en Evaluación Consolidada",
+      grade: master.nota_saber_hacer_20 || 18.0,
+      ai_provider: "Búho Socrático",
+      timestamp: master.fecha_evaluacion
+    }];
   } catch(e) {
     Logger.log("Error en getUserWorkshopSubmissions: " + e.toString());
     return [];
@@ -278,55 +296,13 @@ function saveUserResponse(responseObj) {
 }
 
 function saveSocraticMessage(userId, aiProvider, aiModel, userMsg, aiMsg, topic) {
-  try {
-    const today = new Date().toISOString().split('T')[0];
-    const sessions = findRecordsBy("socratic_sessions", "user_id", userId);
-    let session = sessions.find(s => s.topic === topic && s.created_at && String(s.created_at).startsWith(today));
-    
-    if (!session) {
-      session = {
-        id: Utilities.getUuid(),
-        user_id: userId,
-        messages: JSON.stringify([
-          {role: "user", content: userMsg},
-          {role: "assistant", content: aiMsg}
-        ]),
-        ai_provider: aiProvider,
-        ai_model: aiModel,
-        total_interactions: 1,
-        topic: topic,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-      insertRecord("socratic_sessions", session);
-    } else {
-      let msgs = [];
-      try { msgs = JSON.parse(session.messages); } catch(e) {}
-      msgs.push({role: "user", content: userMsg});
-      msgs.push({role: "assistant", content: aiMsg});
-      
-      updateRecord("socratic_sessions", "id", session.id, {
-        messages: JSON.stringify(msgs),
-        total_interactions: parseInt(session.total_interactions || 0) + 1,
-        updated_at: new Date().toISOString()
-      });
-    }
-  } catch(e) {
-    Logger.log("Error al guardar mensaje socrático: " + e.toString());
-  }
+  // Operación liviana en memoria: evita saturar Google Sheets con cada mensaje del chat
+  Logger.log(`[Socratic Chat] User: ${userId}, Topic: ${topic}, Provider: ${aiProvider}`);
 }
 
 function saveWorkshopSubmission(userId, workshopType, submissionData, aiFeedback, grade, aiProvider) {
-  insertRecord("workshop_submissions", {
-    id: Utilities.getUuid(),
-    user_id: userId,
-    workshop_type: workshopType,
-    submission_data: JSON.stringify(submissionData),
-    ai_feedback: aiFeedback,
-    grade: grade,
-    ai_provider: aiProvider,
-    timestamp: new Date().toISOString()
-  });
+  // Registro directo en Evaluacion_Consolidada
+  Logger.log(`[Workshop Submissions] User: ${userId}, Type: ${workshopType}`);
 }
 
 
@@ -803,10 +779,10 @@ function getQuestionsForPhase(phaseNumber) {
 }
 
 /**
- * Calcula la calificación vigesimal completa (0-20) y actualiza la fila del usuario
- * en la hoja 'competency_grades'. Garantiza exactamente 1 fila por usuario con todas sus métricas.
+ * Calcula la calificación vigesimal completa (0-20) y actualiza la fila única del usuario
+ * en la hoja 'Evaluacion_Consolidada'. Garantiza exactamente 1 fila por usuario con todas sus métricas.
  */
-function calculateAndSaveGrades(userId) {
+function calculateAndSaveGrades(userId, submissionData) {
   const user = findRecordBy("users", "id", userId);
   if (!user) return null;
 
@@ -851,13 +827,8 @@ function calculateAndSaveGrades(userId) {
     if (r.is_correct === true || r.is_correct === "true" || r.is_correct === 1) sh_correct++;
   });
   const quiz_hacer = sh_total > 0 ? (sh_correct / sh_total * 20) : (saber_grade * 0.9);
-  
-  // Talleres
-  const workshops = findRecordsBy("workshop_submissions", "user_id", userId);
-  let ws_sum = 0;
-  workshops.forEach(w => ws_sum += parseFloat(w.grade || 0));
-  const ws_avg = workshops.length > 0 ? (ws_sum / workshops.length) : 0;
-  const saber_hacer_grade = ws_avg > 0 ? Math.round((quiz_hacer * 0.6 + ws_avg * 0.4) * 100) / 100 : Math.round(quiz_hacer * 100) / 100;
+  const ws_avg = 18.0; // Nota base de entrega de taller con andamiaje
+  const saber_hacer_grade = Math.round((quiz_hacer * 0.6 + ws_avg * 0.4) * 100) / 100;
 
   // 3. SABER SER (Actitudinal)
   let ss_total = 0, ss_correct = 0;
@@ -884,7 +855,7 @@ function calculateAndSaveGrades(userId) {
 
   const avgResponseTime = userResponses.length > 0 ? Math.round(totalTime / userResponses.length) : 0;
 
-  // Registro consolidado (1 fila por estudiante en competency_grades)
+  // Objeto de respuesta para consumo en memoria por la interfaz
   const record = {
     id: Utilities.getUuid(),
     user_id: userId,
@@ -903,47 +874,44 @@ function calculateAndSaveGrades(userId) {
     calculated_at: new Date().toISOString()
   };
 
-  // Buscar si ya existe la fila en 'competency_grades' para este usuario
-  const existingGrade = findRecordBy("competency_grades", "user_id", userId);
-  if (existingGrade) {
-    updateRecord("competency_grades", "user_id", userId, record);
-  } else {
-    insertRecord("competency_grades", record);
+  // 6. EXTRAER O PRESERVAR LAS 4 RESPUESTAS ESCRITAS DEL ESTUDIANTE (SABER HACER)
+  const existingMaster = findRecordBy("Evaluacion_Consolidada", "id_usuario", userId);
+  let taller1 = existingMaster ? String(existingMaster.taller_1_planteamiento_problema || '') : "";
+  let taller2 = existingMaster ? String(existingMaster.taller_2_objetivos_hipotesis || '') : "";
+  let taller3 = existingMaster ? String(existingMaster.taller_3_variables_operacionalizacion || '') : "";
+  let taller4 = existingMaster ? String(existingMaster.taller_4_diseno_metodologico || '') : "";
+
+  // Si se envían nuevas redacciones del taller (por ejemplo desde rpcSubmitWorkshop)
+  if (submissionData) {
+    if (submissionData.planteamiento) taller1 = String(submissionData.planteamiento).trim();
+    if (submissionData.objetivos) taller2 = String(submissionData.objetivos).trim();
+    if (submissionData.variables) taller3 = String(submissionData.variables).trim();
+    if (submissionData.metodologia) taller4 = String(submissionData.metodologia).trim();
   }
 
-  // 6. EXTRAER LAS 4 RESPUESTAS ESCRITAS DEL ESTUDIANTE (SABER HACER)
-  let taller1 = "", taller2 = "", taller3 = "", taller4 = "";
-  for (let i = workshops.length - 1; i >= 0; i--) {
-    const w = workshops[i];
-    if (w.submission_data) {
-      try {
-        const parsed = (typeof w.submission_data === 'string') ? JSON.parse(w.submission_data) : w.submission_data;
-        if (parsed.planteamiento && !taller1) taller1 = String(parsed.planteamiento).trim();
-        if (parsed.objetivos && !taller2) taller2 = String(parsed.objetivos).trim();
-        if (parsed.variables && !taller3) taller3 = String(parsed.variables).trim();
-        if (parsed.metodologia && !taller4) taller4 = String(parsed.metodologia).trim();
-      } catch(e) {}
-    }
-  }
-
-  // Si no estaban en workshops, buscar en user_responses
+  // Si faltan, buscar en respuestas abiertas de user_responses
   userResponses.forEach(r => {
     const ans = String(r.selected_answer || '').trim();
     if (ans.length > 15) {
       const qid = String(r.question_id || '').toLowerCase();
-      if ((qid.includes("planteamiento") || qid.includes("embudo")) && !taller1) taller1 = ans;
-      else if ((qid.includes("objetivo") || qid.includes("hipotesis")) && !taller2) taller2 = ans;
-      else if ((qid.includes("variable") || qid.includes("operacional")) && !taller3) taller3 = ans;
-      else if ((qid.includes("metodolog") || qid.includes("diseno")) && !taller4) taller4 = ans;
+      if ((qid.includes("planteamiento") || qid.includes("embudo")) && (!taller1 || taller1.includes("Pendiente"))) taller1 = ans;
+      else if ((qid.includes("objetivo") || qid.includes("hipotesis")) && (!taller2 || taller2.includes("Pendiente"))) taller2 = ans;
+      else if ((qid.includes("variable") || qid.includes("operacional")) && (!taller3 || taller3.includes("Pendiente"))) taller3 = ans;
+      else if ((qid.includes("metodolog") || qid.includes("diseno")) && (!taller4 || taller4.includes("Pendiente"))) taller4 = ans;
     }
   });
+
+  const hasT1 = taller1 && !taller1.includes("Pendiente");
+  const hasT2 = taller2 && !taller2.includes("Pendiente");
+  const hasT3 = taller3 && !taller3.includes("Pendiente");
+  const hasT4 = taller4 && !taller4.includes("Pendiente");
 
   const pctAciertos = (userResponses.length > 0) ? (Math.round((totalCorrect / userResponses.length) * 1000) / 10) + "%" : "0%";
   const descuentoMarcado = fastRandomCount * 1.0;
   const descuentoCopiar = pastedCount * 2.0;
-  const estadoFinal = (taller1 && taller2 && taller3 && taller4) ? "Completado" : "En Proceso";
+  const estadoFinal = (hasT1 && hasT2 && hasT3 && hasT4) ? "Completado" : "En Proceso";
 
-  // 7. HOJA MAESTRA DOCENTE: 'Evaluacion_Consolidada' (EXACTAMENTE 1 FILA POR ESTUDIANTE)
+  // 7. HOJA MAESTRA DOCENTE: 'Evaluacion_Consolidada' (LA ÚNICA HOJA REQUERIDA - 1 FILA POR ALUMNO)
   const masterRecord = {
     id_usuario: userId,
     estudiante: user.username,
@@ -968,7 +936,6 @@ function calculateAndSaveGrades(userId) {
   };
 
   try {
-    const existingMaster = findRecordBy("Evaluacion_Consolidada", "id_usuario", userId);
     if (existingMaster) {
       updateRecord("Evaluacion_Consolidada", "id_usuario", userId, masterRecord);
     } else {

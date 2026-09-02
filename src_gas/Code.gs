@@ -269,8 +269,8 @@ function rpcRespondQuiz(data) {
       pasted_text_count: user.pasted_text_count || 0
     });
 
-    // Recalcular y actualizar la fila única del estudiante en 'competency_grades'
-    calculateAndSaveGrades(user.id);
+    // Optimización crítica: Las notas consolidadas se calculan al terminar la fase (rpcCompleteModule)
+    // para que responder cada pregunta sea 100% instantáneo.
 
     return {
       success: true,
@@ -298,7 +298,7 @@ function rpcCompleteModule(userId, phaseNumber) {
         unlocked_module: nextModule
       });
     }
-    // Recalcular y guardar la fila única consolidada del estudiante en 'competency_grades'
+    // Recalcular y guardar la fila única en 'Evaluacion_Consolidada'
     const grades = calculateAndSaveGrades(userId);
     return { success: true, grades: grades };
   } catch(e) {
@@ -319,8 +319,8 @@ function rpcSocraticChat(userId, topic, userMessage) {
 function rpcGetAdminStats() {
   try {
     const users = getRecords("users");
-    const grades = getRecords("competency_grades");
-    return { success: true, data: { usersCount: users.length } };
+    const grades = getRecords("Evaluacion_Consolidada");
+    return { success: true, data: { usersCount: users.length, gradesCount: grades.length } };
   } catch(e) {
     return { success: false, error: e.toString() };
   }
@@ -336,18 +336,15 @@ function rpcSubmitWorkshop(userId, workshopType, submissionData) {
       return { success: false, error: "Usuario no registrado con ID: " + userId };
     }
 
-    // 1. Guardar en 'workshop_submissions' con nota inicial (18.0 por entrega completa)
-    saveWorkshopSubmission(userId, workshopType, submissionData, "Entregado con andamiaje socrático", 18.0, "Búho Socrático");
-
-    // 2. Desbloquear Fase 3 (Laboratorio Ético)
+    // 1. Desbloquear Fase 3 (Laboratorio Ético)
     const nextModule = Math.max(parseInt(user.unlocked_module || 1), 3);
     updateRecord("users", "id", user.id, {
       unlocked_module: nextModule
     });
 
-    // 3. Recalcular y actualizar la fila del estudiante en 'competency_grades' y 'Evaluacion_Consolidada'
+    // 2. Guardar las 4 redacciones y notas consolidadas en 'Evaluacion_Consolidada' en 1 sola operación
     try {
-      calculateAndSaveGrades(userId);
+      calculateAndSaveGrades(userId, submissionData);
     } catch(errGrading) {
       Logger.log("Advertencia calculando notas en workshop: " + errGrading.toString());
     }

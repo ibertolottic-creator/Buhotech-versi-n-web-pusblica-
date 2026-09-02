@@ -102,13 +102,21 @@ function aiOrchestrateChat(topic, userMessage) {
     "3. ANDAMIAJE SOCRÁTICO: NUNCA des la respuesta hecha ni redactes el texto por el alumno. Haz 1 o 2 preguntas reflexivas para que él mismo detecte qué falta ajustar.\n" +
     "4. BASE DE CONOCIMIENTO PARA ESTE TEMA (" + ragInfo.name + "):\n" + ragInfo.rules;
 
-  // 1. Cascada: Pool de Claves Gemini
+  // 1. Cascada: Pool de Claves Gemini (Rotación inteligente con memoria de clave activa)
   const geminiPool = keys.geminiPool || [];
-  for (let i = 0; i < geminiPool.length; i++) {
+  let geminiStart = 0;
+  try {
+    const cachedIdx = CacheService.getScriptCache().get("GEMINI_ACTIVE_KEY_IDX");
+    if (cachedIdx) geminiStart = parseInt(cachedIdx) % geminiPool.length;
+  } catch(e) {}
+
+  for (let offset = 0; offset < geminiPool.length; offset++) {
+    const i = (geminiStart + offset) % geminiPool.length;
     try {
       const response = callGemini(geminiPool[i], systemPrompt, userMessage);
       if (response && response.trim().length > 0) {
         Logger.log("✅ Éxito con clave Gemini #" + (i + 1));
+        try { CacheService.getScriptCache().put("GEMINI_ACTIVE_KEY_IDX", String(i), 1800); } catch(e) {}
         return { text: response.trim(), provider: "gemini", model: "flash-pool" };
       }
     } catch (e) {
