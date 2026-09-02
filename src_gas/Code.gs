@@ -377,3 +377,12 @@ function rpcRecordPaste(userId) {
     return { success: false, error: e.toString() };
   }
 }
+
+function rpcSyncConsolidatedSheet() {
+  try {
+    const result = syncAllUsersConsolidatedSheet();
+    return { success: true, count: result.updatedCount };
+  } catch(e) {
+    return { success: false, error: e.toString() };
+  }
+}

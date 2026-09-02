@@ -15,7 +15,29 @@ const SHEET_SCHEMAS = {
   socratic_sessions: ["id", "user_id", "messages", "ai_provider", "ai_model", "total_latency_ms", "total_interactions", "topic", "created_at", "updated_at"],
   workshop_submissions: ["id", "user_id", "workshop_type", "submission_data", "ai_feedback", "grade", "ai_provider", "latency_ms", "timestamp"],
   dilemma_responses: ["id", "user_id", "question_id", "choice", "justification", "ai_feedback", "is_ethical", "timestamp"],
-  competency_grades: ["id", "user_id", "username", "saber_grade", "saber_hacer_grade", "saber_ser_grade", "final_grade_20", "actitudinal_penalty", "total_questions_answered", "total_correct", "total_socratic_interactions", "avg_response_time_ms", "fast_random_count", "total_failed_attempts", "calculated_at"]
+  competency_grades: ["id", "user_id", "username", "saber_grade", "saber_hacer_grade", "saber_ser_grade", "final_grade_20", "actitudinal_penalty", "total_questions_answered", "total_correct", "total_socratic_interactions", "avg_response_time_ms", "fast_random_count", "total_failed_attempts", "calculated_at"],
+  Evaluacion_Consolidada: [
+    "id_usuario",
+    "estudiante",
+    "fecha_evaluacion",
+    "nota_saber_conocer_20",
+    "preguntas_cognitivas_respondidas",
+    "respuestas_cognitivas_correctas",
+    "porcentaje_aciertos_cognitivo",
+    "nota_saber_hacer_20",
+    "taller_1_planteamiento_problema",
+    "taller_2_objetivos_hipotesis",
+    "taller_3_variables_operacionalizacion",
+    "taller_4_diseno_metodologico",
+    "nota_saber_ser_20",
+    "veces_marcado_rapido_azar",
+    "descuento_marcado_rapido_pts",
+    "intentos_copiar_pegar",
+    "descuento_copiar_pegar_pts",
+    "descuento_total_saber_ser",
+    "nota_final_tesis_20",
+    "estado"
+  ]
 };
 
 function getSpreadsheet() {
@@ -869,5 +891,101 @@ function calculateAndSaveGrades(userId) {
     insertRecord("competency_grades", record);
   }
 
+  // 6. EXTRAER LAS 4 RESPUESTAS ESCRITAS DEL ESTUDIANTE (SABER HACER)
+  let taller1 = "", taller2 = "", taller3 = "", taller4 = "";
+  for (let i = workshops.length - 1; i >= 0; i--) {
+    const w = workshops[i];
+    if (w.submission_data) {
+      try {
+        const parsed = (typeof w.submission_data === 'string') ? JSON.parse(w.submission_data) : w.submission_data;
+        if (parsed.planteamiento && !taller1) taller1 = String(parsed.planteamiento).trim();
+        if (parsed.objetivos && !taller2) taller2 = String(parsed.objetivos).trim();
+        if (parsed.variables && !taller3) taller3 = String(parsed.variables).trim();
+        if (parsed.metodologia && !taller4) taller4 = String(parsed.metodologia).trim();
+      } catch(e) {}
+    }
+  }
+
+  // Si no estaban en workshops, buscar en user_responses
+  userResponses.forEach(r => {
+    const ans = String(r.selected_answer || '').trim();
+    if (ans.length > 15) {
+      const qid = String(r.question_id || '').toLowerCase();
+      if ((qid.includes("planteamiento") || qid.includes("embudo")) && !taller1) taller1 = ans;
+      else if ((qid.includes("objetivo") || qid.includes("hipotesis")) && !taller2) taller2 = ans;
+      else if ((qid.includes("variable") || qid.includes("operacional")) && !taller3) taller3 = ans;
+      else if ((qid.includes("metodolog") || qid.includes("diseno")) && !taller4) taller4 = ans;
+    }
+  });
+
+  const pctAciertos = (userResponses.length > 0) ? (Math.round((totalCorrect / userResponses.length) * 1000) / 10) + "%" : "0%";
+  const descuentoMarcado = fastRandomCount * 1.0;
+  const descuentoCopiar = pastedCount * 2.0;
+  const estadoFinal = (taller1 && taller2 && taller3 && taller4) ? "Completado" : "En Proceso";
+
+  // 7. HOJA MAESTRA DOCENTE: 'Evaluacion_Consolidada' (EXACTAMENTE 1 FILA POR ESTUDIANTE)
+  const masterRecord = {
+    id_usuario: userId,
+    estudiante: user.username,
+    fecha_evaluacion: new Date().toLocaleString(),
+    nota_saber_conocer_20: saber_grade,
+    preguntas_cognitivas_respondidas: userResponses.length,
+    respuestas_cognitivas_correctas: totalCorrect,
+    porcentaje_aciertos_cognitivo: pctAciertos,
+    nota_saber_hacer_20: saber_hacer_grade,
+    taller_1_planteamiento_problema: taller1 || "⚠️ Pendiente de redacción",
+    taller_2_objetivos_hipotesis: taller2 || "⚠️ Pendiente de redacción",
+    taller_3_variables_operacionalizacion: taller3 || "⚠️ Pendiente de redacción",
+    taller_4_diseno_metodologico: taller4 || "⚠️ Pendiente de redacción",
+    nota_saber_ser_20: saber_ser_grade,
+    veces_marcado_rapido_azar: fastRandomCount,
+    descuento_marcado_rapido_pts: descuentoMarcado,
+    intentos_copiar_pegar: pastedCount,
+    descuento_copiar_pegar_pts: descuentoCopiar,
+    descuento_total_saber_ser: actitudinal_penalty,
+    nota_final_tesis_20: final_grade_20,
+    estado: estadoFinal
+  };
+
+  try {
+    const existingMaster = findRecordBy("Evaluacion_Consolidada", "id_usuario", userId);
+    if (existingMaster) {
+      updateRecord("Evaluacion_Consolidada", "id_usuario", userId, masterRecord);
+    } else {
+      insertRecord("Evaluacion_Consolidada", masterRecord);
+    }
+  } catch(e) {
+    Logger.log("Error guardando en Evaluacion_Consolidada: " + e.toString());
+  }
+
   return record;
+}
+
+/**
+ * Recorre todos los usuarios y actualiza de forma masiva la hoja 'Evaluacion_Consolidada'.
+ */
+function syncAllUsersConsolidatedSheet() {
+  const users = getRecords("users");
+  let count = 0;
+  for (let i = 0; i < users.length; i++) {
+    if (users[i].id) {
+      calculateAndSaveGrades(users[i].id);
+      count++;
+    }
+  }
+  return { success: true, updatedCount: count };
+}
+
+/**
+ * Menú contextual en Google Sheets para el docente.
+ */
+function onOpen() {
+  try {
+    const ui = SpreadsheetApp.getUi();
+    ui.createMenu('🦉 Buhotech Labs')
+      .addItem('📊 Actualizar Evaluación Consolidada', 'syncAllUsersConsolidatedSheet')
+      .addToUi();
+  } catch(e) {
+    // Modo no interactivo o webapp aislada
+  }
 }

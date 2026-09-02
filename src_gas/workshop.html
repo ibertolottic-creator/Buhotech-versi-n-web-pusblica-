@@ -484,10 +484,26 @@
             if (sideCaption) sideCaption.innerHTML = data.caption || data.instructions;
         }
 
+        function renderMessageHtml(text) {
+            if (!text) return '';
+            // Si ya contiene etiquetas HTML seguras (<strong>, <br>, <em>), respetarlas
+            if (text.includes('<br>') || text.includes('<strong>') || text.includes('<em>') || text.includes('•')) {
+                return text.replace(/\n/g, '<br>');
+            }
+            // Si es texto plano o markdown con saltos de línea y negritas:
+            return String(text)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/\n/g, '<br>');
+        }
+
         function addBubble(role, text) {
             const bubble = document.createElement('div');
             bubble.className = `chat-bubble ${role}`;
-            bubble.textContent = text;
+            bubble.innerHTML = renderMessageHtml(text);
             messagesContainer.appendChild(bubble);
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }

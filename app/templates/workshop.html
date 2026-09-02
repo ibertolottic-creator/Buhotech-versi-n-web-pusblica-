@@ -350,10 +350,24 @@
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
 
+    function renderMessageHtml(text) {
+        if (!text) return '';
+        if (text.includes('<br>') || text.includes('<strong>') || text.includes('<em>') || text.includes('•')) {
+            return text.replace(/\n/g, '<br>');
+        }
+        return String(text)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/\n/g, '<br>');
+    }
+
     function addBubble(role, text) {
         const bubble = document.createElement('div');
         bubble.className = `chat-bubble ${role}`;
-        bubble.textContent = text;
+        bubble.innerHTML = renderMessageHtml(text);
         messagesContainer.appendChild(bubble);
         scrollToBottom();
     }
