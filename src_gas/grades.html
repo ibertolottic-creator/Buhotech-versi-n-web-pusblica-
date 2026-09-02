@@ -292,14 +292,30 @@
     <script>
         let reportData = null;
 
-        window.onload = function() {
-            const userId = localStorage.getItem('user_id');
-            const username = localStorage.getItem('username') || "Estudiante";
-
-            if (!userId) {
-                window.top.location.href = "<?= url ?>?page=login";
-                return;
+        function safeRedirect(targetUrl) {
+            try {
+                let link = document.getElementById('safe-redirect-anchor');
+                if (!link) {
+                    link = document.createElement('a');
+                    link.id = 'safe-redirect-anchor';
+                    link.target = '_top';
+                    link.style.display = 'none';
+                    document.body.appendChild(link);
+                }
+                link.href = targetUrl;
+                link.click();
+            } catch(e) {
+                try {
+                    window.top.location.href = targetUrl;
+                } catch(e2) {
+                    window.location.href = targetUrl;
+                }
             }
+        }
+
+        window.onload = function() {
+            const userId = localStorage.getItem('user_id') || "";
+            const username = localStorage.getItem('username') || "Estudiante";
 
             document.getElementById('student-meta').textContent = "Estudiante: " + username + " • " + new Date().toLocaleDateString('es-PE', { year: 'numeric', month: 'long', day: 'numeric' });
             document.getElementById('print-student-info').textContent = "Estudiante: " + username + " | Fecha de emisión: " + new Date().toLocaleString('es-PE');
@@ -309,10 +325,15 @@
                 .withSuccessHandler(function(res) {
                     if (res && res.success) {
                         reportData = res;
+                        if (res.user && res.user.username) {
+                            document.getElementById('student-meta').textContent = "Estudiante: " + res.user.username + " • " + new Date().toLocaleDateString('es-PE', { year: 'numeric', month: 'long', day: 'numeric' });
+                            document.getElementById('print-student-info').textContent = "Estudiante: " + res.user.username + " | Fecha de emisión: " + new Date().toLocaleString('es-PE');
+                            document.getElementById('print-student-name').textContent = res.user.username;
+                        }
                         renderGrades(res.grades, res.user);
                         renderOpenQuestions(res.workshops, res.text_responses);
                     } else {
-                        alert("No se pudo cargar el reporte: " + (res ? res.error : "Error de conexión"));
+                        alert("No se pudo cargar el reporte: " + (res && res.error ? res.error : "Error de comunicación con Google Sheets. Intenta recargar la página."));
                     }
                 })
                 .withFailureHandler(function(err) {

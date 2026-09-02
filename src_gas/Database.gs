@@ -48,18 +48,29 @@ function getSpreadsheet() {
  */
 function getOrCreateSheet(sheetName) {
   const ss = getSpreadsheet();
-  let sheet = ss.getSheetByName(sheetName);
+  const normTarget = String(sheetName).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[\s_-]+/g, "");
+  const sheets = ss.getSheets();
+  let sheet = null;
+  for (let i = 0; i < sheets.length; i++) {
+    const s = sheets[i];
+    const sNorm = String(s.getName()).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[\s_-]+/g, "");
+    if (sNorm === normTarget) {
+      sheet = s;
+      break;
+    }
+  }
+
   const defaultHeaders = SHEET_SCHEMAS[sheetName] || ["id", "user_id", "timestamp"];
   
   if (!sheet) {
     sheet = ss.insertSheet(sheetName);
     sheet.getRange(1, 1, 1, defaultHeaders.length).setValues([defaultHeaders]);
-    sheet.setFrozenRows(1);
+    try { sheet.setFrozenRows(1); } catch(e) {}
   } else {
     // Si la hoja ya existía pero está completamente vacía (0 filas o 0 columnas)
     if (sheet.getLastRow() === 0 || sheet.getLastColumn() === 0) {
       sheet.getRange(1, 1, 1, defaultHeaders.length).setValues([defaultHeaders]);
-      sheet.setFrozenRows(1);
+      try { sheet.setFrozenRows(1); } catch(e) {}
     }
   }
   return sheet;
@@ -82,8 +93,10 @@ function getRecords(sheetName) {
   const data = sheet.getDataRange().getValues();
   if (!data || data.length <= 1) return [];
   
-  const headers = data[0];
-  if (!headers || !headers.length) return [];
+  // Limpiar y recortar espacios en los encabezados
+  const rawHeaders = data[0];
+  if (!rawHeaders || !rawHeaders.length) return [];
+  const headers = rawHeaders.map(h => String(h || '').trim());
   
   const records = [];
   
@@ -91,7 +104,10 @@ function getRecords(sheetName) {
     const row = data[i];
     const record = {};
     for (let j = 0; j < headers.length; j++) {
-      record[headers[j]] = row[j];
+      const colName = headers[j];
+      if (colName) {
+        record[colName] = row[j];
+      }
     }
     // Guardar el número de fila real (base 1)
     record._rowNumber = i + 1;
@@ -120,12 +136,21 @@ function insertRecord(sheetName, recordObj) {
     const lastCol = sheet.getLastColumn() || 1;
     const headersRange = sheet.getRange(1, 1, 1, lastCol).getValues();
     if (!headersRange || !headersRange[0]) return false;
-    const headers = headersRange[0];
+    const headers = headersRange[0].map(h => String(h || '').trim());
     
     const newRow = [];
     for (let i = 0; i < headers.length; i++) {
       const colName = headers[i];
       let value = recordObj[colName];
+      if (value === undefined) {
+        const lowerCol = colName.toLowerCase();
+        for (const k in recordObj) {
+          if (k.toLowerCase().trim() === lowerCol) {
+            value = recordObj[k];
+            break;
+          }
+        }
+      }
       if (value === undefined || value === null) value = "";
       if (typeof value === 'object') {
         value = JSON.stringify(value);
@@ -162,18 +187,22 @@ function updateRecord(sheetName, keyColumn, keyValue, updatesObj) {
     
     const data = sheet.getDataRange().getValues();
     if (!data || data.length <= 1) return false;
-    const headers = data[0];
-    if (!headers || !headers.length) return false;
+    const headers = data[0].map(h => String(h || '').trim());
     
-    const keyIndex = headers.indexOf(keyColumn);
+    const targetKey = String(keyColumn).toLowerCase().trim();
+    let keyIndex = headers.indexOf(keyColumn);
+    if (keyIndex === -1) {
+      keyIndex = headers.findIndex(h => h.toLowerCase() === targetKey);
+    }
     if (keyIndex === -1) {
       Logger.log("Columna de llave " + keyColumn + " no encontrada en " + sheetName);
       return false;
     }
     
+    const targetVal = String(keyValue || '').trim();
     let rowIndex = -1;
     for (let i = 1; i < data.length; i++) {
-      if (data[i][keyIndex] == keyValue) {
+      if (String(data[i][keyIndex] || '').trim() === targetVal) {
         rowIndex = i;
         break;
       }
@@ -184,7 +213,11 @@ function updateRecord(sheetName, keyColumn, keyValue, updatesObj) {
     // Actualización ultra-rápida en memoria y 1 solo setValues batch:
     const rowValues = data[rowIndex].slice();
     for (const key in updatesObj) {
-      const colIndex = headers.indexOf(key);
+      const lowerKey = key.toLowerCase().trim();
+      let colIndex = headers.indexOf(key);
+      if (colIndex === -1) {
+        colIndex = headers.findIndex(h => h.toLowerCase() === lowerKey);
+      }
       if (colIndex !== -1) {
         let value = updatesObj[key];
         if (typeof value === 'object') value = JSON.stringify(value);
@@ -204,16 +237,36 @@ function updateRecord(sheetName, keyColumn, keyValue, updatesObj) {
 }
 
 /**
- * Encuentra un registro por columna
+ * Encuentra un registro por columna de forma flexible
  */
 function findRecordBy(sheetName, keyColumn, keyValue) {
   const records = getRecords(sheetName);
-  return records.find(r => r[keyColumn] == keyValue) || null;
+  const targetKey = String(keyColumn).toLowerCase().trim();
+  const targetVal = String(keyValue || '').trim();
+  return records.find(r => {
+    if (String(r[keyColumn] || '').trim() === targetVal) return true;
+    for (const k in r) {
+      if (k.toLowerCase().trim() === targetKey && String(r[k] || '').trim() === targetVal) {
+        return true;
+      }
+    }
+    return false;
+  }) || null;
 }
 
 function findRecordsBy(sheetName, keyColumn, keyValue) {
   const records = getRecords(sheetName);
-  return records.filter(r => r[keyColumn] == keyValue);
+  const targetKey = String(keyColumn).toLowerCase().trim();
+  const targetVal = String(keyValue || '').trim();
+  return records.filter(r => {
+    if (String(r[keyColumn] || '').trim() === targetVal) return true;
+    for (const k in r) {
+      if (k.toLowerCase().trim() === targetKey && String(r[k] || '').trim() === targetVal) {
+        return true;
+      }
+    }
+    return false;
+  });
 }
 
 /**

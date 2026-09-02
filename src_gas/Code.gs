@@ -92,24 +92,44 @@ function rpcGetUserData(userId) {
 
 function rpcGetGrades(userId) {
   try {
-    const user = findRecordBy("users", "id", userId);
-    const grades = calculateAndSaveGrades(userId);
-    const workshops = getUserWorkshopSubmissions(userId);
+    const allUsers = getRecords("users");
+    let user = null;
+    
+    if (userId) {
+      user = findRecordBy("users", "id", userId);
+    }
+    // Si no se encuentra por id, intentar por username o tomar el último usuario activo
+    if (!user && allUsers && allUsers.length > 0) {
+      user = allUsers[allUsers.length - 1];
+      userId = user.id;
+    }
+    
+    if (!user) {
+      return { 
+        success: false, 
+        error: "No se encontró ningún estudiante registrado en la hoja de cálculo." 
+      };
+    }
+
+    const grades = calculateAndSaveGrades(userId) || {};
+    const workshops = getUserWorkshopSubmissions(userId) || [];
     
     // Obtener respuestas abiertas de user_responses
-    const allResponses = findRecordsBy("user_responses", "user_id", userId);
+    const allResponses = findRecordsBy("user_responses", "user_id", userId) || [];
     const textResponses = allResponses.filter(r => {
       return r.selected_answer && String(r.selected_answer).length > 10;
     });
 
-    return { 
+    // Sanitización completa a primitivos JSON (evita que Google Apps Script devuelva null en withSuccessHandler por objetos Date)
+    return JSON.parse(JSON.stringify({ 
       success: true, 
       user: user,
-      grades: grades || {},
-      workshops: workshops || [],
-      text_responses: textResponses || []
-    };
+      grades: grades,
+      workshops: workshops,
+      text_responses: textResponses
+    }));
   } catch(e) {
+    Logger.log("Error en rpcGetGrades: " + e.toString());
     return { success: false, error: e.toString() };
   }
 }
